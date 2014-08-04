@@ -267,7 +267,7 @@ class App(object):
         glfw.make_context_current(self.window)
     def setup(self):
         pass
-    def update(self, dt):
+    def update(self, t, dt):
         pass
     def draw(self):
         pass
@@ -278,12 +278,11 @@ class App(object):
     def run(self):
         self.create_window()
         self.setup()
-        self.time = time.time()
+        self.start = self.time = time.time()
         while not glfw.window_should_close(self.window):
             now = time.time()
-            dt = now - self.time
+            self.update(now - self.start, now - self.time)
             self.time = now
-            self.update(dt)
             self.draw()
             glfw.swap_buffers(self.window)
             glfw.poll_events()

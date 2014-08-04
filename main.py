@@ -11,7 +11,7 @@ class App(pg.App):
         # program.position = pg.VertexBuffer(3, pg.FLOAT, [...])
         print program.get_attributes()
         print program.get_uniforms()
-    def update(self, dt):
+    def update(self, t, dt):
         pass
     def draw(self):
         self.clear()
