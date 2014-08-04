@@ -1,6 +1,8 @@
 import pg
 
-class App(pg.App):
+class Window(pg.Window):
+    def __init__(self):
+        super(Window, self).__init__((640, 480), 'Hello World')
     def setup(self):
         matrix = pg.Matrix()
         matrix = matrix.translate((0, 1, 0))
@@ -19,5 +21,6 @@ class App(pg.App):
         pass
 
 if __name__ == "__main__":
-    app = App()
+    app = pg.App()
+    Window()
     app.run()

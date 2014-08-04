@@ -256,15 +256,29 @@ class Matrix(object):
         return matrix * self
 
 class App(object):
-    def create_window(self):
+    instance = None
+    def __init__(self):
         if not glfw.init():
             raise Exception
-        title = 'Python Graphics'
-        self.window = glfw.create_window(640, 480, title, None, None)
-        if not self.window:
-            glfw.terminate()
+        App.instance = self
+        self.windows = []
+    def run(self):
+        while self.windows:
+            glfw.poll_events()
+            for window in list(self.windows):
+                window.tick()
+        glfw.terminate()
+
+class Window(object):
+    def __init__(self, size, title='Python Graphics'):
+        width, height = size
+        self.handle = glfw.create_window(width, height, title, None, None)
+        if not self.handle:
             raise Exception
-        glfw.make_context_current(self.window)
+        self.start = self.time = time.time()
+        self.use()
+        self.setup()
+        App.instance.windows.append(self)
     def setup(self):
         pass
     def update(self, t, dt):
@@ -273,18 +287,19 @@ class App(object):
         pass
     def teardown(self):
         pass
+    def use(self):
+        glfw.make_context_current(self.handle)
     def clear(self):
         glClear(GL_COLOR_BUFFER_BIT)
-    def run(self):
-        self.create_window()
-        self.setup()
-        self.start = self.time = time.time()
-        while not glfw.window_should_close(self.window):
-            now = time.time()
-            self.update(now - self.start, now - self.time)
-            self.time = now
-            self.draw()
-            glfw.swap_buffers(self.window)
-            glfw.poll_events()
-        self.teardown()
-        glfw.terminate()
+    def tick(self):
+        if glfw.window_should_close(self.handle):
+            self.teardown()
+            App.instance.windows.remove(self)
+            glfw.destroy_window(self.handle)
+            return
+        self.use()
+        now = time.time()
+        self.update(now - self.start, now - self.time)
+        self.time = now
+        self.draw()
+        glfw.swap_buffers(self.handle)
