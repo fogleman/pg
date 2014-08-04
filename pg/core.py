@@ -1,5 +1,6 @@
 from ctypes import *
 from OpenGL.GL import *
+from math import sin, cos, tan, pi
 import os
 
 ATTRIBUTE_DATA_TYPES = {
@@ -94,7 +95,7 @@ class Program(object):
         name = create_string_buffer(256)
         size = c_int()
         data_type = c_int()
-        for index in range(count.value):
+        for index in xrange(count.value):
             glGetActiveAttrib(
                 self.handle, index, 256, None,
                 byref(size), byref(data_type), name)
@@ -107,7 +108,7 @@ class Program(object):
         result = []
         count = c_int()
         glGetProgramiv(self.handle, GL_ACTIVE_UNIFORMS, byref(count))
-        for index in range(count.value):
+        for index in xrange(count.value):
             name, size, data_type = glGetActiveUniform(self.handle, index)
             location = glGetUniformLocation(self.handle, name)
             uniform = Uniform(location, name, size, data_type)
@@ -119,3 +120,136 @@ class Context(object):
         self.program = program
     def draw(self, mode):
         pass
+
+def normalize(vector):
+    d = sum(x * x for x in vector) ** 0.5
+    return tuple(x / d for x in vector)
+
+class Matrix(object):
+    def __init__(self, value=None):
+        if value is None:
+            value = [
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ]
+        self.value = value
+    def __repr__(self):
+        result = []
+        for row in xrange(4):
+            x = ', '.join('%.3f' % self[(row, col)] for col in xrange(4))
+            result.append('[%s]' % x)
+        return '\n'.join(result)
+    def __getitem__(self, index):
+        return self.value[self.index(index)]
+    def __setitem__(self, index, value):
+        self.value[self.index(index)] = value
+    def __mul__(self, other):
+        return self.multiply(other)
+    def index(self, index):
+        if isinstance(index, (int, long)):
+            return index
+        if isinstance(index, tuple):
+            row, col = index
+            return col * 4 + row
+        raise Exception
+    def multiply(self, other):
+        result = Matrix()
+        for col in xrange(4):
+            for row in xrange(4):
+                result[(row, col)] = sum(
+                    self[(row, i)] * other[(i, col)] for i in xrange(4))
+        return result
+    def identity(self):
+        return Matrix()
+    def translate(self, value):
+        dx, dy, dz = value
+        matrix = Matrix([
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            dx, dy, dz, 1,
+        ])
+        return matrix * self
+    def scale(self, value):
+        sx, sy, sz = value
+        matrix = Matrix([
+            sx, 0, 0, 0,
+            0, sy, 0, 0,
+            0, 0, sz, 0,
+            0, 0, 0, 1,
+        ])
+        return matrix * self
+    def rotate(self, vector, angle):
+        x, y, z = normalize(vector)
+        s = sin(angle)
+        c = cos(angle)
+        m = 1 - c
+        matrix = Matrix([
+            m * x * x + c,
+            m * x * y - z * s,
+            m * z * x + y * s,
+            0,
+            m * x * y + z * s,
+            m * y * y + c,
+            m * y * z - x * s,
+            0,
+            m * z * x - y * s,
+            m * y * z + x * s,
+            m * z * z + c,
+            0,
+            0,
+            0,
+            0,
+            1,
+        ])
+        return matrix * self
+    def frustum(self, left, right, bottom, top, near, far):
+        t1 = 2.0 * near
+        t2 = right - left
+        t3 = top - bottom
+        t4 = far - near
+        matrix = Matrix([
+            t1 / t2,
+            0,
+            0,
+            0,
+            0,
+            t1 / t3,
+            0,
+            0,
+            (right + left) / t2,
+            (top + bottom) / t3,
+            (-far - near) / t4,
+            -1,
+            0,
+            0,
+            (-t1 * far) / t4,
+            0,
+        ])
+        return matrix * self
+    def perspective(self, fov, aspect, near, far):
+        ymax = near * tan(fov * pi / 360)
+        xmax = ymax * aspect
+        return self.frustum(-xmax, xmax, -ymax, ymax, near, far)
+    def orthographic(self, left, right, bottom, top, near, far):
+        matrix = Matrix([
+            2 / (right - left),
+            0,
+            0,
+            0,
+            0,
+            2 / (top - bottom),
+            0,
+            0,
+            0,
+            0,
+            -2 / (far - near),
+            0,
+            -(right + left) / (right - left),
+            -(top + bottom) / (top - bottom),
+            -(far + near) / (far - near),
+            1,
+        ])
+        return matrix * self

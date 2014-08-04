@@ -14,6 +14,11 @@ def main():
         return
     glfw.make_context_current(window)
 
+    matrix = pg.Matrix()
+    matrix = matrix.translate((0, 1, 0))
+    matrix = matrix.perspective(45, 640 / 480.0, 0.1, 100)
+    print matrix
+
     program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
     print program.get_attributes()
     print program.get_uniforms()
