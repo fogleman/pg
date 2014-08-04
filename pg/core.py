@@ -113,3 +113,9 @@ class Program(object):
             uniform = Uniform(location, name, size, data_type)
             result.append(uniform)
         return result
+
+class Context(object):
+    def __init__(self, program):
+        self.program = program
+    def draw(self, mode):
+        pass

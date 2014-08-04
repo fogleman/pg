@@ -1,3 +1,4 @@
+from OpenGL.GL import *
 import glfw
 import pg
 
@@ -18,6 +19,7 @@ def main():
     print program.get_uniforms()
 
     while not glfw.window_should_close(window):
+        glClear(GL_COLOR_BUFFER_BIT)
         glfw.swap_buffers(window)
         glfw.poll_events()
     glfw.terminate()
