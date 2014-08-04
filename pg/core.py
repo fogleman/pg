@@ -165,20 +165,20 @@ class Matrix(object):
     def identity(self):
         return Matrix()
     def translate(self, value):
-        dx, dy, dz = value
+        x, y, z = value
         matrix = Matrix([
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
-            dx, dy, dz, 1,
+            x, y, z, 1,
         ])
         return matrix * self
     def scale(self, value):
-        sx, sy, sz = value
+        x, y, z = value
         matrix = Matrix([
-            sx, 0, 0, 0,
-            0, sy, 0, 0,
-            0, 0, sz, 0,
+            x, 0, 0, 0,
+            0, y, 0, 0,
+            0, 0, z, 0,
             0, 0, 0, 1,
         ])
         return matrix * self
@@ -207,7 +207,7 @@ class Matrix(object):
         ])
         return matrix * self
     def frustum(self, left, right, bottom, top, near, far):
-        t1 = 2.0 * near
+        t1 = 2 * near
         t2 = right - left
         t3 = top - bottom
         t4 = far - near
