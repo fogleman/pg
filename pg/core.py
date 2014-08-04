@@ -1,7 +1,9 @@
 from ctypes import *
 from OpenGL.GL import *
 from math import sin, cos, tan, pi
+import glfw
 import os
+import time
 
 ATTRIBUTE_DATA_TYPES = {
     GL_FLOAT: 'GL_FLOAT',
@@ -252,3 +254,38 @@ class Matrix(object):
             1,
         ])
         return matrix * self
+
+class App(object):
+    def create_window(self):
+        if not glfw.init():
+            raise Exception
+        title = 'Python Graphics'
+        self.window = glfw.create_window(640, 480, title, None, None)
+        if not self.window:
+            glfw.terminate()
+            raise Exception
+        glfw.make_context_current(self.window)
+    def setup(self):
+        pass
+    def update(self, dt):
+        pass
+    def draw(self):
+        pass
+    def teardown(self):
+        pass
+    def clear(self):
+        glClear(GL_COLOR_BUFFER_BIT)
+    def run(self):
+        self.create_window()
+        self.setup()
+        self.time = time.time()
+        while not glfw.window_should_close(self.window):
+            now = time.time()
+            dt = now - self.time
+            self.time = now
+            self.update(dt)
+            self.draw()
+            glfw.swap_buffers(self.window)
+            glfw.poll_events()
+        self.teardown()
+        glfw.terminate()
