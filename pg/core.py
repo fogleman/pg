@@ -138,7 +138,7 @@ class Matrix(object):
     def __repr__(self):
         result = []
         for row in xrange(4):
-            x = ', '.join('%.3f' % self[(row, col)] for col in xrange(4))
+            x = ','.join('% .3f' % self[(row, col)] for col in xrange(4))
             result.append('[%s]' % x)
         return '\n'.join(result)
     def __getitem__(self, index):
@@ -148,12 +148,11 @@ class Matrix(object):
     def __mul__(self, other):
         return self.multiply(other)
     def index(self, index):
-        if isinstance(index, (int, long)):
-            return index
-        if isinstance(index, tuple):
+        try:
             row, col = index
             return col * 4 + row
-        raise Exception
+        except Exception:
+            return index
     def multiply(self, other):
         result = Matrix()
         for col in xrange(4):

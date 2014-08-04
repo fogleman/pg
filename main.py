@@ -3,12 +3,11 @@ import glfw
 import pg
 
 # program.position = pg.VertexBuffer(3, pg.FLOAT, [...])
-# program.matrix = pg.mat4(1).translate((0, 1, 0)).perspective(45, 1.5, 0.1, 100)
 
 def main():
     if not glfw.init():
         return
-    window = glfw.create_window(640, 480, 'Window', None, None)
+    window = glfw.create_window(640, 480, 'Python Graphics', None, None)
     if not window:
         glfw.terminate()
         return
@@ -20,6 +19,7 @@ def main():
     print matrix
 
     program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
+    # program.matrix = matrix
     print program.get_attributes()
     print program.get_uniforms()
 
