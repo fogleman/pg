@@ -24,7 +24,9 @@ class Window(pg.Window):
         self.context.position = pg.VertexBuffer(3, position)
         self.context.color = pg.VertexBuffer(3, color)
     def update(self, t, dt):
-        matrix = self.wasd.get_matrix()
+        matrix = pg.Matrix()
+        matrix = matrix.rotate((0, 1, 0), t)
+        matrix = self.wasd.get_matrix(matrix)
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)
         self.context.matrix = matrix
     def draw(self):

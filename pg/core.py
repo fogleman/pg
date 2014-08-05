@@ -361,8 +361,8 @@ class WASD(object):
         if glfw.get_key(self.window.handle, ord('D')):
             sx += 1
         return (sx, sz)
-    def get_matrix(self):
-        matrix = Matrix()
+    def get_matrix(self, matrix=None):
+        matrix = matrix or Matrix()
         matrix = matrix.translate((-self.x, -self.y, -self.z))
         matrix = matrix.rotate((cos(self.rx), 0, sin(self.rx)), self.ry)
         matrix = matrix.rotate((0, 1, 0), -self.rx)
