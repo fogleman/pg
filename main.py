@@ -7,14 +7,7 @@ class Window(pg.Window):
         self.program = pg.Program(
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(self.program)
-        self.context.position = pg.VertexBuffer(3, [
-            -1, -1, 0,
-            1, -1, 0,
-            -1, 1, 0,
-            -1, 1, 0,
-            1, -1, 0,
-            1, 1, 0,
-        ])
+        self.context.position = pg.VertexBuffer(3, pg.sphere(1, 2))
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = matrix.rotate((0, 1, 0), t * 3)

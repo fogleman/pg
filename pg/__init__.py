@@ -23,3 +23,7 @@ from core import (
     GL_TRIANGLE_STRIP_ADJACENCY,
     GL_TRIANGLES_ADJACENCY,
 )
+
+from geometry import (
+    sphere,
+)
