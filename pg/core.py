@@ -339,7 +339,17 @@ class WASD(object):
         self.ry = 0
         if self.exclusive:
             self.window.set_exclusive()
+    def on_mouse_button(self, button, action, mods):
+        if self.exclusive:
+            if button == glfw.MOUSE_BUTTON_1 and action == glfw.PRESS:
+                self.window.set_exclusive()
+    def on_key(self, key, scancode, action, mods):
+        if self.exclusive:
+            if key == glfw.KEY_ESCAPE:
+                self.window.set_exclusive(False)
     def on_cursor_pos(self, mx, my):
+        if self.exclusive and not self.window.exclusive:
+            return
         m = self.sensitivity / 1000.0
         self.rx += (mx - self.mx) * m
         if self.invert:
@@ -414,6 +424,7 @@ class Window(object):
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
+        self.exclusive = False
         self.start = self.time = time.time()
         self.use()
         self.on_size(*size)
@@ -424,6 +435,9 @@ class Window(object):
         self.setup()
         App.instance.windows.append(self)
     def set_exclusive(self, exclusive=True):
+        if exclusive == self.exclusive:
+            return
+        self.exclusive = exclusive
         if exclusive:
             glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
         else:
@@ -455,6 +469,7 @@ class Window(object):
     def set_callbacks(self):
         glfw.set_window_size_callback(self.handle, self._on_size)
         glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
+        glfw.set_mouse_button_callback(self.handle, self._on_mouse_button)
         glfw.set_key_callback(self.handle, self._on_key)
         glfw.set_char_callback(self.handle, self._on_char)
     def call_listeners(self, name, *args):
@@ -468,6 +483,10 @@ class Window(object):
     def _on_cursor_pos(self, window, x, y):
         self.call_listeners('on_cursor_pos', x, y)
     def on_cursor_pos(self, x, y):
+        pass
+    def _on_mouse_button(self, window, button, action, mods):
+        self.call_listeners('on_mouse_button', button, action, mods)
+    def on_mouse_button(self, button, action, mods):
         pass
     def _on_key(self, window, key, scancode, action, mods):
         self.call_listeners('on_key', key, scancode, action, mods)
