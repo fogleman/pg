@@ -1,4 +1,5 @@
 import pg
+import random
 
 class Window(pg.Window):
     def __init__(self):
@@ -7,10 +8,13 @@ class Window(pg.Window):
         self.program = pg.Program(
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(self.program)
-        self.context.position = pg.VertexBuffer(3, pg.sphere((0.5, 0, 0), 1, 2))
+        position = pg.sphere((0.5, 0, 0), 1, 3)
+        color = [random.random() for i in xrange(len(position))]
+        self.context.position = pg.VertexBuffer(3, position)
+        self.context.color = pg.VertexBuffer(3, color)
     def update(self, t, dt):
         matrix = pg.Matrix()
-        matrix = matrix.rotate((0, 1, 0), t * 3)
+        matrix = matrix.rotate((0, 1, 0), t)
         matrix = matrix.translate((0, 0, -3))
         matrix = matrix.perspective(65, 1.333, 0.1, 100)
         self.context.matrix = matrix
