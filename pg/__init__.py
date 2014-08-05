@@ -2,7 +2,6 @@ from core import (
     App,
     Context,
     FragmentShader,
-    Matrix,
     Program,
     Shader,
     Texture,
@@ -28,6 +27,10 @@ from core import (
 
 from geometry import (
     Sphere,
+)
+
+from matrix import (
+    Matrix,
 )
 
 from util import (
