@@ -1,6 +1,7 @@
 from ctypes import *
 from OpenGL.GL import *
 from math import sin, cos, tan, pi
+from util import normalize
 import glfw
 import os
 import time
@@ -191,10 +192,6 @@ class Context(object):
             self._attributes[name].set(value)
         count = min(x.count for x in self._attribute_values.itervalues())
         glDrawArrays(mode, 0, count)
-
-def normalize(vector):
-    d = sum(x * x for x in vector) ** 0.5
-    return tuple(x / d for x in vector)
 
 class Matrix(object):
     def __init__(self, value=None):

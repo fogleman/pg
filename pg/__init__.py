@@ -27,3 +27,8 @@ from core import (
 from geometry import (
     sphere,
 )
+
+from util import (
+    hex_color,
+    normalize,
+)

@@ -1,4 +1,4 @@
-from core import normalize
+from util import normalize
 
 def _sphere(center, radius, detail, result, a, b, c):
     if detail == 0:
