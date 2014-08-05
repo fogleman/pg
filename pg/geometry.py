@@ -1,20 +1,20 @@
 from core import normalize
 
-def _sphere(radius, detail, result, a, b, c):
+def _sphere(center, radius, detail, result, a, b, c):
     if detail == 0:
-        result.extend(a)
-        result.extend(b)
-        result.extend(c)
+        result.extend([a[i] + center[i] for i in xrange(3)])
+        result.extend([b[i] + center[i] for i in xrange(3)])
+        result.extend([c[i] + center[i] for i in xrange(3)])
     else:
         ab = normalize([(a[i] + b[i]) / 2.0 for i in xrange(3)])
         ac = normalize([(a[i] + c[i]) / 2.0 for i in xrange(3)])
         bc = normalize([(b[i] + c[i]) / 2.0 for i in xrange(3)])
-        _sphere(radius, detail - 1, result, a, ab, ac)
-        _sphere(radius, detail - 1, result, b, bc, ab)
-        _sphere(radius, detail - 1, result, c, ac, bc)
-        _sphere(radius, detail - 1, result, ab, bc, ac)
+        _sphere(center, radius, detail - 1, result, a, ab, ac)
+        _sphere(center, radius, detail - 1, result, b, bc, ab)
+        _sphere(center, radius, detail - 1, result, c, ac, bc)
+        _sphere(center, radius, detail - 1, result, ab, bc, ac)
 
-def sphere(radius, detail):
+def sphere(center, radius, detail):
     indices = [
         (4, 3, 0), (1, 4, 0), (3, 4, 5), (4, 1, 5),
         (0, 3, 2), (0, 2, 1), (5, 2, 3), (5, 1, 2),
@@ -26,5 +26,5 @@ def sphere(radius, detail):
     result = []
     for a, b, c in indices:
         a, b, c = positions[a], positions[b], positions[c]
-        _sphere(radius, detail, result, a, b, c)
+        _sphere(center, radius, detail, result, a, b, c)
     return result
