@@ -5,36 +5,6 @@ import glfw
 import os
 import time
 
-ATTRIBUTE_DATA_TYPES = {
-    GL_FLOAT: 'GL_FLOAT',
-    GL_FLOAT_VEC2: 'GL_FLOAT_VEC2',
-    GL_FLOAT_VEC3: 'GL_FLOAT_VEC3',
-    GL_FLOAT_VEC4: 'GL_FLOAT_VEC4',
-    GL_FLOAT_MAT2: 'GL_FLOAT_MAT2',
-    GL_FLOAT_MAT3: 'GL_FLOAT_MAT3',
-    GL_FLOAT_MAT4: 'GL_FLOAT_MAT4',
-}
-
-UNIFORM_DATA_TYPES = {
-    GL_FLOAT: 'GL_FLOAT',
-    GL_FLOAT_VEC2: 'GL_FLOAT_VEC2',
-    GL_FLOAT_VEC3: 'GL_FLOAT_VEC3',
-    GL_FLOAT_VEC4: 'GL_FLOAT_VEC4',
-    GL_INT: 'GL_INT',
-    GL_INT_VEC2: 'GL_INT_VEC2',
-    GL_INT_VEC3: 'GL_INT_VEC3',
-    GL_INT_VEC4: 'GL_INT_VEC4',
-    GL_BOOL: 'GL_BOOL',
-    GL_BOOL_VEC2: 'GL_BOOL_VEC2',
-    GL_BOOL_VEC3: 'GL_BOOL_VEC3',
-    GL_BOOL_VEC4: 'GL_BOOL_VEC4',
-    GL_FLOAT_MAT2: 'GL_FLOAT_MAT2',
-    GL_FLOAT_MAT3: 'GL_FLOAT_MAT3',
-    GL_FLOAT_MAT4: 'GL_FLOAT_MAT4',
-    GL_SAMPLER_2D: 'GL_SAMPLER_2D',
-    GL_SAMPLER_CUBE: 'GL_SAMPLER_CUBE',
-}
-
 FLOATS = set([
     GL_FLOAT,
     GL_FLOAT_VEC2,
@@ -377,8 +347,6 @@ class Window(object):
         self.start = self.time = time.time()
         self.use()
         glEnable(GL_DEPTH_TEST)
-        glDisable(GL_CULL_FACE)
-        glViewport(0, 0, 640, 480)
         self.setup()
         App.instance.windows.append(self)
     def setup(self):

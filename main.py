@@ -4,7 +4,8 @@ class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((640, 480), 'Hello World')
     def setup(self):
-        self.program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
+        self.program = pg.Program(
+            'shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(self.program)
         self.context.position = pg.VertexBuffer(3, [
             -1, -1, 0,
