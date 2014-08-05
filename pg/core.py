@@ -383,7 +383,7 @@ class WASD(object):
         vx = cos(self.rx + strafe) * m
         vy = y
         vz = sin(self.rx + strafe) * m
-        return (vx, vy, vz)
+        return normalize((vx, vy, vz))
     def update(self, t, dt):
         vx, vy, vz = self.get_motion_vector()
         self.x += vx * self.speed * dt
