@@ -5,6 +5,7 @@ from core import (
     Matrix,
     Program,
     Shader,
+    Texture,
     VertexBuffer,
     VertexShader,
     WASD,
@@ -26,7 +27,7 @@ from core import (
 )
 
 from geometry import (
-    sphere,
+    Sphere,
 )
 
 from util import (

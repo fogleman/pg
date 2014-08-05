@@ -3,13 +3,11 @@
 uniform mat4 matrix;
 
 attribute vec4 position;
-attribute vec3 color;
+attribute vec2 uv;
 
-varying vec3 frag_color;
-varying float frag_dist;
+varying vec2 frag_uv;
 
 void main() {
     gl_Position = matrix * position;
-    frag_color = color;
-    frag_dist = distance(vec4(0), position);
+    frag_uv = uv;
 }

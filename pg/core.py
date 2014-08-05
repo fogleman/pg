@@ -1,5 +1,6 @@
 from ctypes import *
 from OpenGL.GL import *
+from PIL import Image
 from math import sin, cos, tan, pi, atan2
 from util import normalize
 import glfw
@@ -32,6 +33,46 @@ MATRICES = set([
     GL_FLOAT_MAT3,
     GL_FLOAT_MAT4,
 ])
+
+SAMPLERS = set([
+    GL_SAMPLER_2D,
+    GL_SAMPLER_CUBE,
+])
+
+TEXTURES = [
+    GL_TEXTURE0,
+    GL_TEXTURE1,
+    GL_TEXTURE2,
+    GL_TEXTURE3,
+    GL_TEXTURE4,
+    GL_TEXTURE5,
+    GL_TEXTURE6,
+    GL_TEXTURE7,
+    GL_TEXTURE8,
+    GL_TEXTURE9,
+    GL_TEXTURE10,
+    GL_TEXTURE11,
+    GL_TEXTURE12,
+    GL_TEXTURE13,
+    GL_TEXTURE14,
+    GL_TEXTURE15,
+    GL_TEXTURE16,
+    GL_TEXTURE17,
+    GL_TEXTURE18,
+    GL_TEXTURE19,
+    GL_TEXTURE20,
+    GL_TEXTURE21,
+    GL_TEXTURE22,
+    GL_TEXTURE23,
+    GL_TEXTURE24,
+    GL_TEXTURE25,
+    GL_TEXTURE26,
+    GL_TEXTURE27,
+    GL_TEXTURE28,
+    GL_TEXTURE29,
+    GL_TEXTURE30,
+    GL_TEXTURE31,
+]
 
 class Shader(object):
     def __init__(self, shader_type, shader_source):
@@ -68,6 +109,25 @@ class VertexBuffer(object):
             GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
+class Texture(object):
+    def __init__(self, index, path):
+        self.index = index
+        im = Image.open(path).convert('RGBA')
+        width, height = im.size
+        data = im.tobytes()
+        handle = c_uint()
+        glGenTextures(1, byref(handle))
+        self.handle = handle.value
+        glActiveTexture(TEXTURES[index])
+        glBindTexture(GL_TEXTURE_2D, self.handle)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+            GL_UNSIGNED_BYTE, data)
+
 class Attribute(object):
     def __init__(self, location, name, size, data_type):
         self.location = location
@@ -92,6 +152,8 @@ class Uniform(object):
     def set(self, value):
         if isinstance(value, Matrix):
             value = value.value
+        elif isinstance(value, Texture):
+            value = value.index
         try:
             count = len(value)
         except Exception:
@@ -120,6 +182,8 @@ class Uniform(object):
                 4: glUniform4i,
             }
             funcs[count](self.location, *value)
+        elif self.data_type in SAMPLERS:
+            glUniform1i(self.location, *value)
     def __repr__(self):
         return 'Uniform%s' % str(
             (self.location, self.name, self.size, self.data_type))

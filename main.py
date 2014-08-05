@@ -5,23 +5,23 @@ import random
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
-        self.wasd = pg.WASD(self, speed=3)
+        self.wasd = pg.WASD(self, speed=1)
     def on_size(self, width, height):
         self.aspect = float(width) / height
     def setup(self):
         self.program = pg.Program(
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(self.program)
+        self.context.sampler = pg.Texture(0, 'textures/earth.png')
         position = []
-        for angle in xrange(0, 360, 30):
+        uv = []
+        for angle in range(0, 360, 30):
             x, z = sin(radians(angle)), cos(radians(angle))
-            position.extend(pg.sphere(3, 0.2, (x, 0, z)))
-        color = []
-        for i in xrange(12 * 8):
-            n = len(position) / 3 / 12 / 8
-            color.extend(pg.hex_color(random.randint(0, 0xffffff)) * n)
+            sphere = pg.Sphere(3, 0.2, (x, 0, z))
+            position.extend(sphere.position)
+            uv.extend(sphere.uv)
         self.context.position = pg.VertexBuffer(3, position)
-        self.context.color = pg.VertexBuffer(3, color)
+        self.context.uv = pg.VertexBuffer(2, uv)
     def update(self, t, dt):
         matrix = pg.Matrix().rotate((0, 1, 0), t)
         matrix = self.wasd.get_matrix(matrix)
