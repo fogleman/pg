@@ -344,14 +344,40 @@ class Window(object):
         self.start = self.time = time.time()
         self.use()
         self.on_size(*size)
+        self.listeners = [self]
         glfw.set_window_size_callback(self.handle, self._on_size)
+        glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
+        glfw.set_key_callback(self.handle, self._on_key)
+        glfw.set_char_callback(self.handle, self._on_char)
         glEnable(GL_DEPTH_TEST)
+        glEnable(GL_CULL_FACE)
         self.setup()
         App.instance.windows.append(self)
     def _on_size(self, window, width, height):
-        self.on_size(width, height)
+        for listener in self.listeners:
+            listener.on_size(width, height)
     def on_size(self, width, height):
         pass
+    def _on_cursor_pos(self, window, x, y):
+        for listener in self.listeners:
+            listener.on_cursor_pos(x, y)
+    def on_cursor_pos(self, x, y):
+        pass
+    def _on_key(self, window, key, scancode, action, mods):
+        for listener in self.listeners:
+            listener.on_key(key, scancode, action, mods)
+    def on_key(self, key, scancode, action, mods):
+        pass
+    def _on_char(self, window, codepoint):
+        for listener in self.listeners:
+            listener.on_char(codepoint)
+    def on_char(self, codepoint):
+        pass
+    def set_exclusive(self, value):
+        if value:
+            glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
+        else:
+            glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
     def setup(self):
         pass
     def update(self, t, dt):

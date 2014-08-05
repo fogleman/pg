@@ -2,11 +2,6 @@ from math import sin, cos, radians
 import pg
 import random
 
-COLORS = [
-    0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728, 0x9467bd,
-    0x8c564b, 0xe377c2, 0x7f7f7f, 0xbcbd22, 0x17becf,
-]
-
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
@@ -19,10 +14,11 @@ class Window(pg.Window):
         position = []
         for angle in xrange(0, 360, 30):
             x, z = sin(radians(angle)), cos(radians(angle))
-            position.extend(pg.sphere((x, 0, z), 0.2, 3))
+            position.extend(pg.sphere(3, 0.2, (x, 0, z)))
         color = []
-        for _ in xrange(len(position) / 9):
-            color.extend(pg.hex_color(random.choice(COLORS)) * 3)
+        for i in xrange(12 * 8):
+            n = len(position) / 3 / 12 / 8
+            color.extend(pg.hex_color(random.randint(0, 0xffffff)) * n)
         self.context.position = pg.VertexBuffer(3, position)
         self.context.color = pg.VertexBuffer(3, color)
     def update(self, t, dt):
