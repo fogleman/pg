@@ -7,6 +7,7 @@ class Sphere(object):
         self.radius = radius
         self.center = center
         self.position = []
+        self.normal = []
         self.uv = []
         self.setup()
     def setup(self):
@@ -26,6 +27,9 @@ class Sphere(object):
         r = self.radius
         p = self.center
         if detail == 0:
+            self.normal.extend(a)
+            self.normal.extend(b)
+            self.normal.extend(c)
             self.position.extend([r * a[i] + p[i] for i in xrange(3)])
             self.position.extend([r * b[i] + p[i] for i in xrange(3)])
             self.position.extend([r * c[i] + p[i] for i in xrange(3)])
