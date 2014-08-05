@@ -307,7 +307,7 @@ class Matrix(object):
             m02, m12, m22, m32,
             m03, m13, m23, m33,
         ) = self.value
-        return (
+        return float(
             m00 * m11 * m22 * m33 -
             m00 * m11 * m23 * m32 +
             m00 * m12 * m23 * m31 -
