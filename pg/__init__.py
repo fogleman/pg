@@ -7,6 +7,7 @@ from core import (
     Shader,
     VertexBuffer,
     VertexShader,
+    WASD,
     Window,
 )
 

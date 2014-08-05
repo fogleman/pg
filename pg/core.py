@@ -1,6 +1,6 @@
 from ctypes import *
 from OpenGL.GL import *
-from math import sin, cos, tan, pi
+from math import sin, cos, tan, pi, atan2
 from util import normalize
 import glfw
 import os
@@ -78,7 +78,7 @@ class Attribute(object):
         glEnableVertexAttribArray(self.location)
         glBindBuffer(GL_ARRAY_BUFFER, value.handle)
         glVertexAttribPointer(
-            self.location, value.components, GL_FLOAT, GL_FALSE, 0, c_void_p(0))
+            self.location, value.components, GL_FLOAT, GL_FALSE, 0, c_void_p())
     def __repr__(self):
         return 'Attribute%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -321,6 +321,75 @@ class Matrix(object):
         ])
         return matrix * self
 
+class WASD(object):
+    def __init__(self, window, speed=1.0, sensitivity=2.5, invert=False):
+        self.window = window
+        self.speed = speed
+        self.sensitivity = sensitivity
+        self.invert = invert
+        self.window.listeners.append(self)
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        self.mx = 0
+        self.my = 0
+        self.rx = 0
+        self.ry = 0
+    def on_cursor_pos(self, mx, my):
+        m = self.sensitivity / 1000.0
+        self.rx += (mx - self.mx) * m
+        if self.invert:
+            self.ry += (my - self.my) * m
+        else:
+            self.ry -= (my - self.my) * m
+        if self.rx < 0:
+            self.rx += 2 * pi
+        if self.rx >= 2 * pi:
+            self.rx -= 2 * pi
+        self.ry = max(self.ry, -pi / 2)
+        self.ry = min(self.ry, pi / 2)
+        self.mx = mx
+        self.my = my
+    def get_strafe(self):
+        sx = sz = 0
+        if glfw.get_key(self.window.handle, ord('W')):
+            sz -= 1
+        if glfw.get_key(self.window.handle, ord('S')):
+            sz += 1
+        if glfw.get_key(self.window.handle, ord('A')):
+            sx -= 1
+        if glfw.get_key(self.window.handle, ord('D')):
+            sx += 1
+        return (sx, sz)
+    def get_matrix(self):
+        matrix = Matrix()
+        matrix = matrix.translate((-self.x, -self.y, -self.z))
+        matrix = matrix.rotate((cos(self.rx), 0, sin(self.rx)), self.ry)
+        matrix = matrix.rotate((0, 1, 0), -self.rx)
+        return matrix
+    def get_motion_vector(self):
+        sx, sz = self.get_strafe()
+        if sx == 0 and sz == 0:
+            return (0, 0, 0)
+        strafe = atan2(sz, sx)
+        m = cos(self.ry)
+        y = sin(self.ry)
+        if sx:
+            if not sz:
+                y = 0
+            m = 1
+        if sz > 0:
+            y = -y
+        vx = cos(self.rx + strafe) * m
+        vy = y
+        vz = sin(self.rx + strafe) * m
+        return (vx, vy, vz)
+    def update(self, t, dt):
+        vx, vy, vz = self.get_motion_vector()
+        self.x += vx * self.speed * dt
+        self.y += vy * self.speed * dt
+        self.z += vz * self.speed * dt
+
 class App(object):
     instance = None
     def __init__(self):
@@ -345,36 +414,13 @@ class Window(object):
         self.use()
         self.on_size(*size)
         self.listeners = [self]
-        glfw.set_window_size_callback(self.handle, self._on_size)
-        glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
-        glfw.set_key_callback(self.handle, self._on_key)
-        glfw.set_char_callback(self.handle, self._on_char)
+        self.set_callbacks()
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
         self.setup()
         App.instance.windows.append(self)
-    def _on_size(self, window, width, height):
-        for listener in self.listeners:
-            listener.on_size(width, height)
-    def on_size(self, width, height):
-        pass
-    def _on_cursor_pos(self, window, x, y):
-        for listener in self.listeners:
-            listener.on_cursor_pos(x, y)
-    def on_cursor_pos(self, x, y):
-        pass
-    def _on_key(self, window, key, scancode, action, mods):
-        for listener in self.listeners:
-            listener.on_key(key, scancode, action, mods)
-    def on_key(self, key, scancode, action, mods):
-        pass
-    def _on_char(self, window, codepoint):
-        for listener in self.listeners:
-            listener.on_char(codepoint)
-    def on_char(self, codepoint):
-        pass
-    def set_exclusive(self, value):
-        if value:
+    def set_exclusive(self, exclusive=True):
+        if exclusive:
             glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
         else:
             glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
@@ -398,7 +444,32 @@ class Window(object):
             glfw.destroy_window(self.handle)
             return
         now = time.time()
-        self.update(now - self.start, now - self.time)
+        self.call_listeners('update', now - self.start, now - self.time)
         self.time = now
         self.draw()
         glfw.swap_buffers(self.handle)
+    def set_callbacks(self):
+        glfw.set_window_size_callback(self.handle, self._on_size)
+        glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
+        glfw.set_key_callback(self.handle, self._on_key)
+        glfw.set_char_callback(self.handle, self._on_char)
+    def call_listeners(self, name, *args):
+        for listener in self.listeners:
+            if hasattr(listener, name):
+                getattr(listener, name)(*args)
+    def _on_size(self, window, width, height):
+        self.call_listeners('on_size', width, height)
+    def on_size(self, width, height):
+        pass
+    def _on_cursor_pos(self, window, x, y):
+        self.call_listeners('on_cursor_pos', x, y)
+    def on_cursor_pos(self, x, y):
+        pass
+    def _on_key(self, window, key, scancode, action, mods):
+        self.call_listeners('on_key', key, scancode, action, mods)
+    def on_key(self, key, scancode, action, mods):
+        pass
+    def _on_char(self, window, codepoint):
+        self.call_listeners('on_char', codepoint)
+    def on_char(self, codepoint):
+        pass

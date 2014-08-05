@@ -5,6 +5,8 @@ import random
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
+        self.set_exclusive()
+        self.wasd = pg.WASD(self)
     def on_size(self, width, height):
         self.aspect = float(width) / height
     def setup(self):
@@ -22,10 +24,7 @@ class Window(pg.Window):
         self.context.position = pg.VertexBuffer(3, position)
         self.context.color = pg.VertexBuffer(3, color)
     def update(self, t, dt):
-        matrix = pg.Matrix()
-        matrix = matrix.rotate((0, 1, 0), t)
-        matrix = matrix.rotate((1, 0, 0), -0.5)
-        matrix = matrix.translate((0, 0.25, -2))
+        matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)
         self.context.matrix = matrix
     def draw(self):
