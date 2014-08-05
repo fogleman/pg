@@ -5,7 +5,6 @@ import random
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
-        self.set_exclusive()
         self.wasd = pg.WASD(self, speed=3)
     def on_size(self, width, height):
         self.aspect = float(width) / height

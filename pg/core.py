@@ -322,11 +322,13 @@ class Matrix(object):
         return matrix * self
 
 class WASD(object):
-    def __init__(self, window, speed=1.0, sensitivity=2.5, invert=False):
+    def __init__(self, window,
+        speed=1.0, sensitivity=2.5, invert=False, exclusive=True):
         self.window = window
         self.speed = speed
         self.sensitivity = sensitivity
         self.invert = invert
+        self.exclusive = exclusive
         self.window.listeners.append(self)
         self.x = 0
         self.y = 0
@@ -335,6 +337,8 @@ class WASD(object):
         self.my = 0
         self.rx = 0
         self.ry = 0
+        if self.exclusive:
+            self.window.set_exclusive()
     def on_cursor_pos(self, mx, my):
         m = self.sensitivity / 1000.0
         self.rx += (mx - self.mx) * m

@@ -6,7 +6,7 @@ It is a work in progress.
 
 ### Screenshot
 
-![Screenshot](http://i.imgur.com/0TTxnQa.png)
+![Screenshot](http://i.imgur.com/Oks9BHl.png)
 
 ### Sample
 
@@ -14,14 +14,10 @@ It is a work in progress.
     import pg
     import random
 
-    COLORS = [
-        0x1f77b4, 0xff7f0e, 0x2ca02c, 0xd62728, 0x9467bd,
-        0x8c564b, 0xe377c2, 0x7f7f7f, 0xbcbd22, 0x17becf,
-    ]
-
     class Window(pg.Window):
         def __init__(self):
             super(Window, self).__init__((800, 600))
+            self.wasd = pg.WASD(self, speed=3)
         def on_size(self, width, height):
             self.aspect = float(width) / height
         def setup(self):
@@ -31,17 +27,16 @@ It is a work in progress.
             position = []
             for angle in xrange(0, 360, 30):
                 x, z = sin(radians(angle)), cos(radians(angle))
-                position.extend(pg.sphere((x, 0, z), 0.2, 3))
+                position.extend(pg.sphere(3, 0.2, (x, 0, z)))
             color = []
-            for _ in xrange(len(position) / 9):
-                color.extend(pg.hex_color(random.choice(COLORS)) * 3)
+            for i in xrange(12 * 8):
+                n = len(position) / 3 / 12 / 8
+                color.extend(pg.hex_color(random.randint(0, 0xffffff)) * n)
             self.context.position = pg.VertexBuffer(3, position)
             self.context.color = pg.VertexBuffer(3, color)
         def update(self, t, dt):
-            matrix = pg.Matrix()
-            matrix = matrix.rotate((0, 1, 0), t)
-            matrix = matrix.rotate((1, 0, 0), -0.5)
-            matrix = matrix.translate((0, 0.25, -2))
+            matrix = pg.Matrix().rotate((0, 1, 0), t)
+            matrix = self.wasd.get_matrix(matrix)
             matrix = matrix.perspective(65, self.aspect, 0.1, 100)
             self.context.matrix = matrix
         def draw(self):
