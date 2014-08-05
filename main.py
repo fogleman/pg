@@ -13,10 +13,14 @@ class Window(pg.Window):
         # program.position = pg.VertexBuffer(3, pg.FLOAT, [...])
         print program.get_attributes()
         print program.get_uniforms()
+        context = pg.Context(program)
+        context.matrix = matrix
+        self.context = context
     def update(self, t, dt):
         pass
     def draw(self):
         self.clear()
+        self.context.draw(None)
     def teardown(self):
         pass
 

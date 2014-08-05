@@ -1,5 +1,6 @@
 from core import (
     App,
+    Context,
     FragmentShader,
     Matrix,
     Program,

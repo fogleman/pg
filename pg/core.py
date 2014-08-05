@@ -35,6 +35,33 @@ UNIFORM_DATA_TYPES = {
     GL_SAMPLER_CUBE: 'GL_SAMPLER_CUBE',
 }
 
+FLOATS = set([
+    GL_FLOAT,
+    GL_FLOAT_VEC2,
+    GL_FLOAT_VEC3,
+    GL_FLOAT_VEC4,
+])
+
+INTS = set([
+    GL_INT,
+    GL_INT_VEC2,
+    GL_INT_VEC3,
+    GL_INT_VEC4,
+])
+
+BOOLS = set([
+    GL_BOOL,
+    GL_BOOL_VEC2,
+    GL_BOOL_VEC3,
+    GL_BOOL_VEC4,
+])
+
+MATRICES = set([
+    GL_FLOAT_MAT2,
+    GL_FLOAT_MAT3,
+    GL_FLOAT_MAT4,
+])
+
 class Shader(object):
     def __init__(self, shader_type, shader_source):
         if os.path.exists(shader_source):
@@ -61,6 +88,8 @@ class Attribute(object):
         self.name = name
         self.size = size
         self.data_type = data_type
+    def set(self, value):
+        pass
     def __repr__(self):
         return 'Attribute%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -71,6 +100,37 @@ class Uniform(object):
         self.name = name
         self.size = size
         self.data_type = data_type
+    def set(self, value):
+        if isinstance(value, Matrix):
+            value = value.value
+        try:
+            count = len(value)
+        except Exception:
+            value = [value]
+            count = 1
+        if self.data_type in MATRICES:
+            funcs = {
+                4: glUniformMatrix2fv,
+                9: glUniformMatrix3fv,
+                16: glUniformMatrix4fv,
+            }
+            funcs[count](self.location, 1, False, (c_float * count)(*value))
+        elif self.data_type in FLOATS:
+            funcs = {
+                1: glUniform1f,
+                2: glUniform2f,
+                3: glUniform3f,
+                4: glUniform4f,
+            }
+            funcs[count](self.location, *value)
+        elif self.data_type in INTS or self.data_type in BOOLS:
+            funcs = {
+                1: glUniform1i,
+                2: glUniform2i,
+                3: glUniform3i,
+                4: glUniform4i,
+            }
+            funcs[count](self.location, *value)
     def __repr__(self):
         return 'Uniform%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -90,6 +150,8 @@ class Program(object):
         log = glGetProgramInfoLog(self.handle)
         if log:
             raise Exception(log)
+    def use(self):
+        glUseProgram(self.handle)
     def get_attributes(self):
         result = []
         count = c_int()
@@ -119,9 +181,24 @@ class Program(object):
 
 class Context(object):
     def __init__(self, program):
-        self.program = program
+        self._program = program
+        self._attributes = dict((x.name, x) for x in program.get_attributes())
+        self._uniforms = dict((x.name, x) for x in program.get_uniforms())
+        self._attribute_values = {}
+        self._uniform_values = {}
+    def __setattr__(self, name, value):
+        if name.startswith('_'):
+            super(Context, self).__setattr__(name, value)
+        elif name in self._attributes:
+            self._attribute_values[name] = value
+        elif name in self._uniforms:
+            self._uniform_values[name] = value
+        else:
+            super(Context, self).__setattr__(name, value)
     def draw(self, mode):
-        pass
+        self._program.use()
+        for name, value in self._uniform_values.iteritems():
+            self._uniforms[name].set(value)
 
 def normalize(vector):
     d = sum(x * x for x in vector) ** 0.5
