@@ -10,7 +10,6 @@ COLORS = [
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
-        self.on_size(800, 600)
     def on_size(self, width, height):
         self.aspect = float(width) / height
     def setup(self):

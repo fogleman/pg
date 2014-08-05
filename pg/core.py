@@ -341,9 +341,10 @@ class Window(object):
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
-        glfw.set_window_size_callback(self.handle, self._on_size)
         self.start = self.time = time.time()
         self.use()
+        self.on_size(*size)
+        glfw.set_window_size_callback(self.handle, self._on_size)
         glEnable(GL_DEPTH_TEST)
         self.setup()
         App.instance.windows.append(self)
