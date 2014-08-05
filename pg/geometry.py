@@ -2,9 +2,9 @@ from util import normalize
 
 def _sphere(center, radius, detail, result, a, b, c):
     if detail == 0:
-        result.extend([a[i] + center[i] for i in xrange(3)])
-        result.extend([b[i] + center[i] for i in xrange(3)])
-        result.extend([c[i] + center[i] for i in xrange(3)])
+        result.extend([radius * a[i] + center[i] for i in xrange(3)])
+        result.extend([radius * b[i] + center[i] for i in xrange(3)])
+        result.extend([radius * c[i] + center[i] for i in xrange(3)])
     else:
         ab = normalize([(a[i] + b[i]) / 2.0 for i in xrange(3)])
         ac = normalize([(a[i] + c[i]) / 2.0 for i in xrange(3)])

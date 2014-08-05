@@ -1,3 +1,4 @@
+from math import sin, cos, radians
 import pg
 import random
 
@@ -16,7 +17,10 @@ class Window(pg.Window):
         self.program = pg.Program(
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(self.program)
-        position = pg.sphere((1.5, 0, 0), 1, 3) + pg.sphere((-1.5, 0, 0), 1, 3)
+        position = []
+        for angle in xrange(0, 360, 30):
+            x, z = sin(radians(angle)), cos(radians(angle))
+            position.extend(pg.sphere((x, 0, z), 0.2, 3))
         color = []
         for _ in xrange(len(position) / 9):
             color.extend(pg.hex_color(random.choice(COLORS)) * 3)
@@ -25,14 +29,13 @@ class Window(pg.Window):
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = matrix.rotate((0, 1, 0), t)
-        matrix = matrix.translate((0, 0, -3))
+        matrix = matrix.rotate((1, 0, 0), -0.5)
+        matrix = matrix.translate((0, 0.25, -2))
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)
         self.context.matrix = matrix
     def draw(self):
         self.clear()
         self.context.draw(pg.GL_TRIANGLES)
-    def teardown(self):
-        pass
 
 if __name__ == "__main__":
     app = pg.App()
