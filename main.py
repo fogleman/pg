@@ -4,6 +4,9 @@ import random
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((640, 480), 'Hello World')
+        self.on_size(640, 480)
+    def on_size(self, width, height):
+        self.aspect = float(width) / height
     def setup(self):
         self.program = pg.Program(
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
@@ -16,7 +19,7 @@ class Window(pg.Window):
         matrix = pg.Matrix()
         matrix = matrix.rotate((0, 1, 0), t)
         matrix = matrix.translate((0, 0, -3))
-        matrix = matrix.perspective(65, 1.333, 0.1, 100)
+        matrix = matrix.perspective(65, self.aspect, 0.1, 100)
         self.context.matrix = matrix
     def draw(self):
         self.clear()
