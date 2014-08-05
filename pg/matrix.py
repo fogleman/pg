@@ -1,3 +1,5 @@
+from __future__ import division
+
 from math import sin, cos, tan, pi
 from util import normalize
 
@@ -10,7 +12,7 @@ class Matrix(object):
                 0, 0, 1, 0,
                 0, 0, 0, 1,
             ]
-        self.value = value
+        self.value = map(float, value)
     def __repr__(self):
         result = []
         for row in xrange(4):
@@ -51,7 +53,7 @@ class Matrix(object):
             m02, m12, m22, m32,
             m03, m13, m23, m33,
         ) = self.value
-        return float(
+        return (
             m00 * m11 * m22 * m33 -
             m00 * m11 * m23 * m32 +
             m00 * m12 * m23 * m31 -
