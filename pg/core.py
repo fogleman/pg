@@ -82,6 +82,21 @@ class FragmentShader(Shader):
     def __init__(self, shader_source):
         super(FragmentShader, self).__init__(GL_FRAGMENT_SHADER, shader_source)
 
+class VertexBuffer(object):
+    def __init__(self, components, data):
+        self.components = components
+        self.count = len(data) / components
+        handle = c_uint()
+        glGenBuffers(1, byref(handle))
+        self.handle = handle.value
+        glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            sizeof(c_float) * len(data),
+            (c_float * len(data))(*data),
+            GL_STATIC_DRAW)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+
 class Attribute(object):
     def __init__(self, location, name, size, data_type):
         self.location = location
@@ -89,7 +104,10 @@ class Attribute(object):
         self.size = size
         self.data_type = data_type
     def set(self, value):
-        pass
+        glEnableVertexAttribArray(self.location)
+        glBindBuffer(GL_ARRAY_BUFFER, value.handle)
+        glVertexAttribPointer(
+            self.location, value.components, GL_FLOAT, GL_FALSE, 0, c_void_p(0))
     def __repr__(self):
         return 'Attribute%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -199,6 +217,10 @@ class Context(object):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
             self._uniforms[name].set(value)
+        for name, value in self._attribute_values.iteritems():
+            self._attributes[name].set(value)
+        count = min(x.count for x in self._attribute_values.itervalues())
+        glDrawArrays(mode, 0, count)
 
 def normalize(vector):
     d = sum(x * x for x in vector) ** 0.5
@@ -354,6 +376,9 @@ class Window(object):
             raise Exception
         self.start = self.time = time.time()
         self.use()
+        glEnable(GL_DEPTH_TEST)
+        glDisable(GL_CULL_FACE)
+        glViewport(0, 0, 640, 480)
         self.setup()
         App.instance.windows.append(self)
     def setup(self):
@@ -367,14 +392,14 @@ class Window(object):
     def use(self):
         glfw.make_context_current(self.handle)
     def clear(self):
-        glClear(GL_COLOR_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     def tick(self):
+        self.use()
         if glfw.window_should_close(self.handle):
             self.teardown()
             App.instance.windows.remove(self)
             glfw.destroy_window(self.handle)
             return
-        self.use()
         now = time.time()
         self.update(now - self.start, now - self.time)
         self.time = now

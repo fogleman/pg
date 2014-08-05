@@ -4,23 +4,22 @@ class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((640, 480), 'Hello World')
     def setup(self):
-        matrix = pg.Matrix()
-        matrix = matrix.translate((0, 1, 0))
-        matrix = matrix.perspective(45, 640 / 480.0, 0.1, 100)
-        print matrix
-        program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
-        # program.matrix = matrix
-        # program.position = pg.VertexBuffer(3, pg.FLOAT, [...])
-        print program.get_attributes()
-        print program.get_uniforms()
-        context = pg.Context(program)
-        context.matrix = matrix
-        self.context = context
+        self.program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
+        self.context = pg.Context(self.program)
+        self.context.position = pg.VertexBuffer(3, [
+            -1, -1, 0,
+            1, -1, 0,
+            0, 1, 0,
+        ])
     def update(self, t, dt):
-        pass
+        matrix = pg.Matrix()
+        matrix = matrix.rotate((0, 1, 0), t)
+        matrix = matrix.translate((0, 0, -4))
+        matrix = matrix.perspective(65, 1.333, 0.1, 100)
+        self.context.matrix = matrix
     def draw(self):
         self.clear()
-        self.context.draw(None)
+        self.context.draw(pg.GL_TRIANGLES)
     def teardown(self):
         pass
 
