@@ -1,11 +1,10 @@
 from math import sin, cos, radians
 import pg
-import random
 
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
-        self.wasd = pg.WASD(self, speed=1)
+        self.wasd = pg.WASD(self)
     def on_size(self, width, height):
         self.aspect = float(width) / height
     def setup(self):

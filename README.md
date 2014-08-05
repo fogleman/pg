@@ -51,4 +51,4 @@ It is a work in progress.
 ### Dependencies
 
     brew install glfw3
-    pip install PyOpenGL glfw
+    pip install glfw Pillow PyOpenGL
