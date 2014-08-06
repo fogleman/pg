@@ -101,9 +101,9 @@ class Cylinder(object):
                 (0, 0), (1, 0), (0, 1),
             ]
             for position in positions:
-                self.position.extend((matrix * position)[:3])
+                self.position.extend((matrix * position))
             for normal in normals:
-                self.normal.extend((normal_matrix * normal)[:3])
+                self.normal.extend((normal_matrix * normal))
             for uv in uvs:
                 self.uv.extend(uv)
 
@@ -182,7 +182,7 @@ class Plane(object):
         matrix = matrix.rotate((rx, 0, rz), b)
         matrix = matrix.translate(point)
         for position in positions:
-            self.position.extend((matrix * position)[:3])
+            self.position.extend((matrix * position))
         self.normal.extend(normal * 6)
         for uv in uvs:
             self.uv.extend(uv)

@@ -5,21 +5,22 @@ class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
         self.wasd = pg.WASD(self)
+        self.wasd.look_at((-3, 3, 3), (0, 0, 0))
     def setup(self):
         program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(program)
         self.context.sampler = pg.Texture(0, 'textures/bronze.jpg')
         data = []
-        n = 0.4
+        r = 0.4
         d = 2.0
         for angle in range(0, 360, 60):
             x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
-            sphere = pg.Sphere(3, n, (x, 0, z))
+            sphere = pg.Sphere(3, r, (x, 0, z))
             data.extend(pg.interleave(
                 [3, 3, 2], [sphere.position, sphere.normal, sphere.uv]))
         for angle in range(30, 360, 60):
             x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
-            cuboid = pg.Cuboid(x - n, x + n, -n, n, z - n, z + n)
+            cuboid = pg.Cuboid(x - r, x + r, -r, r, z - r, z + r)
             data.extend(pg.interleave(
                 [3, 3, 2], [cuboid.position, cuboid.normal, cuboid.uv]))
         plane = pg.Plane((0, 0, 0), (1, 1, 1))

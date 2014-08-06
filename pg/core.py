@@ -1,7 +1,7 @@
 from ctypes import *
 from OpenGL.GL import *
 from PIL import Image
-from math import sin, cos, pi, atan2
+from math import sin, cos, pi, atan2, asin
 from matrix import Matrix
 from util import normalize
 import glfw
@@ -244,6 +244,15 @@ class WASD(object):
         if self.exclusive:
             self.window.set_exclusive()
         self.window.listeners.append(self)
+    def look_at(self, position, target):
+        px, py, pz = position
+        tx, ty, tz = target
+        dx, dy, dz = normalize((tx - px, ty - py, tz - pz))
+        self.x = px
+        self.y = py
+        self.z = pz
+        self.rx = 2 * pi - (atan2(dx, dz) + pi)
+        self.ry = asin(dy)
     def on_mouse_button(self, button, action, mods):
         if self.exclusive:
             if button == glfw.MOUSE_BUTTON_1 and action == glfw.PRESS:

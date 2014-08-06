@@ -28,7 +28,7 @@ class Matrix(object):
             return self.matrix_multiply(other)
         elif len(other) == 3:
             x, y, z = other
-            return self.vector_multiply((x, y, z, 1))
+            return self.vector_multiply((x, y, z, 1))[:3]
         else:
             return self.vector_multiply(other)
     def index(self, index):
