@@ -325,7 +325,7 @@ class App(object):
 
 class Window(object):
     def __init__(self, size, title='Python Graphics'):
-        width, height = size
+        self.size = width, height = size
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
@@ -371,6 +371,12 @@ class Window(object):
         self.time = now
         self.draw()
         glfw.swap_buffers(self.handle)
+    def save_image(self, path):
+        width, height = self.size
+        data = (c_ubyte * (width * height * 3))()
+        glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)
+        im = Image.frombytes('RGB', (width, height), data)
+        im.save(path)
     def set_callbacks(self):
         glfw.set_window_size_callback(self.handle, self._on_size)
         glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
@@ -382,6 +388,7 @@ class Window(object):
             if hasattr(listener, name):
                 getattr(listener, name)(*args)
     def _on_size(self, window, width, height):
+        self.size = (width, height)
         self.aspect = float(width) / height
         self.call_listeners('on_size', width, height)
     def on_size(self, width, height):
