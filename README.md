@@ -4,6 +4,31 @@ pg is a lightweight OpenGL graphics framework for Python.
 
 It is a work in progress.
 
+### Features
+
+Most OpenGL applications have a lot of features in common, but there's a lot of
+boilerplate involved when using bare OpenGL. This framework provides a clean
+API for managing these common features so you can focus on your application-
+specific functionality instead.
+
+* shaders
+    * compile and link
+    * attributes and uniforms
+* vertex buffers
+* matrices
+    * translate, rotate, scale
+    * perspective and orthographic projections
+    * transpose, determinant, inverse
+* textures
+    * load
+* geometric shapes
+    * sphere, cube
+* WASD movement
+    * built-in!
+* windowing and input
+    * glfw-based
+    * multiple windows
+
 ### Screenshot
 
 ![Screenshot](http://i.imgur.com/Oks9BHl.png)
