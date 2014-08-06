@@ -27,11 +27,16 @@ from core import (
 
 from geometry import (
     Cuboid,
+    Plane,
     Sphere,
 )
 
 from matrix import (
     Matrix,
+)
+
+from programs import (
+    SingleColorProgram,
 )
 
 from util import (

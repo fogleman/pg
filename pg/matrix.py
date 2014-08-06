@@ -24,20 +24,30 @@ class Matrix(object):
     def __setitem__(self, index, value):
         self.value[self.index(index)] = value
     def __mul__(self, other):
-        return self.multiply(other)
+        if isinstance(other, Matrix):
+            return self.matrix_multiply(other)
+        elif len(other) == 3:
+            x, y, z = other
+            return self.vector_multiply((x, y, z, 1))
+        else:
+            return self.vector_multiply(other)
     def index(self, index):
         try:
             row, col = index
             return col * 4 + row
         except Exception:
             return index
-    def multiply(self, other):
+    def matrix_multiply(self, other):
         result = Matrix()
         for col in xrange(4):
             for row in xrange(4):
                 result[(row, col)] = sum(
                     self[(row, i)] * other[(i, col)] for i in xrange(4))
         return result
+    def vector_multiply(self, other):
+        return tuple(
+            sum(self[(i, j)] * other[j] for j in xrange(4))
+            for i in xrange(4))
     def identity(self):
         return Matrix()
     def transpose(self):

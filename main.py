@@ -10,7 +10,9 @@ class Window(pg.Window):
     def setup(self):
         self.program = pg.Program(
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
+        # self.program = pg.SingleColorProgram()
         self.context = pg.Context(self.program)
+        # self.context.color = pg.hex_color(0x123456)
         self.context.sampler = pg.Texture(0, 'textures/bronze.jpg')
         data = []
         n = 0.4
@@ -25,6 +27,9 @@ class Window(pg.Window):
             cuboid = pg.Cuboid(x - n, x + n, -n, n, z - n, z + n)
             data.extend(pg.interleave(
                 [3, 3, 2], [cuboid.position, cuboid.normal, cuboid.uv]))
+        plane = pg.Plane((0, 0, 0), (1, 1, 1))
+        data.extend(pg.interleave(
+            [3, 3, 2], [plane.position, plane.normal, plane.uv]))
         vertex_buffer = pg.VertexBuffer(8, data)
         self.context.position = vertex_buffer.slice(3, 0)
         self.context.normal = vertex_buffer.slice(3, 3)

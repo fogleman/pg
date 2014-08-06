@@ -1,4 +1,5 @@
-from math import asin, pi, atan2
+from math import asin, pi, atan2, hypot, sin, cos
+from matrix import Matrix
 from util import normalize
 
 class Sphere(object):
@@ -60,9 +61,8 @@ class Cuboid(object):
         self.position = []
         self.normal = []
         self.uv = []
-        self.setup((x1, y1, z1), (x2, y2, z2))
-    def setup(self, lo, hi):
-        (x1, y1, z1), (x2, y2, z2) = (lo, hi)
+        self.setup(x1, x2, y1, y2, z1, z2)
+    def setup(self, x1, x2, y1, y2, z1, z2):
         positions = [
             ((x1, y1, z1), (x1, y1, z2), (x1, y2, z1), (x1, y2, z2)),
             ((x2, y1, z1), (x2, y1, z2), (x2, y2, z1), (x2, y2, z2)),
@@ -101,3 +101,37 @@ class Cuboid(object):
                 self.position.extend(positions[i][j])
                 self.normal.extend(normals[i])
                 self.uv.extend(uvs[i][j])
+
+class Plane(object):
+    def __init__(self, point, normal, size=0.5, both=True):
+        self.position = []
+        self.normal = []
+        self.uv = []
+        nx, ny, nz = normal
+        self.setup(point, (nx, ny, nz), size)
+        if both:
+            self.setup(point, (-nx, -ny, -nz), size)
+    def setup(self, point, normal, size):
+        n = size
+        positions = [
+            (-n, 0, -n), (n, 0, -n), (-n, 0, n),
+            (-n, 0, n), (n, 0, -n), (n, 0, n)
+        ]
+        uvs = [
+            (0, 0), (1, 0), (0, 1),
+            (0, 1), (1, 0), (1, 1)
+        ]
+        normal = normalize(normal)
+        nx, ny, nz = normal
+        a = atan2(nz, nx) + pi
+        b = atan2(ny, hypot(nx, nz)) + pi / 2
+        rx, rz = cos(a + pi / 2), sin(a + pi / 2)
+        matrix = Matrix()
+        matrix = matrix.rotate((0, 1, 0), a)
+        matrix = matrix.rotate((rx, 0, rz), b)
+        matrix = matrix.translate(point)
+        for position in positions:
+            self.position.extend((matrix * position)[:3])
+        self.normal.extend(normal * 6)
+        for uv in uvs:
+            self.uv.extend(uv)
