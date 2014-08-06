@@ -225,8 +225,6 @@ class Context(object):
         glDrawArrays(mode, 0, count)
 
 class WASD(object):
-    # TODO: set position
-    # TODO: set sight vector
     def __init__(self, window,
         speed=1.0, sensitivity=2.5, invert=False, exclusive=True):
         self.window = window
@@ -241,6 +239,7 @@ class WASD(object):
         self.ry = 0
         self.mx = 0
         self.my = 0
+        self.discard = True
         if self.exclusive:
             self.window.set_exclusive()
         self.window.listeners.append(self)
@@ -257,12 +256,18 @@ class WASD(object):
         if self.exclusive:
             if button == glfw.MOUSE_BUTTON_1 and action == glfw.PRESS:
                 self.window.set_exclusive()
+                self.discard = True
     def on_key(self, key, scancode, action, mods):
         if self.exclusive:
             if key == glfw.KEY_ESCAPE:
                 self.window.set_exclusive(False)
     def on_cursor_pos(self, mx, my):
         if self.exclusive and not self.window.exclusive:
+            return
+        if self.discard:
+            self.mx = mx
+            self.my = my
+            self.discard = False
             return
         m = self.sensitivity / 1000.0
         self.rx += (mx - self.mx) * m
