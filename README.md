@@ -28,38 +28,49 @@ specific functionality instead.
     * glfw-based
     * multiple windows
 
-### Screenshot
+### Dependencies
+
+    brew install glfw3
+    pip install glfw Pillow PyOpenGL
+
+### Example
 
 ![Screenshot](http://i.imgur.com/LqshPxY.jpg)
 
-### Sample
-
-    from math import sin, cos, radians
+    from math import sin, cos, radians, pi
     import pg
-    import random
 
     class Window(pg.Window):
         def __init__(self):
             super(Window, self).__init__((800, 600))
-            self.wasd = pg.WASD(self, speed=3)
+            self.wasd = pg.WASD(self)
         def on_size(self, width, height):
             self.aspect = float(width) / height
         def setup(self):
             self.program = pg.Program(
                 'shaders/vertex.glsl', 'shaders/fragment.glsl')
             self.context = pg.Context(self.program)
-            position = []
-            for angle in xrange(0, 360, 30):
-                x, z = sin(radians(angle)), cos(radians(angle))
-                position.extend(pg.sphere(3, 0.2, (x, 0, z)))
-            color = []
-            for i in xrange(12 * 8):
-                n = len(position) / 3 / 12 / 8
-                color.extend(pg.hex_color(random.randint(0, 0xffffff)) * n)
-            self.context.position = pg.VertexBuffer(3, position)
-            self.context.color = pg.VertexBuffer(3, color)
+            self.context.sampler = pg.Texture(0, 'textures/bronze.jpg')
+            data = []
+            n = 0.4
+            d = 2.0
+            for angle in range(0, 360, 60):
+                x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
+                sphere = pg.Sphere(3, n, (x, 0, z))
+                data.extend(pg.interleave(
+                    [3, 3, 2], [sphere.position, sphere.normal, sphere.uv]))
+            for angle in range(30, 360, 60):
+                x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
+                cuboid = pg.Cuboid(x - n, x + n, -n, n, z - n, z + n)
+                data.extend(pg.interleave(
+                    [3, 3, 2], [cuboid.position, cuboid.normal, cuboid.uv]))
+            vertex_buffer = pg.VertexBuffer(8, data)
+            self.context.position = vertex_buffer.slice(3, 0)
+            self.context.normal = vertex_buffer.slice(3, 3)
+            self.context.uv = vertex_buffer.slice(2, 6)
         def update(self, t, dt):
-            matrix = pg.Matrix().rotate((0, 1, 0), t)
+            matrix = pg.Matrix().rotate((0, 1, 0), t * 2 * pi / 60)
+            self.context.normal_matrix = matrix.inverse().transpose()
             matrix = self.wasd.get_matrix(matrix)
             matrix = matrix.perspective(65, self.aspect, 0.1, 100)
             self.context.matrix = matrix
@@ -71,8 +82,3 @@ specific functionality instead.
         app = pg.App()
         Window()
         app.run()
-
-### Dependencies
-
-    brew install glfw3
-    pip install glfw Pillow PyOpenGL
