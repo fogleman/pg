@@ -17,25 +17,25 @@ class Window(pg.Window):
             x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
             sphere = pg.Sphere(3, r, (x, 0, z))
             data.extend(pg.interleave(
-                [3, 3, 2], [sphere.position, sphere.normal, sphere.uv]))
+                sphere.position, sphere.normal, sphere.uv))
         for angle in range(30, 360, 60):
             x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
             cuboid = pg.Cuboid(x - r, x + r, -r, r, z - r, z + r)
             data.extend(pg.interleave(
-                [3, 3, 2], [cuboid.position, cuboid.normal, cuboid.uv]))
+                cuboid.position, cuboid.normal, cuboid.uv))
         plane = pg.Plane((0, 0, 0), (1, 1, 1))
         data.extend(pg.interleave(
-            [3, 3, 2], [plane.position, plane.normal, plane.uv]))
+            plane.position, plane.normal, plane.uv))
         cylinder = pg.Cylinder((1, 1, -1), (-1, 1, 1), 0.25, 36)
         data.extend(pg.interleave(
-            [3, 3, 2], [cylinder.position, cylinder.normal, cylinder.uv]))
-        vertex_buffer = pg.VertexBuffer(8, data)
+            cylinder.position, cylinder.normal, cylinder.uv))
+        vertex_buffer = pg.VertexBuffer(data)
         self.context.position = vertex_buffer.slice(3, 0)
         self.context.normal = vertex_buffer.slice(3, 3)
         self.context.uv = vertex_buffer.slice(2, 6)
         self.axes = pg.Context(pg.SolidColorProgram())
         self.axes.color = (0.3, 0.3, 0.3)
-        self.axes.position = pg.VertexBuffer(3, pg.Axes(100).position)
+        self.axes.position = pg.VertexBuffer(pg.Axes(100).position)
     def update(self, t, dt):
         matrix = pg.Matrix().rotate((0, 1, 0), t * 2 * pi / 60)
         self.context.normal_matrix = matrix.inverse().transpose()

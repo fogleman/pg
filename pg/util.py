@@ -1,3 +1,5 @@
+from operator import add
+
 def hex_color(value):
     r = ((value >> (8 * 2)) & 255) / 255.0
     g = ((value >> (8 * 1)) & 255) / 255.0
@@ -11,15 +13,8 @@ def normalize(vector):
 def distance(p1, p2):
     return sum((a - b) ** 2 for a, b in zip(p1, p2)) ** 0.5
 
-def interleave(sizes, arrays):
-    result = []
-    count = len(sizes)
-    indexes = [0] * count
-    length = min(len(array) / size for size, array in zip(sizes, arrays))
-    for _ in xrange(length):
-        for i in xrange(count):
-            index = indexes[i]
-            size = sizes[i]
-            result.extend(arrays[i][index:index+size])
-            indexes[i] += size
-    return result
+def interleave(*args):
+    return [reduce(add, x) for x in zip(*args)]
+
+def flatten(x):
+    return reduce(add, x)

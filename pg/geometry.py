@@ -30,12 +30,12 @@ class Sphere(object):
         r = self.radius
         p = self.center
         if detail == 0:
-            self.normal.extend(a)
-            self.normal.extend(b)
-            self.normal.extend(c)
-            self.position.extend([r * a[i] + p[i] for i in xrange(3)])
-            self.position.extend([r * b[i] + p[i] for i in xrange(3)])
-            self.position.extend([r * c[i] + p[i] for i in xrange(3)])
+            self.normal.append(a)
+            self.normal.append(b)
+            self.normal.append(c)
+            self.position.append(tuple(r * a[i] + p[i] for i in xrange(3)))
+            self.position.append(tuple(r * b[i] + p[i] for i in xrange(3)))
+            self.position.append(tuple(r * c[i] + p[i] for i in xrange(3)))
             ta = [0.5 + atan2(a[0], a[2]) / (2 * pi), 0.5 - asin(a[1]) / pi]
             tb = [0.5 + atan2(b[0], b[2]) / (2 * pi), 0.5 - asin(b[1]) / pi]
             tc = [0.5 + atan2(c[0], c[2]) / (2 * pi), 0.5 - asin(c[1]) / pi]
@@ -46,9 +46,9 @@ class Sphere(object):
                 ta[0] = (ta[0] + 1) % 1.0
                 tb[0] = (tb[0] + 1) % 1.0
                 tc[0] = (tc[0] + 1) % 1.0
-            self.uv.extend(ta)
-            self.uv.extend(tb)
-            self.uv.extend(tc)
+            self.uv.append(tuple(ta))
+            self.uv.append(tuple(tb))
+            self.uv.append(tuple(tc))
         else:
             ab = normalize([(a[i] + b[i]) / 2.0 for i in xrange(3)])
             ac = normalize([(a[i] + c[i]) / 2.0 for i in xrange(3)])
@@ -101,11 +101,11 @@ class Cylinder(object):
                 (0, 0), (1, 0), (0, 1),
             ]
             for position in positions:
-                self.position.extend((matrix * position))
+                self.position.append((matrix * position))
             for normal in normals:
-                self.normal.extend((normal_matrix * normal))
+                self.normal.append((normal_matrix * normal))
             for uv in uvs:
-                self.uv.extend(uv)
+                self.uv.append(uv)
 
 class Cuboid(object):
     def __init__(self, x1, x2, y1, y2, z1, z2):
@@ -149,9 +149,9 @@ class Cuboid(object):
         for i in xrange(6):
             for v in xrange(6):
                 j = indices[i][v]
-                self.position.extend(positions[i][j])
-                self.normal.extend(normals[i])
-                self.uv.extend(uvs[i][j])
+                self.position.append(positions[i][j])
+                self.normal.append(normals[i])
+                self.uv.append(uvs[i][j])
 
 class Plane(object):
     def __init__(self, point, normal, size=0.5, both=True):
@@ -182,19 +182,19 @@ class Plane(object):
         matrix = matrix.rotate((rx, 0, rz), b)
         matrix = matrix.translate(point)
         for position in positions:
-            self.position.extend((matrix * position))
-        self.normal.extend(normal * 6)
+            self.position.append((matrix * position))
+        self.normal.extend([normal] * 6)
         for uv in uvs:
-            self.uv.extend(uv)
+            self.uv.append(uv)
 
 class Axes(object):
     def __init__(self, size=1):
         n = size
         self.position = [
-            0, 0, 0, n, 0, 0,
-            0, 0, 0, 0, n, 0,
-            0, 0, 0, 0, 0, n,
-            0, 0, 0, -n, 0, 0,
-            0, 0, 0, 0, -n, 0,
-            0, 0, 0, 0, 0, -n,
+            (0, 0, 0), (n, 0, 0),
+            (0, 0, 0), (0, n, 0),
+            (0, 0, 0), (0, 0, n),
+            (0, 0, 0), (-n, 0, 0),
+            (0, 0, 0), (0, -n, 0),
+            (0, 0, 0), (0, 0, -n),
         ]

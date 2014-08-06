@@ -3,7 +3,7 @@ from OpenGL.GL import *
 from PIL import Image
 from math import sin, cos, pi, atan2, asin
 from matrix import Matrix
-from util import normalize
+from util import flatten, normalize
 import glfw
 import os
 import time
@@ -46,19 +46,27 @@ class FragmentShader(Shader):
         super(FragmentShader, self).__init__(GL_FRAGMENT_SHADER, shader_source)
 
 class VertexBuffer(object):
-    def __init__(self, components, data):
-        self.components = components
-        self.count = len(data) / components
+    def __init__(self, data):
+        self.count = len(data)
+        self.components = len(data[0])
+        flat = flatten(data)
         handle = c_uint()
         glGenBuffers(1, byref(handle))
         self.handle = handle.value
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
         glBufferData(
-            GL_ARRAY_BUFFER, sizeof(c_float) * len(data),
-            (c_float * len(data))(*data), GL_STATIC_DRAW)
+            GL_ARRAY_BUFFER, sizeof(c_float) * len(flat),
+            (c_float * len(flat))(*flat), GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
+    def slices(self, components_list):
+        offset = 0
+        result = []
+        for components in components_list:
+            result.append(VertexBufferSlice(self, components, offset))
+            offset += components
+        return result
     def set(self, location):
         glEnableVertexAttribArray(location)
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)

@@ -43,6 +43,7 @@ from programs import (
 
 from util import (
     distance,
+    flatten,
     hex_color,
     interleave,
     normalize,
