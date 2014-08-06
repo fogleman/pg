@@ -60,10 +60,10 @@ class VertexBuffer(object):
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
-    def slices(self, components_list):
+    def slices(self, *args):
         offset = 0
         result = []
-        for components in components_list:
+        for components in args:
             result.append(VertexBufferSlice(self, components, offset))
             offset += components
         return result
@@ -88,15 +88,15 @@ class VertexBufferSlice(object):
             c_void_p(sizeof(c_float) * self.offset))
 
 class Texture(object):
-    def __init__(self, index, path):
-        self.index = index
+    def __init__(self, unit, path):
+        self.unit = unit
         im = Image.open(path).convert('RGBA')
         width, height = im.size
         data = im.tobytes()
         handle = c_uint()
         glGenTextures(1, byref(handle))
         self.handle = handle.value
-        glActiveTexture(TEXTURES[index])
+        glActiveTexture(TEXTURES[unit])
         glBindTexture(GL_TEXTURE_2D, self.handle)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -128,7 +128,7 @@ class Uniform(object):
         if isinstance(value, Matrix):
             value = value.value
         elif isinstance(value, Texture):
-            value = value.index
+            value = value.unit
         try:
             count = len(value)
         except Exception:

@@ -29,10 +29,8 @@ class Window(pg.Window):
         cylinder = pg.Cylinder((1, 1, -1), (-1, 1, 1), 0.25, 36)
         data.extend(pg.interleave(
             cylinder.position, cylinder.normal, cylinder.uv))
-        vertex_buffer = pg.VertexBuffer(data)
-        self.context.position = vertex_buffer.slice(3, 0)
-        self.context.normal = vertex_buffer.slice(3, 3)
-        self.context.uv = vertex_buffer.slice(2, 6)
+        self.context.position, self.context.normal, self.context.uv = (
+            pg.VertexBuffer(data).slices(3, 3, 2))
         self.axes = pg.Context(pg.SolidColorProgram())
         self.axes.color = (0.3, 0.3, 0.3)
         self.axes.position = pg.VertexBuffer(pg.Axes(100).position)
