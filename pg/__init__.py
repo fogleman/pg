@@ -26,6 +26,7 @@ from core import (
 )
 
 from geometry import (
+    Cuboid,
     Sphere,
 )
 

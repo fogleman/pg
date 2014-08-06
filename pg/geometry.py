@@ -54,3 +54,50 @@ class Sphere(object):
             self._setup(detail - 1, (b, bc, ab))
             self._setup(detail - 1, (c, ac, bc))
             self._setup(detail - 1, (ab, bc, ac))
+
+class Cuboid(object):
+    def __init__(self, x1, x2, y1, y2, z1, z2):
+        self.position = []
+        self.normal = []
+        self.uv = []
+        self.setup((x1, y1, z1), (x2, y2, z2))
+    def setup(self, lo, hi):
+        (x1, y1, z1), (x2, y2, z2) = (lo, hi)
+        positions = [
+            ((x1, y1, z1), (x1, y1, z2), (x1, y2, z1), (x1, y2, z2)),
+            ((x2, y1, z1), (x2, y1, z2), (x2, y2, z1), (x2, y2, z2)),
+            ((x1, y2, z1), (x1, y2, z2), (x2, y2, z1), (x2, y2, z2)),
+            ((x1, y1, z1), (x1, y1, z2), (x2, y1, z1), (x2, y1, z2)),
+            ((x1, y1, z1), (x1, y2, z1), (x2, y1, z1), (x2, y2, z1)),
+            ((x1, y1, z2), (x1, y2, z2), (x2, y1, z2), (x2, y2, z2)),
+        ]
+        normals = [
+            (-1, 0, 0),
+            (1, 0, 0),
+            (0, 1, 0),
+            (0, -1, 0),
+            (0, 0, -1),
+            (0, 0, 1),
+        ]
+        uvs = [
+            ((0, 0), (1, 0), (0, 1), (1, 1)),
+            ((1, 0), (0, 0), (1, 1), (0, 1)),
+            ((0, 1), (0, 0), (1, 1), (1, 0)),
+            ((0, 0), (0, 1), (1, 0), (1, 1)),
+            ((0, 0), (0, 1), (1, 0), (1, 1)),
+            ((1, 0), (1, 1), (0, 0), (0, 1)),
+        ]
+        indices = [
+            (0, 3, 2, 0, 1, 3),
+            (0, 3, 1, 0, 2, 3),
+            (0, 3, 2, 0, 1, 3),
+            (0, 3, 1, 0, 2, 3),
+            (0, 3, 2, 0, 1, 3),
+            (0, 3, 1, 0, 2, 3),
+        ]
+        for i in xrange(6):
+            for v in xrange(6):
+                j = indices[i][v]
+                self.position.extend(positions[i][j])
+                self.normal.extend(normals[i])
+                self.uv.extend(uvs[i][j])

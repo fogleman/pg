@@ -13,11 +13,17 @@ class Window(pg.Window):
         self.context = pg.Context(self.program)
         self.context.sampler = pg.Texture(0, 'textures/earth.png')
         data = []
-        for angle in range(0, 360, 30):
+        n = 0.2
+        for angle in range(0, 360, 60):
             x, z = sin(radians(angle)), cos(radians(angle))
-            sphere = pg.Sphere(3, 0.2, (x, 0, z))
+            sphere = pg.Sphere(3, n, (x, 0, z))
             data.extend(pg.interleave(
                 [3, 3, 2], [sphere.position, sphere.normal, sphere.uv]))
+        for angle in range(30, 360, 60):
+            x, z = sin(radians(angle)), cos(radians(angle))
+            cuboid = pg.Cuboid(x - n, x + n, -n, n, z - n, z + n)
+            data.extend(pg.interleave(
+                [3, 3, 2], [cuboid.position, cuboid.normal, cuboid.uv]))
         vertex_buffer = pg.VertexBuffer(8, data)
         self.context.position = vertex_buffer.slice(3, 0)
         self.context.normal = vertex_buffer.slice(3, 3)
