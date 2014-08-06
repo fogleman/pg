@@ -12,18 +12,16 @@ class Window(pg.Window):
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(self.program)
         self.context.sampler = pg.Texture(0, 'textures/earth.png')
-        position = []
-        normal = []
-        uv = []
+        data = []
         for angle in range(0, 360, 30):
             x, z = sin(radians(angle)), cos(radians(angle))
             sphere = pg.Sphere(3, 0.2, (x, 0, z))
-            position.extend(sphere.position)
-            normal.extend(sphere.normal)
-            uv.extend(sphere.uv)
-        self.context.position = pg.VertexBuffer(3, position)
-        self.context.normal = pg.VertexBuffer(3, normal)
-        self.context.uv = pg.VertexBuffer(2, uv)
+            data.extend(pg.interleave(
+                [3, 3, 2], [sphere.position, sphere.normal, sphere.uv]))
+        vertex_buffer = pg.VertexBuffer(8, data)
+        self.context.position = vertex_buffer.slice(3, 0)
+        self.context.normal = vertex_buffer.slice(3, 3)
+        self.context.uv = vertex_buffer.slice(2, 6)
     def update(self, t, dt):
         matrix = pg.Matrix().rotate((0, 1, 0), t)
         self.context.normal_matrix = matrix.inverse().transpose()

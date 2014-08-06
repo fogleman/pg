@@ -109,6 +109,15 @@ class VertexBuffer(object):
             (c_float * len(data))(*data),
             GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
+    def slice(self, components, offset):
+        return VertexBufferSlice(self, components, offset)
+
+class VertexBufferSlice(object):
+    def __init__(self, vertex_buffer, components, offset):
+        self.vertex_buffer = vertex_buffer
+        self.components = components
+        self.offset = offset
+        self.count = self.vertex_buffer.count
 
 class Texture(object):
     def __init__(self, index, path):
@@ -136,10 +145,20 @@ class Attribute(object):
         self.size = size
         self.data_type = data_type
     def set(self, value):
-        glEnableVertexAttribArray(self.location)
-        glBindBuffer(GL_ARRAY_BUFFER, value.handle)
-        glVertexAttribPointer(
-            self.location, value.components, GL_FLOAT, GL_FALSE, 0, c_void_p())
+        if isinstance(value, VertexBuffer):
+            glEnableVertexAttribArray(self.location)
+            glBindBuffer(GL_ARRAY_BUFFER, value.handle)
+            glVertexAttribPointer(
+                self.location, value.components,
+                GL_FLOAT, GL_FALSE, 0, c_void_p())
+        elif isinstance(value, VertexBufferSlice):
+            glEnableVertexAttribArray(self.location)
+            glBindBuffer(GL_ARRAY_BUFFER, value.vertex_buffer.handle)
+            glVertexAttribPointer(
+                self.location, value.components,
+                GL_FLOAT, GL_FALSE,
+                sizeof(c_float) * value.vertex_buffer.components,
+                c_void_p(sizeof(c_float) * value.offset))
     def __repr__(self):
         return 'Attribute%s' % str(
             (self.location, self.name, self.size, self.data_type))

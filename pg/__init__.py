@@ -35,5 +35,6 @@ from matrix import (
 
 from util import (
     hex_color,
+    interleave,
     normalize,
 )
