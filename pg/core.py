@@ -104,20 +104,30 @@ class VertexBuffer(object):
         self.handle = handle.value
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
         glBufferData(
-            GL_ARRAY_BUFFER,
-            sizeof(c_float) * len(data),
-            (c_float * len(data))(*data),
-            GL_STATIC_DRAW)
+            GL_ARRAY_BUFFER, sizeof(c_float) * len(data),
+            (c_float * len(data))(*data), GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
+    def set(self, location):
+        glEnableVertexAttribArray(location)
+        glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+        glVertexAttribPointer(
+            location, self.components, GL_FLOAT, GL_FALSE, 0, c_void_p())
 
 class VertexBufferSlice(object):
-    def __init__(self, vertex_buffer, components, offset):
-        self.vertex_buffer = vertex_buffer
+    def __init__(self, parent, components, offset):
+        self.parent = parent
         self.components = components
         self.offset = offset
-        self.count = self.vertex_buffer.count
+        self.count = self.parent.count
+    def set(self, location):
+        glEnableVertexAttribArray(location)
+        glBindBuffer(GL_ARRAY_BUFFER, self.parent.handle)
+        glVertexAttribPointer(
+            location, self.components, GL_FLOAT, GL_FALSE,
+            sizeof(c_float) * self.parent.components,
+            c_void_p(sizeof(c_float) * self.offset))
 
 class Texture(object):
     def __init__(self, index, path):
@@ -145,20 +155,7 @@ class Attribute(object):
         self.size = size
         self.data_type = data_type
     def set(self, value):
-        if isinstance(value, VertexBuffer):
-            glEnableVertexAttribArray(self.location)
-            glBindBuffer(GL_ARRAY_BUFFER, value.handle)
-            glVertexAttribPointer(
-                self.location, value.components,
-                GL_FLOAT, GL_FALSE, 0, c_void_p())
-        elif isinstance(value, VertexBufferSlice):
-            glEnableVertexAttribArray(self.location)
-            glBindBuffer(GL_ARRAY_BUFFER, value.vertex_buffer.handle)
-            glVertexAttribPointer(
-                self.location, value.components,
-                GL_FLOAT, GL_FALSE,
-                sizeof(c_float) * value.vertex_buffer.components,
-                c_void_p(sizeof(c_float) * value.offset))
+        value.set(self.location)
     def __repr__(self):
         return 'Attribute%s' % str(
             (self.location, self.name, self.size, self.data_type))

@@ -1,4 +1,4 @@
-from math import sin, cos, radians
+from math import sin, cos, radians, pi
 import pg
 
 class Window(pg.Window):
@@ -23,7 +23,7 @@ class Window(pg.Window):
         self.context.normal = vertex_buffer.slice(3, 3)
         self.context.uv = vertex_buffer.slice(2, 6)
     def update(self, t, dt):
-        matrix = pg.Matrix().rotate((0, 1, 0), t)
+        matrix = pg.Matrix().rotate((0, 1, 0), t * 2 * pi / 60)
         self.context.normal_matrix = matrix.inverse().transpose()
         matrix = self.wasd.get_matrix(matrix)
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)
