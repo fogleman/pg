@@ -1,6 +1,8 @@
+from __future__ import division
+
 from math import asin, pi, atan2, hypot, sin, cos
 from matrix import Matrix
-from util import normalize
+from util import distance, normalize
 
 class Sphere(object):
     def __init__(self, detail, radius=0.5, center=(0, 0, 0)):
@@ -55,6 +57,55 @@ class Sphere(object):
             self._setup(detail - 1, (b, bc, ab))
             self._setup(detail - 1, (c, ac, bc))
             self._setup(detail - 1, (ab, bc, ac))
+
+class Cylinder(object):
+    def __init__(self, p1, p2, radius, detail):
+        self.position = []
+        self.normal = []
+        self.uv = []
+        self.setup(p1, p2, radius, detail)
+    def setup(self, p1, p2, radius, detail):
+        x1, y1, z1 = p1
+        x2, y2, z2 = p2
+        dx, dy, dz = x2 - x1, y2 - y1, z2 - z1
+        cx, cy, cz = x1 + dx / 2, y1 + dy / 2, z1 + dz / 2
+        a = atan2(dz, dx) - pi / 2
+        b = atan2(dy, hypot(dx, dz)) - pi / 2
+        matrix = Matrix()
+        matrix = matrix.rotate((cos(a), 0, sin(a)), b)
+        normal_matrix = matrix
+        matrix = matrix.translate((cx, cy, cz))
+        d = distance(p1, p2)
+        angles = [i * 2 * pi / detail for i in xrange(detail + 1)]
+        for a1, a2 in zip(angles, angles[1:]):
+            x1, z1 = cos(a1) * radius, sin(a1) * radius
+            x2, z2 = cos(a2) * radius, sin(a2) * radius
+            y1, y2 = -d / 2, d / 2
+            n1, n2 = normalize((x1, 0, z1)), normalize((x2, 0, z2))
+            positions = [
+                (0, y1, 0), (x1, y1, z1), (x2, y1, z2),
+                (0, y2, 0), (x2, y2, z2), (x1, y2, z1),
+                (x1, y1, z1), (x1, y2, z1), (x2, y1, z2),
+                (x2, y1, z2), (x1, y2, z1), (x2, y2, z2),
+            ]
+            normals = [
+                (0, -1, 0), (0, -1, 0), (0, -1, 0),
+                (0, 1, 0), (0, 1, 0), (0, 1, 0),
+                n1, n1, n2,
+                n2, n1, n2,
+            ]
+            uvs = [
+                (0, 0), (1, 0), (0, 1),
+                (0, 0), (1, 0), (0, 1),
+                (0, 0), (1, 0), (0, 1),
+                (0, 0), (1, 0), (0, 1),
+            ]
+            for position in positions:
+                self.position.extend((matrix * position)[:3])
+            for normal in normals:
+                self.normal.extend((normal_matrix * normal)[:3])
+            for uv in uvs:
+                self.uv.extend(uv)
 
 class Cuboid(object):
     def __init__(self, x1, x2, y1, y2, z1, z2):

@@ -25,6 +25,9 @@ class Window(pg.Window):
         plane = pg.Plane((0, 0, 0), (1, 1, 1))
         data.extend(pg.interleave(
             [3, 3, 2], [plane.position, plane.normal, plane.uv]))
+        cylinder = pg.Cylinder((1, 1, -1), (-1, 1, 1), 0.25, 36)
+        data.extend(pg.interleave(
+            [3, 3, 2], [cylinder.position, cylinder.normal, cylinder.uv]))
         vertex_buffer = pg.VertexBuffer(8, data)
         self.context.position = vertex_buffer.slice(3, 0)
         self.context.normal = vertex_buffer.slice(3, 3)

@@ -28,6 +28,7 @@ from core import (
 from geometry import (
     Axes,
     Cuboid,
+    Cylinder,
     Plane,
     Sphere,
 )
@@ -41,6 +42,7 @@ from programs import (
 )
 
 from util import (
+    distance,
     hex_color,
     interleave,
     normalize,
