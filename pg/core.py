@@ -329,10 +329,10 @@ class Window(object):
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
+        self.aspect = float(width) / height
         self.exclusive = False
         self.start = self.time = time.time()
         self.use()
-        self.on_size(*size)
         self.listeners = [self]
         self.set_callbacks()
         glEnable(GL_DEPTH_TEST)
@@ -382,6 +382,7 @@ class Window(object):
             if hasattr(listener, name):
                 getattr(listener, name)(*args)
     def _on_size(self, window, width, height):
+        self.aspect = float(width) / height
         self.call_listeners('on_size', width, height)
     def on_size(self, width, height):
         pass

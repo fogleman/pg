@@ -5,14 +5,9 @@ class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
         self.wasd = pg.WASD(self)
-    def on_size(self, width, height):
-        self.aspect = float(width) / height
     def setup(self):
-        self.program = pg.Program(
-            'shaders/vertex.glsl', 'shaders/fragment.glsl')
-        # self.program = pg.SingleColorProgram()
-        self.context = pg.Context(self.program)
-        # self.context.color = pg.hex_color(0x123456)
+        program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
+        self.context = pg.Context(program)
         self.context.sampler = pg.Texture(0, 'textures/bronze.jpg')
         data = []
         n = 0.4
@@ -34,15 +29,20 @@ class Window(pg.Window):
         self.context.position = vertex_buffer.slice(3, 0)
         self.context.normal = vertex_buffer.slice(3, 3)
         self.context.uv = vertex_buffer.slice(2, 6)
+        self.axes = pg.Context(pg.SolidColorProgram())
+        self.axes.color = (0.3, 0.3, 0.3)
+        self.axes.position = pg.VertexBuffer(3, pg.Axes(100).position)
     def update(self, t, dt):
         matrix = pg.Matrix().rotate((0, 1, 0), t * 2 * pi / 60)
         self.context.normal_matrix = matrix.inverse().transpose()
         matrix = self.wasd.get_matrix(matrix)
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)
         self.context.matrix = matrix
+        self.axes.matrix = matrix
     def draw(self):
         self.clear()
         self.context.draw(pg.GL_TRIANGLES)
+        self.axes.draw(pg.GL_LINES)
 
 if __name__ == "__main__":
     app = pg.App()

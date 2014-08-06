@@ -1,25 +1,27 @@
 from core import Program
 
-class SingleColorProgram(Program):
+class BaseProgram(Program):
     def __init__(self):
-        vs = '''
-        #version 120
+        return super(BaseProgram, self).__init__(self.VS, self.FS)
 
-        uniform mat4 matrix;
+class SolidColorProgram(BaseProgram):
+    VS = '''
+    #version 120
 
-        attribute vec4 position;
+    uniform mat4 matrix;
 
-        void main() {
-            gl_Position = matrix * position;
-        }
-        '''
-        fs = '''
-        #version 120
+    attribute vec4 position;
 
-        uniform vec3 color;
+    void main() {
+        gl_Position = matrix * position;
+    }
+    '''
+    FS = '''
+    #version 120
 
-        void main() {
-            gl_FragColor = vec4(color, 1.0);
-        }
-        '''
-        return super(SingleColorProgram, self).__init__(vs, fs)
+    uniform vec3 color;
+
+    void main() {
+        gl_FragColor = vec4(color, 1.0);
+    }
+    '''

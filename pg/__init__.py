@@ -26,6 +26,7 @@ from core import (
 )
 
 from geometry import (
+    Axes,
     Cuboid,
     Plane,
     Sphere,
@@ -36,7 +37,7 @@ from matrix import (
 )
 
 from programs import (
-    SingleColorProgram,
+    SolidColorProgram,
 )
 
 from util import (

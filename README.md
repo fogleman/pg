@@ -14,6 +14,7 @@ specific functionality instead.
 * shaders
     * compile and link
     * attributes and uniforms
+    * built-in shaders for common functions
 * vertex buffers
 * matrices
     * translate, rotate, scale
@@ -21,7 +22,7 @@ specific functionality instead.
     * transpose, determinant, inverse
 * textures
 * geometric shapes
-    * sphere, cuboid
+    * sphere, cuboid, plane, axes
 * WASD movement
     * built-in!
 * windowing and input

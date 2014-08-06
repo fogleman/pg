@@ -135,3 +135,15 @@ class Plane(object):
         self.normal.extend(normal * 6)
         for uv in uvs:
             self.uv.extend(uv)
+
+class Axes(object):
+    def __init__(self, size=1):
+        n = size
+        self.position = [
+            0, 0, 0, n, 0, 0,
+            0, 0, 0, 0, n, 0,
+            0, 0, 0, 0, 0, n,
+            0, 0, 0, -n, 0, 0,
+            0, 0, 0, 0, -n, 0,
+            0, 0, 0, 0, 0, -n,
+        ]
