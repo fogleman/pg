@@ -31,7 +31,7 @@ specific functionality instead.
 
 ### Screenshot
 
-![Screenshot](http://i.imgur.com/Oks9BHl.png)
+![Screenshot](http://i.imgur.com/JD0ObXJ.png)
 
 ### Sample
 

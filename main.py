@@ -11,7 +11,7 @@ class Window(pg.Window):
         self.program = pg.Program(
             'shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(self.program)
-        self.context.sampler = pg.Texture(0, 'textures/earth.png')
+        self.context.sampler = pg.Texture(0, 'textures/bronze.jpg')
         data = []
         n = 0.2
         for angle in range(0, 360, 60):
