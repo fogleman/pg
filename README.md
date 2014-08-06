@@ -20,9 +20,8 @@ specific functionality instead.
     * perspective and orthographic projections
     * transpose, determinant, inverse
 * textures
-    * load
 * geometric shapes
-    * sphere, cube
+    * sphere, cuboid
 * WASD movement
     * built-in!
 * windowing and input
@@ -31,7 +30,7 @@ specific functionality instead.
 
 ### Screenshot
 
-![Screenshot](http://i.imgur.com/JD0ObXJ.png)
+![Screenshot](http://i.imgur.com/LqshPxY.jpg)
 
 ### Sample
 
