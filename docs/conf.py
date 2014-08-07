@@ -12,8 +12,23 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from mock import Mock as MagicMock
 import sys
 import os
+
+# Mock modules for readthedocs.org support.
+MOCK_MODULES = [
+    'glfw',
+    'OpenGL',
+    'PIL',
+]
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return Mock()
+
+sys.modules.update((name, Mock()) for name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
