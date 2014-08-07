@@ -19,6 +19,7 @@ import os
 MOCK_MODULES = [
     'glfw',
     'OpenGL',
+    'OpenGL.GL',
     'PIL',
 ]
 
