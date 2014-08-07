@@ -32,7 +32,7 @@ class Mock(object):
     def __int__(cls):
         return 1
     @classmethod
-    def __contains__(cls, value):
+    def __contains__(cls, x):
         return False
     @classmethod
     def __len__(cls):
@@ -53,10 +53,13 @@ class Mock(object):
     def __bool__(cls):
         return True
     @classmethod
-    def __index__(cls, value):
+    def __index__(cls, x):
         return 1
     @classmethod
-    def __getattr__(cls, name):
+    def __getattr__(cls, x):
+        return Mock()
+    @classmethod
+    def __getitem__(cls, x):
         return Mock()
 
 for mod_name in MOCK_MODULES:
