@@ -82,6 +82,12 @@ class Cylinder(object):
             x2, z2 = cos(a2) * radius, sin(a2) * radius
             y1, y2 = -d / 2, d / 2
             n1, n2 = normalize((x1, 0, z1)), normalize((x2, 0, z2))
+            uv1 = (0.5 + cos(a1) * 0.5, 0.5 + sin(a1) * 0.5)
+            uv2 = (0.5 + cos(a2) * 0.5, 0.5 + sin(a2) * 0.5)
+            u1 = a1 % (2 * pi)
+            u2 = a2 % (2 * pi)
+            if u2 < u1:
+                u2 += 2 * pi
             positions = [
                 (0, y1, 0), (x1, y1, z1), (x2, y1, z2),
                 (0, y2, 0), (x2, y2, z2), (x1, y2, z1),
@@ -95,10 +101,10 @@ class Cylinder(object):
                 n2, n1, n2,
             ]
             uvs = [
-                (0, 0), (1, 0), (0, 1),
-                (0, 0), (1, 0), (0, 1),
-                (0, 0), (1, 0), (0, 1),
-                (0, 0), (1, 0), (0, 1),
+                (0.5, 0.5), uv1, uv2,
+                (0.5, 0.5), uv2, uv1,
+                (u1, 0), (u1, 1), (u2, 0),
+                (u2, 0), (u1, 1), (u2, 1),
             ]
             for position in positions:
                 self.position.append((matrix * position))
