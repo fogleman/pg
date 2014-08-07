@@ -8,23 +8,6 @@ import glfw
 import os
 import time
 
-FLOATS = set([GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4])
-INTS = set([GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4])
-BOOLS = set([GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4])
-MATS = set([GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4])
-SAMPLERS = set([GL_SAMPLER_2D, GL_SAMPLER_CUBE])
-
-TEXTURES = [
-    GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3,
-    GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
-    GL_TEXTURE8, GL_TEXTURE9, GL_TEXTURE10, GL_TEXTURE11,
-    GL_TEXTURE12, GL_TEXTURE13, GL_TEXTURE14, GL_TEXTURE15,
-    GL_TEXTURE16, GL_TEXTURE17, GL_TEXTURE18, GL_TEXTURE19,
-    GL_TEXTURE20, GL_TEXTURE21, GL_TEXTURE22, GL_TEXTURE23,
-    GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27,
-    GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
-]
-
 class Shader(object):
     def __init__(self, shader_type, shader_source):
         if os.path.exists(shader_source):
@@ -64,7 +47,7 @@ class VertexBuffer(object):
         offset = 0
         result = []
         for components in args:
-            result.append(VertexBufferSlice(self, components, offset))
+            result.append(self.slice(components, offset))
             offset += components
         return result
     def set(self, location):
@@ -88,6 +71,16 @@ class VertexBufferSlice(object):
             c_void_p(sizeof(c_float) * self.offset))
 
 class Texture(object):
+    UNITS = [
+        GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3,
+        GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
+        GL_TEXTURE8, GL_TEXTURE9, GL_TEXTURE10, GL_TEXTURE11,
+        GL_TEXTURE12, GL_TEXTURE13, GL_TEXTURE14, GL_TEXTURE15,
+        GL_TEXTURE16, GL_TEXTURE17, GL_TEXTURE18, GL_TEXTURE19,
+        GL_TEXTURE20, GL_TEXTURE21, GL_TEXTURE22, GL_TEXTURE23,
+        GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27,
+        GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
+    ]
     def __init__(self, unit, path):
         self.unit = unit
         im = Image.open(path).convert('RGBA')
@@ -96,7 +89,7 @@ class Texture(object):
         handle = c_uint()
         glGenTextures(1, byref(handle))
         self.handle = handle.value
-        glActiveTexture(TEXTURES[unit])
+        glActiveTexture(Texture.UNITS[unit])
         glBindTexture(GL_TEXTURE_2D, self.handle)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -119,6 +112,11 @@ class Attribute(object):
             (self.location, self.name, self.size, self.data_type))
 
 class Uniform(object):
+    FLOATS = set([GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4])
+    INTS = set([GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4])
+    BOOLS = set([GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4])
+    MATS = set([GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4])
+    SAMPLERS = set([GL_SAMPLER_2D, GL_SAMPLER_CUBE])
     def __init__(self, location, name, size, data_type):
         self.location = location
         self.name = name
@@ -134,14 +132,14 @@ class Uniform(object):
         except Exception:
             value = [value]
             count = 1
-        if self.data_type in MATS:
+        if self.data_type in Uniform.MATS:
             funcs = {
                 4: glUniformMatrix2fv,
                 9: glUniformMatrix3fv,
                 16: glUniformMatrix4fv,
             }
             funcs[count](self.location, 1, False, (c_float * count)(*value))
-        elif self.data_type in FLOATS:
+        elif self.data_type in Uniform.FLOATS:
             funcs = {
                 1: glUniform1f,
                 2: glUniform2f,
@@ -149,7 +147,7 @@ class Uniform(object):
                 4: glUniform4f,
             }
             funcs[count](self.location, *value)
-        elif self.data_type in INTS or self.data_type in BOOLS:
+        elif self.data_type in Uniform.INTS or self.data_type in Uniform.BOOLS:
             funcs = {
                 1: glUniform1i,
                 2: glUniform2i,
@@ -157,7 +155,7 @@ class Uniform(object):
                 4: glUniform4i,
             }
             funcs[count](self.location, *value)
-        elif self.data_type in SAMPLERS:
+        elif self.data_type in Uniform.SAMPLERS:
             glUniform1i(self.location, *value)
     def __repr__(self):
         return 'Uniform%s' % str(
@@ -351,16 +349,18 @@ class Window(object):
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
+        self.use()
+        self.configure()
         self.aspect = float(width) / height
         self.exclusive = False
         self.start = self.time = time.time()
-        self.use()
         self.listeners = [self]
         self.set_callbacks()
+        self.call('setup')
+        App.instance.windows.append(self)
+    def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
-        self.setup()
-        App.instance.windows.append(self)
     def set_exclusive(self, exclusive=True):
         if exclusive == self.exclusive:
             return
@@ -384,14 +384,14 @@ class Window(object):
     def tick(self):
         self.use()
         if glfw.window_should_close(self.handle):
-            self.teardown()
+            self.call('teardown')
             App.instance.windows.remove(self)
             glfw.destroy_window(self.handle)
             return
         now = time.time()
-        self.call_listeners('update', now - self.start, now - self.time)
+        self.call('update', now - self.start, now - self.time)
         self.time = now
-        self.draw()
+        self.call('draw')
         glfw.swap_buffers(self.handle)
     def save_image(self, path):
         width, height = self.size
@@ -405,29 +405,29 @@ class Window(object):
         glfw.set_mouse_button_callback(self.handle, self._on_mouse_button)
         glfw.set_key_callback(self.handle, self._on_key)
         glfw.set_char_callback(self.handle, self._on_char)
-    def call_listeners(self, name, *args):
+    def call(self, name, *args, **kwargs):
         for listener in self.listeners:
             if hasattr(listener, name):
-                getattr(listener, name)(*args)
+                getattr(listener, name)(*args, **kwargs)
     def _on_size(self, window, width, height):
         self.size = (width, height)
         self.aspect = float(width) / height
-        self.call_listeners('on_size', width, height)
+        self.call('on_size', width, height)
     def on_size(self, width, height):
         pass
     def _on_cursor_pos(self, window, x, y):
-        self.call_listeners('on_cursor_pos', x, y)
+        self.call('on_cursor_pos', x, y)
     def on_cursor_pos(self, x, y):
         pass
     def _on_mouse_button(self, window, button, action, mods):
-        self.call_listeners('on_mouse_button', button, action, mods)
+        self.call('on_mouse_button', button, action, mods)
     def on_mouse_button(self, button, action, mods):
         pass
     def _on_key(self, window, key, scancode, action, mods):
-        self.call_listeners('on_key', key, scancode, action, mods)
+        self.call('on_key', key, scancode, action, mods)
     def on_key(self, key, scancode, action, mods):
         pass
     def _on_char(self, window, codepoint):
-        self.call_listeners('on_char', codepoint)
+        self.call('on_char', codepoint)
     def on_char(self, codepoint):
         pass

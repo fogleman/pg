@@ -198,3 +198,19 @@ class Axes(object):
             (0, 0, 0), (0, -n, 0),
             (0, 0, 0), (0, 0, -n),
         ]
+
+class CylinderAxes(object):
+    def __init__(self, size=1, radius=0.0625, detail=12):
+        n = size
+        cylinders = [
+            Cylinder((-n, 0, 0), (n, 0, 0), radius, detail),
+            Cylinder((0, -n, 0), (0, n, 0), radius, detail),
+            Cylinder((0, 0, -n), (0, 0, n), radius, detail),
+        ]
+        self.position = []
+        self.normal = []
+        self.uv = []
+        for cylinder in cylinders:
+            self.position.extend(cylinder.position)
+            self.normal.extend(cylinder.normal)
+            self.uv.extend(cylinder.uv)
