@@ -4,31 +4,20 @@ import pg
 class Window(pg.Window):
     def __init__(self):
         super(Window, self).__init__((800, 600))
-        self.wasd = pg.WASD(self)
-        self.wasd.look_at((-3, 3, 3), (0, 0, 0))
+        self.wasd = pg.WASD(self, speed=3)
+        self.wasd.look_at((-5, 4, 5), (0, 0, 0))
     def setup(self):
         program = pg.Program('shaders/vertex.glsl', 'shaders/fragment.glsl')
         self.context = pg.Context(program)
         self.context.sampler = pg.Texture(0, 'textures/bronze.jpg')
         data = []
-        r = 0.4
-        d = 2.0
-        for angle in range(0, 360, 60):
-            x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
-            sphere = pg.Sphere(3, r, (x, 0, z))
+        points = pg.poisson_disc(-8, -8, 8, 8, 1, 32)
+        for x, z in points:
+            noise = pg.simplex2(x * 0.3, z * 0.3, 4)
+            y = (noise + 1) / 2
+            cylinder = pg.Cylinder((x, 0, z), (x, y, z), 0.4, 18)
             data.extend(pg.interleave(
-                sphere.position, sphere.normal, sphere.uv))
-        for angle in range(30, 360, 60):
-            x, z = sin(radians(angle)) * d, cos(radians(angle)) * d
-            cuboid = pg.Cuboid(x - r, x + r, -r, r, z - r, z + r)
-            data.extend(pg.interleave(
-                cuboid.position, cuboid.normal, cuboid.uv))
-        plane = pg.Plane((0, 0, 0), (1, 1, 1))
-        data.extend(pg.interleave(
-            plane.position, plane.normal, plane.uv))
-        cylinder = pg.Cylinder((1, 1, -1), (-1, 1, 1), 0.25, 36)
-        data.extend(pg.interleave(
-            cylinder.position, cylinder.normal, cylinder.uv))
+                cylinder.position, cylinder.normal, cylinder.uv))
         self.context.position, self.context.normal, self.context.uv = (
             pg.VertexBuffer(data).slices(3, 3, 2))
         self.axes = pg.Context(pg.SolidColorProgram())

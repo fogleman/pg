@@ -1,5 +1,3 @@
-from operator import add
-
 def hex_color(value):
     '''Accepts a hexadecimal color `value` in the format ``0xrrggbb`` and
     returns an (r, g, b) tuple where 0.0 <= r, g, b <= 1.0.
@@ -34,15 +32,21 @@ def interleave(*args):
     vertex buffer. The shader attributes can be assigned a slice of the
     vertex buffer.
     '''
-    return [reduce(add, x) for x in zip(*args)]
+    result = []
+    for array in zip(*args):
+        result.append(tuple(flatten(array)))
+    return result
 
-def flatten(x):
-    '''Flattens the elements of the provided array, `x`.
+def flatten(array):
+    '''Flattens the elements of the provided array, `data`.
 
         >>> a = [(0, 0), (1, 0), (2, 0), (3, 0)]
         >>> flatten(a)
-        (0, 0, 1, 0, 2, 0, 3, 0)
+        [0, 0, 1, 0, 2, 0, 3, 0]
 
     The flattening process is not recursive, it is only one level deep.
     '''
-    return reduce(add, x)
+    result = []
+    for value in array:
+        result.extend(value)
+    return result

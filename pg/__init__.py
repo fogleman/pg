@@ -37,6 +37,15 @@ from matrix import (
     Matrix,
 )
 
+from noise import (
+    Noise,
+    simplex2,
+)
+
+from poisson import (
+    poisson_disc,
+)
+
 from programs import (
     SolidColorProgram,
 )
