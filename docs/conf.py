@@ -18,9 +18,6 @@ import os
 # Mock modules for readthedocs.org support.
 MOCK_MODULES = [
     'glfw',
-    'OpenGL',
-    'OpenGL.GL',
-    'PIL',
 ]
 
 class Mock(object):
