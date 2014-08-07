@@ -8,4 +8,9 @@ setup(
     author_email='fogleman@gmail.com',
     url='https://github.com/fogleman/pg',
     packages=['pg'],
+    install_requires=[
+        'glfw',
+        'Pillow',
+        'PyOpenGL',
+    ],
 )
