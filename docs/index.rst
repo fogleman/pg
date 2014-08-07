@@ -4,6 +4,8 @@ Python Graphics (pg) Documentation
 .. toctree::
    :maxdepth: 2
 
+   tutorial
+
 .. automodule:: pg
     :members:
 
