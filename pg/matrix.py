@@ -19,10 +19,6 @@ class Matrix(object):
             x = ','.join('% .3f' % self[(row, col)] for col in xrange(4))
             result.append('[%s]' % x)
         return '\n'.join(result)
-    def __getitem__(self, index):
-        return self.value[self.index(index)]
-    def __setitem__(self, index, value):
-        self.value[self.index(index)] = value
     def __mul__(self, other):
         if isinstance(other, Matrix):
             return self.matrix_multiply(other)
@@ -31,31 +27,66 @@ class Matrix(object):
             return self.vector_multiply((x, y, z, 1))[:3]
         else:
             return self.vector_multiply(other)
-    def index(self, index):
-        try:
-            row, col = index
-            return col * 4 + row
-        except Exception:
-            return index
+    # def __getitem__(self, index):
+    #     return self.value[self.index(index)]
+    # def __setitem__(self, index, value):
+    #     self.value[self.index(index)] = value
+    # def index(self, index):
+    #     try:
+    #         row, col = index
+    #         return col * 4 + row
+    #     except Exception:
+    #         return index
     def matrix_multiply(self, other):
-        result = Matrix()
-        for col in xrange(4):
-            for row in xrange(4):
-                result[(row, col)] = sum(
-                    self[(row, i)] * other[(i, col)] for i in xrange(4))
-        return result
+        (
+            a00, a10, a20, a30, a01, a11, a21, a31,
+            a02, a12, a22, a32, a03, a13, a23, a33,
+        ) = self.value
+        (
+            b00, b10, b20, b30, b01, b11, b21, b31,
+            b02, b12, b22, b32, b03, b13, b23, b33,
+        ) = other.value
+        c00 = a00 * b00 + a01 * b10 + a02 * b20 + a03 * b30
+        c10 = a10 * b00 + a11 * b10 + a12 * b20 + a13 * b30
+        c20 = a20 * b00 + a21 * b10 + a22 * b20 + a23 * b30
+        c30 = a30 * b00 + a31 * b10 + a32 * b20 + a33 * b30
+        c01 = a00 * b01 + a01 * b11 + a02 * b21 + a03 * b31
+        c11 = a10 * b01 + a11 * b11 + a12 * b21 + a13 * b31
+        c21 = a20 * b01 + a21 * b11 + a22 * b21 + a23 * b31
+        c31 = a30 * b01 + a31 * b11 + a32 * b21 + a33 * b31
+        c02 = a00 * b02 + a01 * b12 + a02 * b22 + a03 * b32
+        c12 = a10 * b02 + a11 * b12 + a12 * b22 + a13 * b32
+        c22 = a20 * b02 + a21 * b12 + a22 * b22 + a23 * b32
+        c32 = a30 * b02 + a31 * b12 + a32 * b22 + a33 * b32
+        c03 = a00 * b03 + a01 * b13 + a02 * b23 + a03 * b33
+        c13 = a10 * b03 + a11 * b13 + a12 * b23 + a13 * b33
+        c23 = a20 * b03 + a21 * b13 + a22 * b23 + a23 * b33
+        c33 = a30 * b03 + a31 * b13 + a32 * b23 + a33 * b33
+        return Matrix([
+            c00, c10, c20, c30, c01, c11, c21, c31,
+            c02, c12, c22, c32, c03, c13, c23, c33])
     def vector_multiply(self, other):
-        return tuple(
-            sum(self[(i, j)] * other[j] for j in xrange(4))
-            for i in xrange(4))
+        (
+            a00, a10, a20, a30, a01, a11, a21, a31,
+            a02, a12, a22, a32, a03, a13, a23, a33,
+        ) = self.value
+        b0, b1, b2, b3 = other
+        return (
+            a00 * b0 + a01 * b1 + a02 * b2 + a03 * b3,
+            a10 * b0 + a11 * b1 + a12 * b2 + a13 * b3,
+            a20 * b0 + a21 * b1 + a22 * b2 + a23 * b3,
+            a30 * b0 + a31 * b1 + a32 * b2 + a33 * b3,
+        )
     def identity(self):
         return Matrix()
     def transpose(self):
-        result = Matrix()
-        for col in xrange(4):
-            for row in xrange(4):
-                result[(row, col)] = self[(col, row)]
-        return result
+        (
+            a00, a10, a20, a30, a01, a11, a21, a31,
+            a02, a12, a22, a32, a03, a13, a23, a33,
+        ) = self.value
+        return Matrix([
+            a00, a01, a02, a03, a10, a11, a12, a13,
+            a20, a21, a22, a23, a30, a31, a32, a33])
     def determinant(self):
         (
             m00, m10, m20, m30, m01, m11, m21, m31,
