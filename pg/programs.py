@@ -61,6 +61,8 @@ class DirectionalLightProgram(BaseProgram):
     uniform vec3 object_color;
     uniform vec3 ambient_color;
     uniform vec3 light_color;
+    uniform float specular_power;
+    uniform float specular_multiplier;
     uniform bool use_texture;
 
     varying vec3 frag_position;
@@ -78,9 +80,10 @@ class DirectionalLightProgram(BaseProgram):
         if (diffuse > 0.0) {
             vec3 camera_vector = normalize(camera_position - frag_position);
             specular = pow(max(dot(camera_vector,
-                reflect(-light_direction, frag_normal)), 0.0), 32.0);
+                reflect(-light_direction, frag_normal)), 0.0), specular_power);
         }
-        vec3 light = ambient_color + light_color * diffuse + specular;
+        vec3 light = ambient_color + light_color * diffuse +
+            specular * specular_multiplier;
         gl_FragColor = vec4(min(color * light, vec3(1.0)), 1.0);
     }
     '''
@@ -89,4 +92,6 @@ class DirectionalLightProgram(BaseProgram):
         context.object_color = (0.4, 0.6, 0.8)
         context.ambient_color = (0.3, 0.3, 0.3)
         context.light_color = (0.7, 0.7, 0.7)
+        context.specular_power = 32.0
+        context.specular_multiplier = 1.0
         context.use_texture = False

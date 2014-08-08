@@ -12,6 +12,7 @@ class Window(pg.Window):
         self.wasd.look_at((-20, 12, -8), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
         self.context.object_color = (0.2, 0.8, 0.4)
+        self.context.specular_multiplier = 0.3
         normals = defaultdict(list)
         position = []
         size = 50
