@@ -222,14 +222,17 @@ class Context(object):
         self._uniforms = dict((x.name, x) for x in program.get_uniforms())
         self._attribute_values = {}
         self._uniform_values = {}
+        self._dirty = set()
         self._program.set_defaults(self)
     def __setattr__(self, name, value):
         if name.startswith('_'):
             super(Context, self).__setattr__(name, value)
         elif name in self._attributes:
             self._attribute_values[name] = value
+            self._dirty.add(name)
         elif name in self._uniforms:
             self._uniform_values[name] = value
+            self._dirty.add(name)
         else:
             super(Context, self).__setattr__(name, value)
     def __getattr__(self, name):
@@ -244,9 +247,12 @@ class Context(object):
     def draw(self, mode):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
-            self._uniforms[name].bind(value)
+            if name in self._dirty:
+                self._uniforms[name].bind(value)
         for name, value in self._attribute_values.iteritems():
-            self._attributes[name].bind(value)
+            if name in self._dirty:
+                self._attributes[name].bind(value)
+        self._dirty.clear()
         vertex_count = min(
             x.vertex_count for x in self._attribute_values.itervalues())
         glDrawArrays(mode, 0, vertex_count)
