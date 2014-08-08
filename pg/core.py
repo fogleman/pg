@@ -344,10 +344,12 @@ class App(object):
         self.windows = []
     def run(self):
         while self.windows:
-            glfw.poll_events()
-            for window in list(self.windows):
-                window.tick()
+            self.tick()
         glfw.terminate()
+    def tick(self):
+        glfw.poll_events()
+        for window in list(self.windows):
+            window.tick()
 
 class Window(object):
     def __init__(self, size, title='Python Graphics'):
@@ -367,6 +369,8 @@ class Window(object):
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
+    def close(self):
+        glfw.set_window_should_close(self.handle, 1)
     def set_exclusive(self, exclusive=True):
         if exclusive == self.exclusive:
             return
@@ -408,6 +412,7 @@ class Window(object):
         data = (c_ubyte * (width * height * 3))()
         glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)
         im = Image.frombytes('RGB', (width, height), data)
+        im = im.transpose(Image.FLIP_TOP_BOTTOM)
         im.save(path)
     def set_callbacks(self):
         glfw.set_window_size_callback(self.handle, self._on_size)

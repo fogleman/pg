@@ -34,6 +34,21 @@ def get_menu_example():
     except Exception:
         return None
 
+def generate_screenshots(size):
+    try:
+        os.mkdir('screenshots')
+    except Exception:
+        pass
+    app = pg.App()
+    for name in EXAMPLES:
+        module = import_module('examples.%s' % name)
+        window = module.Window(size)
+        app.tick()
+        app.tick()
+        window.save_image('screenshots/%s.png' % name)
+        window.close()
+    app.run()
+
 def main():
     app = pg.App()
     name = get_argument_example() or get_menu_example()
@@ -44,4 +59,5 @@ def main():
     app.run()
 
 if __name__ == '__main__':
+    # generate_screenshots((1600, 1200))
     main()

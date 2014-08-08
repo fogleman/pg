@@ -3,7 +3,7 @@ import pg
 class Window(pg.Window):
     def setup(self):
         self.wasd = pg.WASD(self)
-        self.wasd.look_at((-1, 1, 1), (0, 0, 0))
+        self.wasd.look_at(pg.normalize((1, 0, 1)), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
         self.context.sampler = pg.Texture(0, 'examples/earth.png')
         self.context.use_texture = True
