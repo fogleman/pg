@@ -102,9 +102,9 @@ class Cone(object):
                 (0.5, 0.5), uv2, uv1,
             ]
             for position in positions:
-                self.position.append((matrix * position))
+                self.position.append(matrix * position)
             for normal in normals:
-                self.normal.append((normal_matrix * normal))
+                self.normal.append(normal_matrix * normal)
             for uv in uvs:
                 self.uv.append(uv)
 
@@ -157,9 +157,9 @@ class Cylinder(object):
                 (u2, 0), (u1, 1), (u2, 1),
             ]
             for position in positions:
-                self.position.append((matrix * position))
+                self.position.append(matrix * position)
             for normal in normals:
-                self.normal.append((normal_matrix * normal))
+                self.normal.append(normal_matrix * normal)
             for uv in uvs:
                 self.uv.append(uv)
 
@@ -238,7 +238,7 @@ class Plane(object):
         matrix = matrix.rotate((rx, 0, rz), b)
         matrix = matrix.translate(point)
         for position in positions:
-            self.position.append((matrix * position))
+            self.position.append(matrix * position)
         self.normal.extend([normal] * 6)
         for uv in uvs:
             self.uv.append(uv)

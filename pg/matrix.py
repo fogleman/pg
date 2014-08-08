@@ -25,8 +25,10 @@ class Matrix(object):
         elif len(other) == 3:
             x, y, z = other
             return self.vector_multiply((x, y, z, 1))[:3]
-        else:
+        elif len(other) == 4:
             return self.vector_multiply(other)
+        else:
+            raise Exception
     # def __getitem__(self, index):
     #     return self.value[self.index(index)]
     # def __setitem__(self, index, value):
