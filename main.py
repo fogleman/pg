@@ -1,52 +1,47 @@
-from math import sin, cos, radians, pi
+from importlib import import_module
+import os
 import pg
+import sys
 
-class Window(pg.Window):
-    def __init__(self):
-        super(Window, self).__init__((800, 600))
-        self.wasd = pg.WASD(self, speed=3)
-        self.wasd.look_at((-5, 4, 5), (0, 0, 0))
-    def setup(self):
-        self.context = pg.Context(pg.DirectionalLightProgram())
-        data = []
-        points = pg.poisson_disc(-4, -4, 4, 4, 1, 32)
-        for x, z in points:
-            noise = pg.simplex2(10 + x * 0.25, 10 + z * 0.25, 4)
-            y = (noise + 1) / 1
-            shape = pg.Cone((x, 0, z), (x, y, z), 0.4, 36)
-            data.extend(pg.interleave(shape.position, shape.normal))
-            shape = pg.Sphere(3, 0.3, (x, y, z))
-            data.extend(pg.interleave(shape.position, shape.normal))
-        self.context.position, self.context.normal = (
-            pg.VertexBuffer(data).slices(3, 3))
-        self.plane = pg.Context(pg.DirectionalLightProgram())
-        self.plane.object_color = (1, 1, 1)
-        shape = pg.Plane((0, -0.1, 0), (0, 1, 0), 5)
-        data = pg.interleave(shape.position, shape.normal)
-        self.plane.position, self.plane.normal = (
-            pg.VertexBuffer(data).slices(3, 3))
-        self.axes = pg.Context(pg.SolidColorProgram())
-        self.axes.color = (0.3, 0.3, 0.3)
-        self.axes.position = pg.VertexBuffer(pg.Axes(100).position)
-    def update(self, t, dt):
-        matrix = pg.Matrix()#.rotate((0, 1, 0), t * 2 * pi / 60)
-        normal_matrix = matrix.inverse().transpose()
-        matrix = self.wasd.get_matrix(matrix)
-        matrix = matrix.perspective(65, self.aspect, 0.01, 100)
-        self.context.matrix = matrix
-        self.plane.matrix = matrix
-        self.axes.matrix = matrix
-        self.context.normal_matrix = normal_matrix
-        self.plane.normal_matrix = normal_matrix
-        self.context.camera_position = self.wasd.position
-        self.plane.camera_position = self.wasd.position
-    def draw(self):
-        self.clear()
-        self.plane.draw(pg.GL_TRIANGLES)
-        self.context.draw(pg.GL_TRIANGLES)
-        self.axes.draw(pg.GL_LINES)
+def find_examples():
+    result = []
+    for filename in os.listdir('examples'):
+        name, ext = os.path.splitext(filename)
+        if ext == '.py' and name != '__init__':
+            result.append(name)
+    return result
 
-if __name__ == "__main__":
+EXAMPLES = find_examples()
+
+def get_argument_example():
+    args = sys.argv[1:]
+    if len(args) != 1:
+        return None
+    arg = args[0]
+    if arg in EXAMPLES:
+        return arg
+    try:
+        return EXAMPLES[int(arg) - 1]
+    except Exception:
+        return None
+
+def get_menu_example():
+    print 'Select an example to run:'
+    for index, name in enumerate(EXAMPLES):
+        print '%3d. %s' % (index + 1, name)
+    try:
+        return EXAMPLES[int(raw_input('> ')) - 1]
+    except Exception:
+        return None
+
+def main():
     app = pg.App()
-    Window()
+    name = get_argument_example() or get_menu_example()
+    if name is None:
+        return
+    module = import_module('examples.%s' % name)
+    module.Window((800, 600))
     app.run()
+
+if __name__ == '__main__':
+    main()
