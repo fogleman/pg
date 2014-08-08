@@ -1,14 +1,10 @@
-from __future__ import division
-
-from math import sqrt, floor
+from math import floor
 import random
 
-F2 = 0.5 * (sqrt(3) - 1)
-G2 = (3 - sqrt(3)) / 6
-F3 = 1 / 3
-G3 = 1 / 6
+F2 = (3 ** 0.5 - 1) * 0.5
+G2 = (3 - 3 ** 0.5) / 6.0
 
-GRAD3 = [
+GRAD = [
     (1, 1, 0), (-1, 1, 0), (1, -1, 0), (-1, -1, 0),
     (1, 0, 1), (-1, 0, 1), (1, 0, -1), (-1, 0, -1),
     (0, 1, 1), (0, -1, 1), (0, 1, -1), (0, -1, -1),
@@ -64,30 +60,30 @@ class Noise(object):
         i = floor(x + s)
         j = floor(y + s)
         t = (i + j) * G2
-        xx = [0, 0, 0]
-        yy = [0, 0, 0]
-        xx[0] = x - (i - t)
-        yy[0] = y - (j - t)
-        i1 = int(xx[0] > yy[0])
-        j1 = int(xx[0] <= yy[0])
-        xx[2] = xx[0] + G2 * 2 - 1
-        yy[2] = yy[0] + G2 * 2 - 1
-        xx[1] = xx[0] - i1 + G2
-        yy[1] = yy[0] - j1 + G2
-        i = int(i) & 255
-        j = int(j) & 255
-        g = [
-            perm[i + perm[j]] % 12,
-            perm[i + i1 + perm[j + j1]] % 12,
-            perm[i + 1 + perm[j + 1]] % 12,
-        ]
-        noise = [0, 0, 0]
-        for c in xrange(3):
-            f = 0.5 - xx[c] * xx[c] - yy[c] * yy[c]
-            if f > 0:
-                noise[c] = (f * f * f * f *
-                    (GRAD3[g[c]][0] * xx[c] + GRAD3[g[c]][1] * yy[c]))
-        return sum(noise) * 70
+        x0 = x - (i - t)
+        y0 = y - (j - t)
+        i1 = int(x0 > y0)
+        j1 = int(x0 <= y0)
+        x1 = x0 - i1 + G2
+        y1 = y0 - j1 + G2
+        x2 = x0 + G2 * 2 - 1
+        y2 = y0 + G2 * 2 - 1
+        i = int(i) % 256
+        j = int(j) % 256
+        noise = 0.0
+        f = 0.5 - x0 * x0 - y0 * y0
+        if f > 0:
+            gx, gy, _ = GRAD[perm[i + perm[j]] % 12]
+            noise += f * f * f * f * (gx * x0 + gy * y0)
+        f = 0.5 - x1 * x1 - y1 * y1
+        if f > 0:
+            gx, gy, _ = GRAD[perm[i + i1 + perm[j + j1]] % 12]
+            noise += f * f * f * f * (gx * x1 + gy * y1)
+        f = 0.5 - x2 * x2 - y2 * y2
+        if f > 0:
+            gx, gy, _ = GRAD[perm[i + 1 + perm[j + 1]] % 12]
+            noise += f * f * f * f * (gx * x2 + gy * y2)
+        return noise * 70
     def simplex2(self, x, y, octaves=1, persistence=0.5, lacunarity=2.0):
         frequency = 1.0
         amplitude = 1.0
@@ -102,5 +98,5 @@ class Noise(object):
 
 _instance = Noise()
 
-def simplex2(self, x, y, octaves=1, persistence=0.5, lacunarity=2.0):
+def simplex2(x, y, octaves=1, persistence=0.5, lacunarity=2.0):
     return _instance.simplex2(x, y, octaves, persistence, lacunarity)

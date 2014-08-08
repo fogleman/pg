@@ -40,11 +40,14 @@ from programs import (
 )
 
 from util import (
+    add,
+    cross,
     distance,
     flatten,
     hex_color,
     interleave,
     normalize,
+    sub,
 )
 
 from OpenGL.GL import (

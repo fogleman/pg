@@ -20,6 +20,25 @@ def distance(p1, p2):
     '''
     return sum((a - b) ** 2 for a, b in zip(p1, p2)) ** 0.5
 
+def cross(v1, v2):
+    '''Computes the cross product of two vectors.
+    '''
+    return (
+        v1[1] * v2[2] - v1[2] * v2[1],
+        v1[2] * v2[0] - v1[0] * v2[2],
+        v1[0] * v2[1] - v1[1] * v2[0],
+    )
+
+def add(v1, v2):
+    '''Adds two vectors.
+    '''
+    return tuple(a + b for a, b in zip(v1, v2))
+
+def sub(v1, v2):
+    '''Subtracts two vectors.
+    '''
+    return tuple(a - b for a, b in zip(v1, v2))
+
 def interleave(*args):
     '''Interleaves the elements of the provided arrays.
 
