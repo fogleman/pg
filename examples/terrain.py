@@ -2,9 +2,9 @@ from collections import defaultdict
 import pg
 
 def noise(x, z):
-    a = pg.simplex2(-x * 0.02, -z * 0.02, 2)
-    b = pg.simplex2(x * 0.1, z * 0.1, 2)
-    return (a + 1) * 6 + b
+    a = pg.simplex2(-x * 0.02, -z * 0.02, 4)
+    b = pg.simplex2(x * 0.1, z * 0.1, 4)
+    return (a + 1) * 8 + b
 
 class Window(pg.Window):
     def setup(self):
@@ -15,10 +15,12 @@ class Window(pg.Window):
         normals = defaultdict(list)
         position = []
         size = 50
+        # generate height map
         height = {}
         for x in xrange(-size, size + 1):
             for z in xrange(-size, size + 1):
                 height[(x, z)] = noise(x, z)
+        # generate triangles and track normals for all vertices
         for x in xrange(-size, size):
             for z in xrange(-size, size):
                 t1 = [x + 0, z + 0, x + 1, z + 0, x + 0, z + 1]
@@ -33,18 +35,20 @@ class Window(pg.Window):
                     normals[(x1, z1)].append(n)
                     normals[(x2, z2)].append(n)
                     normals[(x3, z3)].append(n)
+        # compute average normal for all vertices
         normal = []
         for key, value in normals.items():
             normals[key] = pg.normalize(reduce(pg.add, value))
         for x, y, z in position:
             normal.append(normals[(x, z)])
+        # generate vertex buffer
         self.context.position, self.context.normal = (
             pg.VertexBuffer(pg.interleave(position, normal)).slices(3, 3))
     def update(self, t, dt):
         matrix = pg.Matrix()
         normal_matrix = matrix.inverse().transpose()
         matrix = self.wasd.get_matrix(matrix)
-        matrix = matrix.perspective(65, self.aspect, 0.01, 100)
+        matrix = matrix.perspective(65, self.aspect, 0.01, 200)
         self.context.matrix = matrix
         self.context.normal_matrix = normal_matrix
         self.context.camera_position = self.wasd.position
