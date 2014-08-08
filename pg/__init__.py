@@ -7,7 +7,6 @@ from core import (
     Texture,
     VertexBuffer,
     VertexShader,
-    WASD,
     Window,
 )
 
@@ -48,6 +47,10 @@ from util import (
     interleave,
     normalize,
     sub,
+)
+
+from wasd import (
+    WASD,
 )
 
 from OpenGL.GL import (
