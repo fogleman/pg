@@ -58,6 +58,56 @@ class Sphere(object):
             self._setup(detail - 1, (c, ac, bc))
             self._setup(detail - 1, (ab, bc, ac))
 
+class Cone(object):
+    def __init__(self, p1, p2, radius, detail):
+        self.position = []
+        self.normal = []
+        self.uv = []
+        self.setup(p1, p2, radius, detail)
+    def setup(self, p1, p2, radius, detail):
+        x1, y1, z1 = p1
+        x2, y2, z2 = p2
+        dx, dy, dz = x2 - x1, y2 - y1, z2 - z1
+        cx, cy, cz = x1 + dx / 2, y1 + dy / 2, z1 + dz / 2
+        a = atan2(dz, dx) - pi / 2
+        b = atan2(dy, hypot(dx, dz)) - pi / 2
+        matrix = Matrix()
+        matrix = matrix.rotate((cos(a), 0, sin(a)), b)
+        normal_matrix = matrix
+        matrix = matrix.translate((cx, cy, cz))
+        d = distance(p1, p2)
+        y = -sin(pi / 2 - atan2(d, radius)) * radius
+        angles = [i * 2 * pi / detail for i in xrange(detail + 1)]
+        for a1, a2 in zip(angles, angles[1:]):
+            x1, z1 = cos(a1) * radius, sin(a1) * radius
+            x2, z2 = cos(a2) * radius, sin(a2) * radius
+            y1, y2 = -d / 2, d / 2
+            n1, n2 = normalize((x1, y, z1)), normalize((x2, y, z2))
+            uv1 = (0.5 + cos(a1) * 0.5, 0.5 + sin(a1) * 0.5)
+            uv2 = (0.5 + cos(a2) * 0.5, 0.5 + sin(a2) * 0.5)
+            u1 = a1 % (2 * pi)
+            u2 = a2 % (2 * pi)
+            if u2 < u1:
+                u2 += 2 * pi
+            positions = [
+                (0, y2, 0), (x2, y2, z2), (x1, y2, z1),
+                (0, y1, 0), (x1, y2, z1), (x2, y2, z2),
+            ]
+            normals = [
+                (0, 1, 0), (0, 1, 0), (0, 1, 0),
+                (0, -1, 0), n1, n2,
+            ]
+            uvs = [
+                (0.5, 0.5), uv1, uv2,
+                (0.5, 0.5), uv2, uv1,
+            ]
+            for position in positions:
+                self.position.append((matrix * position))
+            for normal in normals:
+                self.normal.append((normal_matrix * normal))
+            for uv in uvs:
+                self.uv.append(uv)
+
 class Cylinder(object):
     def __init__(self, p1, p2, radius, detail):
         self.position = []

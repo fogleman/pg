@@ -13,15 +13,15 @@ class Window(pg.Window):
         for x, z in points:
             noise = pg.simplex2(10 + x * 0.25, 10 + z * 0.25, 4)
             y = (noise + 1) / 1
-            shape = pg.Cylinder((x, 0, z), (x, y, z), 0.1, 36)
+            shape = pg.Cone((x, 0, z), (x, y, z), 0.4, 36)
             data.extend(pg.interleave(shape.position, shape.normal))
-            shape = pg.Sphere(3, 0.4, (x, y, z))
+            shape = pg.Sphere(3, 0.3, (x, y, z))
             data.extend(pg.interleave(shape.position, shape.normal))
         self.context.position, self.context.normal = (
             pg.VertexBuffer(data).slices(3, 3))
         self.plane = pg.Context(pg.DirectionalLightProgram())
         self.plane.object_color = (1, 1, 1)
-        shape = pg.Plane((0, 0.1, 0), (0, 1, 0), 5)
+        shape = pg.Plane((0, -0.1, 0), (0, 1, 0), 5)
         data = pg.interleave(shape.position, shape.normal)
         self.plane.position, self.plane.normal = (
             pg.VertexBuffer(data).slices(3, 3))
