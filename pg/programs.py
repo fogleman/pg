@@ -38,16 +38,19 @@ class DirectionalLightProgram(BaseProgram):
     attribute vec4 position;
     attribute vec3 normal;
     attribute vec2 uv;
+    attribute vec3 color;
 
     varying vec3 frag_position;
     varying vec3 frag_normal;
     varying vec2 frag_uv;
+    varying vec3 frag_color;
 
     void main() {
         gl_Position = matrix * position;
         frag_position = vec3(position);
         frag_normal = normal;
         frag_uv = uv;
+        frag_color = color;
     }
     '''
     FS = '''
@@ -64,13 +67,18 @@ class DirectionalLightProgram(BaseProgram):
     uniform float specular_power;
     uniform float specular_multiplier;
     uniform bool use_texture;
+    uniform bool use_color;
 
     varying vec3 frag_position;
     varying vec3 frag_normal;
     varying vec2 frag_uv;
+    varying vec3 frag_color;
 
     void main() {
         vec3 color = object_color;
+        if (use_color) {
+            color = frag_color;
+        }
         if (use_texture) {
             color = vec3(texture2D(sampler, frag_uv));
         }
@@ -95,3 +103,4 @@ class DirectionalLightProgram(BaseProgram):
         context.specular_power = 32.0
         context.specular_multiplier = 1.0
         context.use_texture = False
+        context.use_color = False
