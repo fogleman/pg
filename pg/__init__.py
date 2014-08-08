@@ -34,6 +34,7 @@ from poisson import (
 )
 
 from programs import (
+    DirectionalLightProgram,
     SolidColorProgram,
 )
 

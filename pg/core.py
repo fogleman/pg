@@ -178,6 +178,8 @@ class Program(object):
             raise Exception(log)
     def use(self):
         glUseProgram(self.handle)
+    def set_defaults(self, context):
+        pass
     def get_attributes(self):
         result = []
         count = c_int()
@@ -212,6 +214,7 @@ class Context(object):
         self._uniforms = dict((x.name, x) for x in program.get_uniforms())
         self._attribute_values = {}
         self._uniform_values = {}
+        self._program.set_defaults(self)
     def __setattr__(self, name, value):
         if name.startswith('_'):
             super(Context, self).__setattr__(name, value)
@@ -249,6 +252,9 @@ class WASD(object):
         if self.exclusive:
             self.window.set_exclusive()
         self.window.listeners.append(self)
+    @property
+    def position(self):
+        return (self.x, self.y, self.z)
     def look_at(self, position, target):
         px, py, pz = position
         tx, ty, tz = target
@@ -381,6 +387,10 @@ class Window(object):
         glfw.make_context_current(self.handle)
     def clear(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    def clear_color_buffer(self):
+        glClear(GL_COLOR_BUFFER_BIT)
+    def clear_depth_buffer(self):
+        glClear(GL_DEPTH_BUFFER_BIT)
     def tick(self):
         self.use()
         if glfw.window_should_close(self.handle):
