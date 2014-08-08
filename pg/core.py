@@ -28,17 +28,25 @@ class FragmentShader(Shader):
         super(FragmentShader, self).__init__(GL_FRAGMENT_SHADER, shader_source)
 
 class VertexBuffer(object):
-    def __init__(self, data):
-        self.count = len(data)
-        self.components = len(data[0])
-        flat = flatten(data)
+    def __init__(self, data=None):
         handle = c_uint()
         glGenBuffers(1, byref(handle))
         self.handle = handle.value
+        if data is not None:
+            self.set_data(data)
+    def set_data(self, data):
+        self.vertex_count = len(data)
+        self.components = len(data[0]) if self.vertex_count else 1
+        self.size = self.vertex_count * self.components
+        flat = flatten(data)
+        if len(flat) != self.size:
+            raise Exception
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
         glBufferData(
-            GL_ARRAY_BUFFER, sizeof(c_float) * len(flat),
-            (c_float * len(flat))(*flat), GL_STATIC_DRAW)
+            GL_ARRAY_BUFFER,
+            sizeof(c_float) * self.size,
+            (c_float * self.size)(*flat),
+            GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
@@ -49,19 +57,20 @@ class VertexBuffer(object):
             result.append(self.slice(components, offset))
             offset += components
         return result
-    def set(self, location):
+    def bind(self, location):
         glEnableVertexAttribArray(location)
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
         glVertexAttribPointer(
-            location, self.components, GL_FLOAT, GL_FALSE, 0, c_void_p())
+            location, self.components, GL_FLOAT, GL_FALSE,
+            0, c_void_p())
 
 class VertexBufferSlice(object):
     def __init__(self, parent, components, offset):
         self.parent = parent
+        self.vertex_count = self.parent.vertex_count
         self.components = components
         self.offset = offset
-        self.count = self.parent.count
-    def set(self, location):
+    def bind(self, location):
         glEnableVertexAttribArray(location)
         glBindBuffer(GL_ARRAY_BUFFER, self.parent.handle)
         glVertexAttribPointer(
@@ -104,8 +113,8 @@ class Attribute(object):
         self.name = name
         self.size = size
         self.data_type = data_type
-    def set(self, value):
-        value.set(self.location)
+    def bind(self, value):
+        value.bind(self.location)
     def __repr__(self):
         return 'Attribute%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -121,7 +130,7 @@ class Uniform(object):
         self.name = name
         self.size = size
         self.data_type = data_type
-    def set(self, value):
+    def bind(self, value):
         if isinstance(value, Matrix):
             value = value.value
         elif isinstance(value, Texture):
@@ -223,14 +232,24 @@ class Context(object):
             self._uniform_values[name] = value
         else:
             super(Context, self).__setattr__(name, value)
+    def __getattr__(self, name):
+        if name.startswith('_'):
+            super(Context, self).__getattr__(name)
+        elif name in self._attributes:
+            return self._attribute_values[name]
+        elif name in self._uniforms:
+            return self._uniform_values[name]
+        else:
+            super(Context, self).__getattr__(name)
     def draw(self, mode):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
-            self._uniforms[name].set(value)
+            self._uniforms[name].bind(value)
         for name, value in self._attribute_values.iteritems():
-            self._attributes[name].set(value)
-        count = min(x.count for x in self._attribute_values.itervalues())
-        glDrawArrays(mode, 0, count)
+            self._attributes[name].bind(value)
+        vertex_count = min(
+            x.vertex_count for x in self._attribute_values.itervalues())
+        glDrawArrays(mode, 0, vertex_count)
 
 class App(object):
     instance = None
