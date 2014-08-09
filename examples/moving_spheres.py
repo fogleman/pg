@@ -4,7 +4,7 @@ import pg
 class Window(pg.Window):
     def setup(self):
         self.wasd = pg.WASD(self, speed=5)
-        self.wasd.look_at((-12, 0, 4), (-6, 0, 0))
+        self.wasd.look_at((14, 0, 0), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
         sphere = pg.Sphere(3, 0.4, (0, 0, 0))
         self.context.position = pg.VertexBuffer(sphere.position)
