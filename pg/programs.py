@@ -3,7 +3,7 @@ from util import normalize
 
 class BaseProgram(Program):
     def __init__(self):
-        return super(BaseProgram, self).__init__(self.VS, self.FS)
+        super(BaseProgram, self).__init__(self.VS, self.FS)
 
 class SolidColorProgram(BaseProgram):
     VS = '''
@@ -34,6 +34,7 @@ class DirectionalLightProgram(BaseProgram):
     #version 120
 
     uniform mat4 matrix;
+    uniform mat4 model_matrix;
 
     attribute vec4 position;
     attribute vec3 normal;
@@ -47,7 +48,7 @@ class DirectionalLightProgram(BaseProgram):
 
     void main() {
         gl_Position = matrix * position;
-        frag_position = vec3(position);
+        frag_position = vec3(model_matrix * position);
         frag_normal = normal;
         frag_uv = uv;
         frag_color = color;

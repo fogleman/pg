@@ -10,6 +10,7 @@ class Window(pg.Window):
         self.context.normal = pg.VertexBuffer(sphere.normal)
     def update(self, t, dt):
         matrix = pg.Matrix()
+        self.context.model_matrix = matrix
         normal_matrix = matrix.inverse().transpose()
         matrix = self.wasd.get_matrix(matrix)
         matrix = matrix.perspective(65, self.aspect, 0.01, 100)

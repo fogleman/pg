@@ -229,7 +229,6 @@ class Context(object):
             super(Context, self).__setattr__(name, value)
         elif name in self._attributes:
             self._attribute_values[name] = value
-            self._dirty.add(name)
         elif name in self._uniforms:
             self._uniform_values[name] = value
             self._dirty.add(name)
@@ -250,8 +249,7 @@ class Context(object):
             if name in self._dirty:
                 self._uniforms[name].bind(value)
         for name, value in self._attribute_values.iteritems():
-            if name in self._dirty:
-                self._attributes[name].bind(value)
+            self._attributes[name].bind(value)
         self._dirty.clear()
         vertex_count = min(
             x.vertex_count for x in self._attribute_values.itervalues())

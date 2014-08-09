@@ -1,4 +1,4 @@
-from math import sin, cos
+from math import sin, cos, pi
 import pg
 
 class Window(pg.Window):
@@ -13,13 +13,15 @@ class Window(pg.Window):
     def draw(self):
         self.clear()
         self.context.camera_position = self.wasd.position
-        for x in range(-10, 11):
-            y = sin(self.time * 2 + x * 0.5) * 2
-            matrix = pg.Matrix().translate((x, y, 0))
-            matrix = self.wasd.get_matrix(matrix)
-            matrix = matrix.perspective(65, self.aspect, 0.01, 100)
-            self.context.matrix = matrix
-            self.context.draw(pg.GL_TRIANGLES)
+        for z in range(-1, 2):
+            for x in range(-10, 11):
+                y = sin(self.time * 3 + x * 0.5 + z * 2 * pi / 3) * 2
+                matrix = pg.Matrix().translate((x, y, z * 3))
+                self.context.model_matrix = matrix
+                matrix = self.wasd.get_matrix(matrix)
+                matrix = matrix.perspective(65, self.aspect, 0.01, 100)
+                self.context.matrix = matrix
+                self.context.draw(pg.GL_TRIANGLES)
 
 if __name__ == "__main__":
     app = pg.App()
