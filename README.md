@@ -1,7 +1,7 @@
-## pg: Python Graphics Framework
+## pg: The Python Graphics Framework
 
-pg is a lightweight OpenGL graphics framework for Python. It is a work in
-progress.
+pg is a lightweight, high-level OpenGL graphics framework for Python. It is a
+work in progress.
 
 ### Tutorial
 
@@ -41,7 +41,7 @@ focus on your application-specific functionality instead.
 
 ### Examples
 
-Clone the repository and run main.py to see several other examples.
+Clone the repository and run main.py to see this and several other examples.
 
 ![Screenshot](http://i.imgur.com/s5AEYei.gif)
 
