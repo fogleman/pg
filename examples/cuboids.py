@@ -1,3 +1,4 @@
+from OpenGL.GL import *
 import pg
 import random
 
@@ -64,7 +65,11 @@ class Window(pg.Window):
         matrix = pg.Matrix().translate((width / 2, height / 2, 0))
         matrix = matrix.orthographic(0, width, 0, height, -1, 1)
         self.crosshairs.matrix = matrix
+        glEnable(GL_COLOR_LOGIC_OP)
+        glLogicOp(GL_INVERT)
+        glLineWidth(3)
         self.crosshairs.draw(pg.GL_LINES)
+        glDisable(GL_COLOR_LOGIC_OP)
     def on_mouse_button(self, button, action, mods):
         if button == 0 and action == 1:
             bullet = Bullet(
