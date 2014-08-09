@@ -45,6 +45,7 @@ from util import (
     flatten,
     hex_color,
     interleave,
+    mul,
     normalize,
     sub,
 )

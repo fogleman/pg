@@ -82,6 +82,12 @@ class WASD(object):
         matrix = matrix.rotate((cos(self.rx), 0, sin(self.rx)), self.ry)
         matrix = matrix.rotate((0, 1, 0), -self.rx)
         return matrix
+    def get_sight_vector(self):
+        m = cos(self.ry)
+        vx = cos(self.rx - pi / 2) * m
+        vy = sin(self.ry)
+        vz = sin(self.rx - pi / 2) * m
+        return (vx, vy, vz)
     def get_motion_vector(self):
         sx, sz = self.get_strafe()
         if sx == 0 and sz == 0:

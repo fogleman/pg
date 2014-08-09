@@ -39,6 +39,11 @@ def sub(v1, v2):
     '''
     return tuple(a - b for a, b in zip(v1, v2))
 
+def mul(v, s):
+    '''Multiplies a vector and a scalar.
+    '''
+    return tuple(a * s for a in v)
+
 def interleave(*args):
     '''Interleaves the elements of the provided arrays.
 
