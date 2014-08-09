@@ -11,23 +11,23 @@ http://pg.readthedocs.org/en/latest/tutorial.html
 
 ### Features
 
-Most OpenGL applications have a lot of features in common, but there's a lot of
-boilerplate involved when using bare OpenGL. This framework provides a clean
-API for managing these common features so you can focus on your application-
-specific functionality instead.
+Many OpenGL applications have a lot of features in common, but there's a lot of
+boilerplate involved when using OpenGL. This high-level framework lets you
+focus on your application-specific functionality instead.
 
 * shaders
     * compile and link
     * attributes and uniforms
-    * built-in shaders for common functions
+    * built-in shaders for common use-cases
 * vertex buffers
+    * optionally interleaved
 * matrices
     * translate, rotate, scale
     * perspective and orthographic projections
     * transpose, determinant, inverse
 * textures
 * geometric shapes
-    * sphere, cuboid, plane, cylinder, axes
+    * sphere, cuboid, plane, cylinder, cone, axes
 * WASD movement
     * built-in!
 * windowing and input
