@@ -37,14 +37,19 @@ class Window(pg.Window):
         self.bullet.position = pg.VertexBuffer(sphere.position)
         self.bullet.normal = pg.VertexBuffer(sphere.normal)
         self.bullets = []
+        # crosshairs
+        self.crosshairs = pg.Context(pg.SolidColorProgram())
+        self.crosshairs.position = pg.VertexBuffer(pg.Crosshairs().position)
     def draw(self):
         self.clear()
+        # cuboids
         self.context.camera_position = self.wasd.position
-        self.bullet.camera_position = self.wasd.position
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 0.1, 500)
         self.context.matrix = matrix
         self.context.draw(pg.GL_TRIANGLES)
+        # bullets
+        self.bullet.camera_position = self.wasd.position
         for bullet in list(self.bullets):
             dt = self.time - bullet.time
             x, y, z = pg.add(bullet.position, pg.mul(bullet.vector, dt * 16))
@@ -54,6 +59,12 @@ class Window(pg.Window):
             self.bullet.draw(pg.GL_TRIANGLES)
             if dt > 10:
                 self.bullets.remove(bullet)
+        # crosshairs
+        width, height = self.size
+        matrix = pg.Matrix().translate((width / 2, height / 2, 0))
+        matrix = matrix.orthographic(0, width, 0, height, -1, 1)
+        self.crosshairs.matrix = matrix
+        self.crosshairs.draw(pg.GL_LINES)
     def on_mouse_button(self, button, action, mods):
         if button == 0 and action == 1:
             bullet = Bullet(

@@ -270,3 +270,11 @@ class CylinderAxes(object):
             self.position.extend(cylinder.position)
             self.normal.extend(cylinder.normal)
             self.uv.extend(cylinder.uv)
+
+class Crosshairs(object):
+    def __init__(self, size=10):
+        n = size
+        self.position = [
+            (0, -n), (0, n),
+            (-n, 0), (n, 0),
+        ]

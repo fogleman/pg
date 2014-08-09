@@ -48,6 +48,9 @@ class VertexBuffer(object):
             (c_float * self.size)(*flat),
             GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
+    def delete(self):
+        handle = c_uint(self.handle)
+        glDeleteBuffers(1, byref(handle))
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
     def slices(self, *args):

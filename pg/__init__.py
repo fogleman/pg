@@ -13,6 +13,7 @@ from core import (
 from geometry import (
     Axes,
     Cone,
+    Crosshairs,
     Cuboid,
     Cylinder,
     CylinderAxes,
