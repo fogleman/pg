@@ -12,14 +12,14 @@ class Window(pg.Window):
     def draw(self):
         self.clear()
         self.context.camera_position = self.wasd.position
-        for z in range(-1, 2):
+        matrix = self.wasd.get_matrix()
+        matrix = matrix.perspective(65, self.aspect, 0.01, 100)
+        for z in range(-2, 3):
             for x in range(-10, 11):
-                y = sin(self.time * 3 + x * 0.5 + z * 2 * pi / 3) * 2
-                matrix = pg.Matrix().translate((x, y, z * 3))
-                self.context.model_matrix = matrix
-                matrix = self.wasd.get_matrix(matrix)
-                matrix = matrix.perspective(65, self.aspect, 0.01, 100)
-                self.context.matrix = matrix
+                y = sin(self.time * pi + x * 0.5 + z * pi) * 3
+                model_matrix = pg.Matrix().translate((x, y, z * 3))
+                self.context.model_matrix = model_matrix
+                self.context.matrix = matrix * model_matrix
                 self.context.draw(pg.GL_TRIANGLES)
 
 if __name__ == "__main__":
