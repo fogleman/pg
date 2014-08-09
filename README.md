@@ -1,8 +1,13 @@
 ## pg: Python Graphics Framework
 
-pg is a lightweight OpenGL graphics framework for Python.
+pg is a lightweight OpenGL graphics framework for Python. It is a work in
+progress.
 
-It is a work in progress.
+### Tutorial
+
+A basic tutorial is available here:
+
+http://pg.readthedocs.org/en/latest/tutorial.html
 
 ### Features
 
@@ -34,7 +39,9 @@ specific functionality instead.
     brew install glfw3
     pip install glfw Pillow PyOpenGL
 
-### Example
+### Examples
+
+Clone the repository and run main.py to see several other examples.
 
 ![Screenshot](http://i.imgur.com/s5AEYei.gif)
 
