@@ -55,9 +55,9 @@ def main():
     if name is None:
         return
     module = import_module('examples.%s' % name)
-    module.Window((800, 600))
+    module.Window()
     app.run()
 
 if __name__ == '__main__':
-    # generate_screenshots((1600, 1200))
+    # generate_screenshots((800, 600))
     main()

@@ -272,7 +272,7 @@ class App(object):
             window.tick()
 
 class Window(object):
-    def __init__(self, size, title='Python Graphics'):
+    def __init__(self, size=(800, 600), title='Python Graphics'):
         self.size = width, height = size
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:

@@ -20,5 +20,5 @@ class Window(pg.Window):
 
 if __name__ == "__main__":
     app = pg.App()
-    Window((800, 600))
+    Window()
     app.run()
