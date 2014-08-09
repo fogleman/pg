@@ -6,9 +6,6 @@ Python Graphics (pg) Documentation
 
    tutorial
 
-.. automodule:: pg
-    :members:
-
 Indices and tables
 ==================
 
