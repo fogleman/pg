@@ -28,15 +28,11 @@ class Window(pg.Window):
         self.axes.position = pg.VertexBuffer(pg.Axes(100).position)
     def update(self, t, dt):
         matrix = pg.Matrix()#.rotate((0, 1, 0), t * 2 * pi / 60)
-        self.context.model_matrix = matrix
-        normal_matrix = matrix.inverse().transpose()
         matrix = self.wasd.get_matrix(matrix)
         matrix = matrix.perspective(65, self.aspect, 0.01, 100)
         self.context.matrix = matrix
         self.plane.matrix = matrix
         self.axes.matrix = matrix
-        self.context.normal_matrix = normal_matrix
-        self.plane.normal_matrix = normal_matrix
         self.context.camera_position = self.wasd.position
         self.plane.camera_position = self.wasd.position
     def draw(self):

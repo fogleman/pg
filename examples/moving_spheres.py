@@ -9,7 +9,6 @@ class Window(pg.Window):
         sphere = pg.Sphere(3, 0.4, (0, 0, 0))
         self.context.position = pg.VertexBuffer(sphere.position)
         self.context.normal = pg.VertexBuffer(sphere.normal)
-        self.context.normal_matrix = pg.Matrix().inverse().transpose()
     def draw(self):
         self.clear()
         self.context.camera_position = self.wasd.position

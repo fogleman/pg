@@ -16,12 +16,9 @@ class Window(pg.Window):
             pg.VertexBuffer(data).slices(3, 3))
     def update(self, t, dt):
         matrix = pg.Matrix()
-        self.context.model_matrix = matrix
-        normal_matrix = matrix.inverse().transpose()
         matrix = self.wasd.get_matrix(matrix)
         matrix = matrix.perspective(65, self.aspect, 0.01, 100)
         self.context.matrix = matrix
-        self.context.normal_matrix = normal_matrix
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()

@@ -1,4 +1,5 @@
 from core import Program
+from matrix import Matrix
 from util import normalize
 
 class BaseProgram(Program):
@@ -58,9 +59,9 @@ class DirectionalLightProgram(BaseProgram):
     #version 120
 
     uniform sampler2D sampler;
-    uniform mat4 normal_matrix;
     uniform vec3 camera_position;
 
+    uniform mat4 normal_matrix;
     uniform vec3 light_direction;
     uniform vec3 object_color;
     uniform vec3 ambient_color;
@@ -97,6 +98,8 @@ class DirectionalLightProgram(BaseProgram):
     }
     '''
     def set_defaults(self, context):
+        context.model_matrix = Matrix()
+        context.normal_matrix = Matrix().inverse().transpose()
         context.light_direction = normalize((1, 1, 1))
         context.object_color = (0.4, 0.6, 0.8)
         context.ambient_color = (0.3, 0.3, 0.3)
