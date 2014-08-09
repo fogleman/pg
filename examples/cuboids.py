@@ -42,12 +42,15 @@ class Window(pg.Window):
         self.crosshairs = pg.Context(pg.SolidColorProgram())
         self.crosshairs.position = pg.VertexBuffer(pg.Crosshairs().position)
     def draw(self):
+        self.wasd.x = -10
         self.clear()
         # cuboids
         self.context.camera_position = self.wasd.position
+        model_matrix = pg.Matrix().translate((self.t * -4, 0, 0))
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 0.1, 500)
-        self.context.matrix = matrix
+        self.context.matrix = matrix * model_matrix
+        self.context.model_matrix = model_matrix
         self.context.draw(pg.GL_TRIANGLES)
         # bullets
         self.bullet.camera_position = self.wasd.position

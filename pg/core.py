@@ -289,6 +289,9 @@ class Window(object):
         self.set_callbacks()
         self.call('setup')
         App.instance.windows.append(self)
+    @property
+    def t(self):
+        return time.time() - self.start
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
