@@ -15,7 +15,7 @@ from csg import (
 )
 
 from font import (
-    FontTexture,
+    Font,
 )
 
 from geometry import (

@@ -96,7 +96,7 @@ class Texture(object):
         self.unit = unit
         if isinstance(im, basestring):
             im = Image.open(im)
-        im = im.convert('RGBA')
+        im = im.convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         width, height = im.size
         data = im.tobytes()
         handle = c_uint()

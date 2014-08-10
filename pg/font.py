@@ -1,18 +1,42 @@
+from OpenGL.GL import *
+from core import Context, Texture, VertexBuffer
 from itertools import product
 from math import ceil, log
+from matrix import Matrix
 from PIL import Image, ImageDraw, ImageFont
+from programs import TextProgram
+from util import interleave
 
-class FontTexture(object):
-    def __init__(self, name, size):
+class Font(object):
+    def __init__(self, unit, name, size):
         self.load(name, size)
-    def render(self, pos, text):
+        self.context = Context(TextProgram())
+        self.context.sampler = Texture(unit, self.im)
+    def render(self, text, window_size, coord=(0, 0), anchor=(0, 0)):
+        size, position, uv = self.compute_vertex_data(text)
+        ww, wh = window_size
+        tx, ty = coord
+        ax, ay = anchor
+        tw, th = size
+        matrix = Matrix()
+        matrix = matrix.translate((tx - tw * ax, ty - th * ay, 0))
+        matrix = matrix.orthographic(0, ww, wh, 0, -1, 1)
+        self.context.matrix = matrix
+        vertex_buffer = VertexBuffer(interleave(position, uv))
+        self.context.position, self.context.uv = vertex_buffer.slices(2, 2)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        self.context.draw(GL_TRIANGLES)
+        glDisable(GL_BLEND)
+        vertex_buffer.delete()
+    def compute_vertex_data(self, text):
         position = []
         uv = []
         data = [
             (0, 0), (0, 1), (1, 0),
             (0, 1), (1, 1), (1, 0),
         ]
-        x, y = pos
+        x = y = 0
         previous = None
         for c in text:
             if c not in self.sizes:
@@ -28,10 +52,11 @@ class FontTexture(object):
             x += k
             for i, j in data:
                 position.append((x + i * self.dx + ox, y + j * self.dy + oy))
-                uv.append((u + i * self.du, v + j * self.dv))
-            x += ox + sx + 1
+                uv.append((u + i * self.du, 1.0 - v - j * self.dv))
+            x += ox + sx
             previous = c
-        return position, uv
+        size = (x, self.dy)
+        return size, position, uv
     def load(self, name, size):
         font = ImageFont.truetype(name, size)
         chars = [chr(x) for x in range(32, 127)]
