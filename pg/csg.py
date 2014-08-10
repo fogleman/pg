@@ -1,21 +1,14 @@
 from __future__ import division
 
 class Vector(object):
-    def __init__(self, *args):
-        if len(args) == 0:
-            self.x = self.y = self.z = 0
-        elif len(args) == 3:
-            self.x, self.y, self.z = args
-        elif len(args) == 1 and hasattr(args[0], 'x'):
-            self.x, self.y, self.z = args[0].x, args[0].y, args[0].z
-        elif len(args) == 1 and len(args[0]) == 3:
-            self.x, self.y, self.z = args[0]
-        else:
-            raise Exception
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
     def get_tuple(self):
         return (self.x, self.y, self.z)
     def clone(self):
-        return Vector(self)
+        return Vector(self.x, self.y, self.z)
     def negate(self):
         return Vector(-self.x, -self.y, -self.z)
     def add(self, a):
@@ -42,10 +35,10 @@ class Vector(object):
 
 class Vertex(object):
     def __init__(self, position, normal):
-        self.position = Vector(position)
-        self.normal = Vector(normal)
+        self.position = position
+        self.normal = normal
     def clone(self):
-        return Vertex(self.position, self.normal)
+        return Vertex(self.position.clone(), self.normal.clone())
     def flip(self):
         self.normal = self.normal.negate()
     def interpolate(self, a, t):
@@ -275,7 +268,7 @@ class CSG(Model):
         for i in xrange(0, len(shape.position), 3):
             positions = shape.position[i:i+3]
             normals = shape.normal[i:i+3]
-            vertices = [Vertex(Vector(a), Vector(b))
+            vertices = [Vertex(Vector(*a), Vector(*b))
                 for a, b in zip(positions, normals)]
             polygon = Polygon(vertices, None)
             polygons.append(polygon)
