@@ -1,6 +1,13 @@
 from math import sin, cos, pi
 import pg
 
+RED = 0xF04326
+YELLOW = 0xFAC02D
+GREEN = 0x1AB243
+BLUE = 0x1256D1
+
+COLORS = [pg.hex_color(x) for x in [RED, YELLOW, GREEN, BLUE]]
+
 class Window(pg.Window):
     def setup(self):
         self.wasd = pg.WASD(self, speed=5)
@@ -9,6 +16,8 @@ class Window(pg.Window):
         sphere = pg.Sphere(3, 0.4, (0, 0, 0))
         self.context.position = pg.VertexBuffer(sphere.position)
         self.context.normal = pg.VertexBuffer(sphere.normal)
+        self.context.ambient_color = (0.4, 0.4, 0.4)
+        self.context.light_color = (0.6, 0.6, 0.6)
     def draw(self):
         self.clear()
         self.context.camera_position = self.wasd.position
@@ -20,6 +29,7 @@ class Window(pg.Window):
                 model_matrix = pg.Matrix().translate((x, y, z * 3))
                 self.context.model_matrix = model_matrix
                 self.context.matrix = matrix * model_matrix
+                self.context.object_color = COLORS[(z + x) % len(COLORS)]
                 self.context.draw(pg.GL_TRIANGLES)
 
 if __name__ == "__main__":
