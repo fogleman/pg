@@ -1,35 +1,37 @@
 from OpenGL.GL import *
-from core import Context, Texture, VertexBuffer
 from itertools import product
 from math import ceil, log
-from matrix import Matrix
 from PIL import Image, ImageDraw, ImageFont
-from programs import TextProgram
-from util import interleave
+import pg
 
 class Font(object):
-    def __init__(self, unit, name, size):
+    def __init__(self, window, unit, name, size, fg=None, bg=None):
+        self.fg = fg or (255, 255, 255, 255)
+        self.bg = bg or (0, 0, 0, 255)
+        self.window = window
         self.load(name, size)
-        self.context = Context(TextProgram())
-        self.context.sampler = Texture(unit, self.im)
-    def render(self, text, window_size, coord=(0, 0), anchor=(0, 0)):
-        size, position, uv = self.compute_vertex_data(text)
-        ww, wh = window_size
+        self.context = pg.Context(pg.TextProgram())
+        self.context.sampler = pg.Texture(unit, self.im)
+    def render(self, text, coord=(0, 0), anchor=(0, 0)):
+        size, position, uv = self.generate_vertex_data(text)
+        ww, wh = self.window.size
         tx, ty = coord
         ax, ay = anchor
         tw, th = size
-        matrix = Matrix()
+        matrix = pg.Matrix()
         matrix = matrix.translate((tx - tw * ax, ty - th * ay, 0))
         matrix = matrix.orthographic(0, ww, wh, 0, -1, 1)
         self.context.matrix = matrix
-        vertex_buffer = VertexBuffer(interleave(position, uv))
+        vertex_buffer = pg.VertexBuffer(pg.interleave(position, uv))
         self.context.position, self.context.uv = vertex_buffer.slices(2, 2)
         glEnable(GL_BLEND)
+        glDisable(GL_DEPTH_TEST)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.context.draw(GL_TRIANGLES)
+        glEnable(GL_DEPTH_TEST)
         glDisable(GL_BLEND)
         vertex_buffer.delete()
-    def compute_vertex_data(self, text):
+    def generate_vertex_data(self, text):
         position = []
         uv = []
         data = [
@@ -52,7 +54,7 @@ class Font(object):
             x += k
             for i, j in data:
                 position.append((x + i * self.dx + ox, y + j * self.dy + oy))
-                uv.append((u + i * self.du, 1.0 - v - j * self.dv))
+                uv.append((u + i * self.du, 1 - v - j * self.dv))
             x += ox + sx
             previous = c
         size = (x, self.dy)
@@ -75,14 +77,14 @@ class Font(object):
         h = mh * rows
         w = int(2 ** ceil(log(w) / log(2)))
         h = int(2 ** ceil(log(h) / log(2)))
-        im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+        im = Image.new('RGBA', (w, h), self.bg)
         draw = ImageDraw.Draw(im)
         for (row, col), c in zip(product(range(rows), range(cols)), chars):
             x = col * mw
             y = row * mh
             dx, dy = offsets[c]
             # draw.rectangle((x, y, x + mw, y + mh), outline=(48, 48, 48, 255))
-            draw.text((x + 1 - dx, y + 1 - dy), c, (255, 255, 255, 255), font)
+            draw.text((x + 1 - dx, y + 1 - dy), c, self.fg, font)
         self.dx = mw
         self.dy = mh
         self.du = float(mw) / w
