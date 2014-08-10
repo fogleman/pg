@@ -3,7 +3,7 @@ import pg
 class Window(pg.Window):
     def setup(self):
         self.wasd = pg.WASD(self, speed=5)
-        self.wasd.look_at((-3, 3, 3), (0, 0, 0))
+        self.wasd.look_at((-2, 2, 2), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
         a = pg.Solid(pg.Cuboid(-1, 1, -1, 1, -1, 1))
         b = pg.Solid(pg.Sphere(2, 1.35))
