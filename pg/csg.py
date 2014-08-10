@@ -208,6 +208,8 @@ class Model(object):
         return self.intersection(other)
     def __sub__(self, other):
         return self.difference(other)
+    def __invert__(self):
+        return self.inverse()
     def union(self, other):
         a = Node(self.clone().polygons)
         b = Node(other.clone().polygons)
@@ -262,7 +264,7 @@ class Model(object):
                 normal.append(c.normal.get_tuple())
         return position, normal
 
-class CSG(Model):
+class Solid(Model):
     def __init__(self, shape):
         polygons = []
         for i in xrange(0, len(shape.position), 3):
@@ -272,4 +274,4 @@ class CSG(Model):
                 for a, b in zip(positions, normals)]
             polygon = Polygon(vertices, None)
             polygons.append(polygon)
-        super(CSG, self).__init__(polygons)
+        super(Solid, self).__init__(polygons)

@@ -11,7 +11,7 @@ from core import (
 )
 
 from csg import (
-    CSG,
+    Solid,
 )
 
 from font import (
