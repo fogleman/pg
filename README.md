@@ -36,6 +36,7 @@ focus on your application-specific functionality instead.
 
 ### Dependencies
 
+    brew tap homebrew/versions
     brew install glfw3
     pip install glfw Pillow PyOpenGL
 
