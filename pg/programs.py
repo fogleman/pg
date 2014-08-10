@@ -108,3 +108,37 @@ class DirectionalLightProgram(BaseProgram):
         context.specular_multiplier = 1.0
         context.use_texture = False
         context.use_color = False
+
+class TextProgram(BaseProgram):
+    VS = '''
+    #version 120
+
+    uniform mat4 matrix;
+
+    attribute vec4 position;
+    attribute vec2 uv;
+
+    varying vec2 frag_uv;
+
+    void main() {
+        gl_Position = matrix * position;
+        frag_uv = uv;
+    }
+    '''
+    FS = '''
+    #version 120
+
+    uniform sampler2D sampler;
+
+    varying vec2 frag_uv;
+
+    void main() {
+        vec4 color = texture2D(sampler, frag_uv);
+        if (color.a == 0) {
+            discard;
+        }
+        gl_FragColor = color;
+    }
+    '''
+    def set_defaults(self, context):
+        pass
