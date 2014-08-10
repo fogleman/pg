@@ -14,6 +14,10 @@ from csg import (
     CSG,
 )
 
+from font import (
+    FontTexture,
+)
+
 from geometry import (
     Axes,
     Cone,

@@ -92,9 +92,11 @@ class Texture(object):
         GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27,
         GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
     ]
-    def __init__(self, unit, path):
+    def __init__(self, unit, im):
         self.unit = unit
-        im = Image.open(path).convert('RGBA')
+        if isinstance(im, basestring):
+            im = Image.open(im)
+        im = im.convert('RGBA')
         width, height = im.size
         data = im.tobytes()
         handle = c_uint()
