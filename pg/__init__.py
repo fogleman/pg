@@ -10,6 +10,10 @@ from core import (
     Window,
 )
 
+from csg import (
+    CSG,
+)
+
 from geometry import (
     Axes,
     Cone,

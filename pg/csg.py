@@ -6,12 +6,14 @@ class Vector(object):
             self.x = self.y = self.z = 0
         elif len(args) == 3:
             self.x, self.y, self.z = args
-        elif len(args) == 1 and len(args[0]) == 3:
-            self.x, self.y, self.z = args[0]
         elif len(args) == 1 and hasattr(args[0], 'x'):
             self.x, self.y, self.z = args[0].x, args[0].y, args[0].z
+        elif len(args) == 1 and len(args[0]) == 3:
+            self.x, self.y, self.z = args[0]
         else:
             raise Exception
+    def get_tuple(self):
+        return (self.x, self.y, self.z)
     def clone(self):
         return Vector(self)
     def negate(self):
@@ -35,21 +37,21 @@ class Vector(object):
             self.x * a.y - self.y * a.x)
     def normalize(self):
         return self.divide(self.length());
-    def lerp(self, a, t):
+    def interpolate(self, a, t):
         return self.add(a.subtract(self).multiply(t))
 
 class Vertex(object):
     def __init__(self, position, normal):
-        self.position = Vertex(position)
-        self.normal = Vertex(normal)
+        self.position = Vector(position)
+        self.normal = Vector(normal)
     def clone(self):
         return Vertex(self.position, self.normal)
     def flip(self):
         self.normal = self.normal.negate()
     def interpolate(self, a, t):
         return Vertex(
-            self.position.lerp(a.position, t),
-            self.normal.lerp(a.normal, t))
+            self.position.interpolate(a.position, t),
+            self.normal.interpolate(a.normal, t))
 
 class Plane(object):
     @staticmethod
@@ -64,16 +66,12 @@ class Plane(object):
     def flip(self):
         self.normal = self.normal.negate()
         self.w = -self.w
-    def split(self, polygon):
+    def split(self, polygon, co_front, co_back, front, back):
         COPLANAR = 0
         FRONT = 1
         BACK = 2
         BOTH = 3
         EPS = 1e-5
-        front = []
-        back = []
-        co_front = []
-        co_back = []
         polygon_type = 0
         vertex_types = []
         for vertex in polygon.vertices:
@@ -100,7 +98,7 @@ class Plane(object):
             for i in xrange(len(polygon.vertices)):
                 j = (i + 1) % len(polygon.vertices)
                 v1, v2 = polygon.vertices[i], polygon.vertices[j]
-                t1, t2 = types[i], types[j]
+                t1, t2 = vertex_types[i], vertex_types[j]
                 if t1 != BACK:
                     f.append(v1)
                 if t1 != FRONT:
@@ -108,7 +106,7 @@ class Plane(object):
                         b.append(v1.clone())
                     else:
                         b.append(v1)
-                if (t1 | t2) == SPANNING:
+                if (t1 | t2) == BOTH:
                     n = self.w - self.normal.dot(v1.position)
                     d = self.normal.dot(v2.position.subtract(v1.position))
                     v = v1.interpolate(v2, n / d)
@@ -118,7 +116,6 @@ class Plane(object):
                 front.append(Polygon(f, polygon.shared))
             if len(b) >= 3:
                 back.append(Polygon(b, polygon.shared))
-        return front, back, co_front, co_back
 
 class Polygon(object):
     def __init__(self, vertices, shared):
@@ -129,7 +126,9 @@ class Polygon(object):
         vertices = [a.clone() for a in self.vertices]
         return Polygon(vertices, self.shared)
     def flip(self):
-        self.vertices = list(reversed(a.flip() for a in self.vertices))
+        self.vertices.reverse()
+        for vertex in self.vertices:
+            vertex.flip()
         self.plane.flip()
 
 class Node(object):
@@ -161,15 +160,11 @@ class Node(object):
         self.front, self.back = self.back, self.front
     def clip_polygons(self, polygons):
         if not self.plane:
-            return list(self.polygons)
+            return list(polygons)
         front = []
         back = []
-        for polygon in self.polygons:
-            f, b, cf, cb = self.plane.split(polygon)
-            front.extend(f)
-            front.extend(cf)
-            back.extend(b)
-            back.extend(cb)
+        for polygon in polygons:
+            self.plane.split(polygon, front, back, front, back)
         if self.front:
             front = self.front.clip_polygons(front)
         if self.back:
@@ -197,14 +192,89 @@ class Node(object):
         front = []
         back = []
         for polygon in polygons:
-            f, b, cf, cb = self.plane.split(polygon)
-            front.extend(f)
-            front.extend(b)
-            self.polygons.extend(cf)
-            self.polygons.extend(cb)
+            self.plane.split(polygon, self.polygons, self.polygons, front, back)
         if front:
             self.front = self.front or Node()
             self.front.build(front)
         if back:
             self.back = self.back or Node()
             self.back.build(back)
+
+class Model(object):
+    def __init__(self, polygons=None):
+        self.polygons = polygons or []
+    def clone(self):
+        return Model([a.clone() for a in self.polygons])
+    def get_polygons(self):
+        return self.polygons
+    def __or__(self, other):
+        return self.union(other)
+    def __and__(self, other):
+        return self.intersection(other)
+    def __sub__(self, other):
+        return self.difference(other)
+    def union(self, other):
+        a = Node(self.clone().polygons)
+        b = Node(other.clone().polygons)
+        a.clip_to(b)
+        b.clip_to(a)
+        b.invert()
+        b.clip_to(a)
+        b.invert()
+        a.build(b.get_polygons())
+        return Model(a.get_polygons())
+    def difference(self, other):
+        a = Node(self.clone().polygons)
+        b = Node(other.clone().polygons)
+        a.invert()
+        a.clip_to(b)
+        b.clip_to(a)
+        b.invert()
+        b.clip_to(a)
+        b.invert()
+        a.build(b.get_polygons())
+        a.invert()
+        return Model(a.get_polygons())
+    def intersection(self, other):
+        a = Node(self.clone().polygons)
+        b = Node(other.clone().polygons)
+        a.invert()
+        b.clip_to(a)
+        b.invert()
+        a.clip_to(b)
+        b.clip_to(a)
+        a.build(b.get_polygons())
+        a.invert()
+        return Model(a.get_polygons())
+    def inverse(self):
+        polygons = [a.clone() for a in self.polygons]
+        for polygon in polygons:
+            polygon.flip()
+        return Model(polygons)
+    def triangulate(self):
+        position = []
+        normal = []
+        for polygon in self.get_polygons():
+            for i in xrange(2, len(polygon.vertices)):
+                a = polygon.vertices[0]
+                b = polygon.vertices[i - 1]
+                c = polygon.vertices[i]
+                position.append(a.position.get_tuple())
+                position.append(b.position.get_tuple())
+                position.append(c.position.get_tuple())
+                normal.append(a.normal.get_tuple())
+                normal.append(b.normal.get_tuple())
+                normal.append(c.normal.get_tuple())
+        return position, normal
+
+class CSG(Model):
+    def __init__(self, shape):
+        polygons = []
+        for i in xrange(0, len(shape.position), 3):
+            positions = shape.position[i:i+3]
+            normals = shape.normal[i:i+3]
+            vertices = [Vertex(Vector(a), Vector(b))
+                for a, b in zip(positions, normals)]
+            polygon = Polygon(vertices, None)
+            polygons.append(polygon)
+        super(CSG, self).__init__(polygons)

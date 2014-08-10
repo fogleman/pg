@@ -295,6 +295,7 @@ class Window(object):
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
     def close(self):
         glfw.set_window_should_close(self.handle, 1)
     def set_exclusive(self, exclusive=True):
