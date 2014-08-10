@@ -6,7 +6,7 @@ class Window(pg.Window):
         self.wasd.look_at((-3, 3, 3), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
         a = pg.Cuboid(-1, 1, -1, 1, -1, 1)
-        b = pg.Sphere(3, 1.35)
+        b = pg.Sphere(2, 1.35)
         c = pg.Cylinder((-1, 0, 0), (1, 0, 0), 0.5, 18)
         d = pg.Cylinder((0, -1, 0), (0, 1, 0), 0.5, 18)
         e = pg.Cylinder((0, 0, -1), (0, 0, 1), 0.5, 18)

@@ -97,8 +97,10 @@ class Plane(object):
             b = []
             for i in xrange(len(polygon.vertices)):
                 j = (i + 1) % len(polygon.vertices)
-                v1, v2 = polygon.vertices[i], polygon.vertices[j]
-                t1, t2 = vertex_types[i], vertex_types[j]
+                v1 = polygon.vertices[i]
+                v2 = polygon.vertices[j]
+                t1 = vertex_types[i]
+                t2 = vertex_types[j]
                 if t1 != BACK:
                     f.append(v1)
                 if t1 != FRONT:
