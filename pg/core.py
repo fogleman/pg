@@ -29,9 +29,7 @@ class FragmentShader(Shader):
 
 class VertexBuffer(object):
     def __init__(self, data=None):
-        handle = c_uint()
-        glGenBuffers(1, byref(handle))
-        self.handle = handle.value
+        self.handle = glGenBuffers(1)
         if data is not None:
             self.set_data(data)
     def set_data(self, data):
