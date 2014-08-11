@@ -36,9 +36,9 @@ class Sphere(object):
             self.position.append(tuple(r * a[i] + p[i] for i in xrange(3)))
             self.position.append(tuple(r * b[i] + p[i] for i in xrange(3)))
             self.position.append(tuple(r * c[i] + p[i] for i in xrange(3)))
-            ta = [0.5 + atan2(a[0], a[2]) / (2 * pi), 0.5 - asin(a[1]) / pi]
-            tb = [0.5 + atan2(b[0], b[2]) / (2 * pi), 0.5 - asin(b[1]) / pi]
-            tc = [0.5 + atan2(c[0], c[2]) / (2 * pi), 0.5 - asin(c[1]) / pi]
+            ta = [0.5 + atan2(a[0], a[2]) / (2 * pi), 0.5 + asin(a[1]) / pi]
+            tb = [0.5 + atan2(b[0], b[2]) / (2 * pi), 0.5 + asin(b[1]) / pi]
+            tc = [0.5 + atan2(c[0], c[2]) / (2 * pi), 0.5 + asin(c[1]) / pi]
             ab = abs(ta[0] - tb[0])
             ac = abs(ta[0] - tc[0])
             bc = abs(tb[0] - tc[0])

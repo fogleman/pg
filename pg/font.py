@@ -7,7 +7,7 @@ import pg
 class Font(object):
     def __init__(self, window, unit, name, size, fg=None, bg=None):
         self.fg = fg or (255, 255, 255, 255)
-        self.bg = bg or (0, 0, 0, 255)
+        self.bg = bg or (0, 0, 0, 0)
         self.window = window
         self.kerning = {}
         self.load(name, size)

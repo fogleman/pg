@@ -99,9 +99,7 @@ class Texture(object):
         im = im.convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         width, height = im.size
         data = im.tobytes()
-        handle = c_uint()
-        glGenTextures(1, byref(handle))
-        self.handle = handle.value
+        self.handle = glGenTextures(1)
         glActiveTexture(Texture.UNITS[unit])
         glBindTexture(GL_TEXTURE_2D, self.handle)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
