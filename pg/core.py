@@ -2,7 +2,7 @@ from ctypes import *
 from OpenGL.GL import *
 from PIL import Image
 from matrix import Matrix
-from util import flatten
+from util import flatten, interleave
 import glfw
 import os
 import time
@@ -47,8 +47,7 @@ class VertexBuffer(object):
             GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def delete(self):
-        handle = c_uint(self.handle)
-        glDeleteBuffers(1, byref(handle))
+        glDeleteBuffers(1, self.handle)
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
     def slices(self, *args):
@@ -78,6 +77,33 @@ class VertexBufferSlice(object):
             location, self.components, GL_FLOAT, GL_FALSE,
             sizeof(c_float) * self.parent.components,
             c_void_p(sizeof(c_float) * self.offset))
+
+class IndexBuffer(object):
+    def __init__(self, data=None):
+        self.handle = glGenBuffers(1)
+        if data is not None:
+            self.set_data(data)
+    def set_data(self, data):
+        self.size = len(data)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.handle)
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            sizeof(c_uint) * self.size,
+            (c_uint * self.size)(*data),
+            GL_STATIC_DRAW)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+    def delete(self):
+        glDeleteBuffers(1, self.handle)
+
+def index(*args):
+    sizes = [len(x[0]) for x in args]
+    data = interleave(*args)
+    distinct = sorted(set(data))
+    lookup = dict((x, i) for i, x in enumerate(distinct))
+    indices = [lookup[x] for x in data]
+    vertex_buffer = VertexBuffer(distinct)
+    index_buffer = IndexBuffer(indices)
+    return index_buffer, vertex_buffer.slices(*sizes)
 
 class Texture(object):
     UNITS = [
@@ -191,12 +217,11 @@ class Program(object):
         pass
     def get_attributes(self):
         result = []
-        count = c_int()
-        glGetProgramiv(self.handle, GL_ACTIVE_ATTRIBUTES, byref(count))
+        count = glGetProgramiv(self.handle, GL_ACTIVE_ATTRIBUTES)
         name = create_string_buffer(256)
         size = c_int()
         data_type = c_int()
-        for index in xrange(count.value):
+        for index in xrange(count):
             glGetActiveAttrib(
                 self.handle, index, 256, None,
                 byref(size), byref(data_type), name)
@@ -207,9 +232,8 @@ class Program(object):
         return result
     def get_uniforms(self):
         result = []
-        count = c_int()
-        glGetProgramiv(self.handle, GL_ACTIVE_UNIFORMS, byref(count))
-        for index in xrange(count.value):
+        count = glGetProgramiv(self.handle, GL_ACTIVE_UNIFORMS)
+        for index in xrange(count):
             name, size, data_type = glGetActiveUniform(self.handle, index)
             location = glGetUniformLocation(self.handle, name)
             uniform = Uniform(location, name, size, data_type)
@@ -244,7 +268,7 @@ class Context(object):
             return self._uniform_values[name]
         else:
             super(Context, self).__getattr__(name)
-    def draw(self, mode):
+    def prepare(self):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
             if name in self._dirty:
@@ -252,9 +276,16 @@ class Context(object):
         for name, value in self._attribute_values.iteritems():
             self._attributes[name].bind(value)
         self._dirty.clear()
+    def draw(self, mode):
+        self.prepare()
         vertex_count = min(
             x.vertex_count for x in self._attribute_values.itervalues())
         glDrawArrays(mode, 0, vertex_count)
+    def draw_elements(self, mode, index_buffer):
+        self.prepare()
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.handle)
+        glDrawElements(mode, index_buffer.size, GL_UNSIGNED_INT, c_void_p())
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
 class App(object):
     instance = None

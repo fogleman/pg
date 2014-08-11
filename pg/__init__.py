@@ -3,6 +3,8 @@ from core import (
     Context,
     FPS,
     FragmentShader,
+    index,
+    IndexBuffer,
     Program,
     Shader,
     Texture,

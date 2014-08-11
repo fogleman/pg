@@ -14,9 +14,10 @@ class Window(pg.Window):
         e = pg.Solid(pg.Cylinder((0, 0, -1), (0, 0, 1), 0.5, 18))
         shape = (a & b) - (c | d | e)
         position, normal, uv = shape.triangulate()
-        self.context.position = pg.VertexBuffer(position)
-        self.context.normal = pg.VertexBuffer(normal)
-        self.context.uv = pg.VertexBuffer(uv)
+        self.index, (position, normal, uv) = pg.index(position, normal, uv)
+        self.context.position = position
+        self.context.normal = normal
+        self.context.uv = uv
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = self.wasd.get_matrix(matrix)
@@ -25,7 +26,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context.draw(pg.GL_TRIANGLES)
+        self.context.draw_elements(pg.GL_TRIANGLES, self.index)
 
 if __name__ == "__main__":
     app = pg.App()
