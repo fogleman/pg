@@ -1,6 +1,7 @@
 from core import (
     App,
     Context,
+    FPS,
     FragmentShader,
     Program,
     Shader,

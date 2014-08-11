@@ -9,6 +9,7 @@ class Font(object):
         self.fg = fg or (255, 255, 255, 255)
         self.bg = bg or (0, 0, 0, 255)
         self.window = window
+        self.kerning = {}
         self.load(name, size)
         self.context = pg.Context(pg.TextProgram())
         self.context.sampler = pg.Texture(unit, self.im)
@@ -50,7 +51,7 @@ class Font(object):
             v = self.dv * row
             sx, sy = self.sizes[c]
             ox, oy = self.offsets[c]
-            k = self.kerning.get((previous, c), 0)
+            k = self.get_kerning(previous, c) if previous else 0
             x += k
             for i, j in data:
                 position.append((x + i * self.dx + ox, y + j * self.dy + oy))
@@ -59,16 +60,18 @@ class Font(object):
             previous = c
         size = (x, self.dy)
         return size, position, uv
+    def get_kerning(self, c1, c2):
+        key = c1 + c2
+        if key not in self.kerning:
+            a = self.sizes[c1][0] + self.sizes[c2][0]
+            b = self.font.getsize(key)[0]
+            self.kerning[key] = b - a
+        return self.kerning[key]
     def load(self, name, size):
         font = ImageFont.truetype(name, size)
         chars = [chr(x) for x in range(32, 127)]
         sizes = dict((c, font.getsize(c)) for c in chars)
         offsets = dict((c, font.getoffset(c)) for c in chars)
-        kerning = {}
-        for c1, c2 in product(chars, repeat=2):
-            a = sizes[c1][0] + sizes[c2][0]
-            b = font.getsize(c1 + c2)[0]
-            kerning[(c1, c2)] = b - a
         mw = max(sizes[c][0] for c in chars) + 1
         mh = max(sizes[c][1] for c in chars) + 1
         rows = 10
@@ -91,5 +94,5 @@ class Font(object):
         self.dv = float(mh) / h
         self.sizes = sizes
         self.offsets = offsets
-        self.kerning = kerning
         self.im = im
+        self.font = font

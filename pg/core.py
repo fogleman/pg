@@ -276,6 +276,20 @@ class App(object):
         for window in list(self.windows):
             window.tick()
 
+class FPS(object):
+    def __init__(self):
+        self.time = time.time()
+        self.counter = 0
+        self.value = 0
+    def tick(self):
+        self.counter += 1
+        now = time.time()
+        elapsed = now - self.time
+        if elapsed >= 1:
+            self.value = self.counter / elapsed
+            self.counter = 0
+            self.time = now
+
 class Window(object):
     def __init__(self, size=(800, 600), title='Python Graphics'):
         self.size = width, height = size
@@ -287,6 +301,7 @@ class Window(object):
         self.aspect = float(width) / height
         self.exclusive = False
         self.start = self.time = time.time()
+        self._fps = FPS()
         self.listeners = [self]
         self.set_callbacks()
         self.call('setup')
@@ -294,6 +309,9 @@ class Window(object):
     @property
     def t(self):
         return time.time() - self.start
+    @property
+    def fps(self):
+        return self._fps.value
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -325,6 +343,7 @@ class Window(object):
     def clear_depth_buffer(self):
         glClear(GL_DEPTH_BUFFER_BIT)
     def tick(self):
+        self._fps.tick()
         self.use()
         if glfw.window_should_close(self.handle):
             self.call('teardown')
