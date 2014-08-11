@@ -34,17 +34,20 @@ class Vector(object):
         return self.add(a.subtract(self).multiply(t))
 
 class Vertex(object):
-    def __init__(self, position, normal):
+    def __init__(self, position, normal, uv):
         self.position = position
         self.normal = normal
+        self.uv = uv
     def clone(self):
-        return Vertex(self.position.clone(), self.normal.clone())
+        return Vertex(
+            self.position.clone(), self.normal.clone(), self.uv.clone())
     def flip(self):
         self.normal = self.normal.negate()
     def interpolate(self, a, t):
         return Vertex(
             self.position.interpolate(a.position, t),
-            self.normal.interpolate(a.normal, t))
+            self.normal.interpolate(a.normal, t),
+            self.uv.interpolate(a.uv, t))
 
 class Plane(object):
     @staticmethod
@@ -251,6 +254,7 @@ class Model(object):
     def triangulate(self):
         position = []
         normal = []
+        uv = []
         for polygon in self.get_polygons():
             for i in xrange(2, len(polygon.vertices)):
                 a = polygon.vertices[0]
@@ -262,7 +266,10 @@ class Model(object):
                 normal.append(a.normal.get_tuple())
                 normal.append(b.normal.get_tuple())
                 normal.append(c.normal.get_tuple())
-        return position, normal
+                uv.append(a.uv.get_tuple()[:2])
+                uv.append(b.uv.get_tuple()[:2])
+                uv.append(c.uv.get_tuple()[:2])
+        return position, normal, uv
 
 class Solid(Model):
     def __init__(self, shape):
@@ -270,8 +277,9 @@ class Solid(Model):
         for i in xrange(0, len(shape.position), 3):
             positions = shape.position[i:i+3]
             normals = shape.normal[i:i+3]
-            vertices = [Vertex(Vector(*a), Vector(*b))
-                for a, b in zip(positions, normals)]
+            uvs = shape.uv[i:i+3]
+            vertices = [Vertex(Vector(*a), Vector(*b), Vector(c[0], c[1], 0))
+                for a, b, c in zip(positions, normals, uvs)]
             polygon = Polygon(vertices, None)
             polygons.append(polygon)
         super(Solid, self).__init__(polygons)
