@@ -58,11 +58,11 @@ class VertexBuffer(object):
             offset += components
         return result
     def bind(self, location):
-        glEnableVertexAttribArray(location)
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
         glVertexAttribPointer(
             location, self.components, GL_FLOAT, GL_FALSE,
             0, c_void_p())
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 class VertexBufferSlice(object):
     def __init__(self, parent, components, offset):
@@ -71,12 +71,12 @@ class VertexBufferSlice(object):
         self.components = components
         self.offset = offset
     def bind(self, location):
-        glEnableVertexAttribArray(location)
         glBindBuffer(GL_ARRAY_BUFFER, self.parent.handle)
         glVertexAttribPointer(
             location, self.components, GL_FLOAT, GL_FALSE,
             sizeof(c_float) * self.parent.components,
             c_void_p(sizeof(c_float) * self.offset))
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 class IndexBuffer(object):
     def __init__(self, data=None):
@@ -141,7 +141,10 @@ class Attribute(object):
         self.size = size
         self.data_type = data_type
     def bind(self, value):
+        glEnableVertexAttribArray(self.location)
         value.bind(self.location)
+    def unbind(self):
+        glDisableVertexAttribArray(self.location)
     def __repr__(self):
         return 'Attribute%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -268,24 +271,24 @@ class Context(object):
             return self._uniform_values[name]
         else:
             super(Context, self).__getattr__(name)
-    def prepare(self):
+    def draw(self, mode, index_buffer=None):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
             if name in self._dirty:
                 self._uniforms[name].bind(value)
+        self._dirty.clear()
         for name, value in self._attribute_values.iteritems():
             self._attributes[name].bind(value)
-        self._dirty.clear()
-    def draw(self, mode):
-        self.prepare()
-        vertex_count = min(
-            x.vertex_count for x in self._attribute_values.itervalues())
-        glDrawArrays(mode, 0, vertex_count)
-    def draw_elements(self, mode, index_buffer):
-        self.prepare()
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.handle)
-        glDrawElements(mode, index_buffer.size, GL_UNSIGNED_INT, c_void_p())
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        if index_buffer is None:
+            vertex_count = min(
+                x.vertex_count for x in self._attribute_values.itervalues())
+            glDrawArrays(mode, 0, vertex_count)
+        else:
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.handle)
+            glDrawElements(mode, index_buffer.size, GL_UNSIGNED_INT, c_void_p())
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        for name in self._attribute_values:
+            self._attributes[name].unbind()
 
 class App(object):
     instance = None

@@ -26,7 +26,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context.draw_elements(pg.GL_TRIANGLES, self.index)
+        self.context.draw(pg.GL_TRIANGLES, self.index)
 
 if __name__ == "__main__":
     app = pg.App()
