@@ -55,6 +55,7 @@ from util import (
     add,
     cross,
     distance,
+    distinct,
     flatten,
     hex_color,
     interleave,

@@ -2,7 +2,7 @@ from ctypes import *
 from OpenGL.GL import *
 from PIL import Image
 from matrix import Matrix
-from util import flatten, interleave
+from util import flatten, interleave, distinct
 import glfw
 import os
 import time
@@ -98,10 +98,10 @@ class IndexBuffer(object):
 def index(*args):
     sizes = [len(x[0]) for x in args]
     data = interleave(*args)
-    distinct = sorted(set(data))
-    lookup = dict((x, i) for i, x in enumerate(distinct))
+    unique = list(distinct(data))
+    lookup = dict((x, i) for i, x in enumerate(unique))
     indices = [lookup[x] for x in data]
-    vertex_buffer = VertexBuffer(distinct)
+    vertex_buffer = VertexBuffer(unique)
     index_buffer = IndexBuffer(indices)
     return index_buffer, vertex_buffer.slices(*sizes)
 

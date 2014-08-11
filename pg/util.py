@@ -74,3 +74,13 @@ def flatten(array):
     for value in array:
         result.extend(value)
     return result
+
+def distinct(iterable, keyfunc=None):
+    '''Yields distinct items from `iterable` in the order that they appear.
+    '''
+    seen = set()
+    for item in iterable:
+        key = item if keyfunc is None else keyfunc(item)
+        if key not in seen:
+            seen.add(key)
+            yield item
