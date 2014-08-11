@@ -1,7 +1,7 @@
 from math import sin, cos, pi, atan2, asin
-from matrix import Matrix
-from util import normalize
-import glfw
+from .matrix import Matrix
+from .util import normalize
+from . import glfw
 
 class WASD(object):
     def __init__(self, window,

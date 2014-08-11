@@ -1,8 +1,8 @@
 from __future__ import division
 
 from math import asin, pi, atan2, hypot, sin, cos
-from matrix import Matrix
-from util import distance, normalize
+from .matrix import Matrix
+from .util import distance, normalize
 
 class Sphere(object):
     def __init__(self, detail, radius=0.5, center=(0, 0, 0)):

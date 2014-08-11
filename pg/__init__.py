@@ -1,4 +1,4 @@
-from core import (
+from .core import (
     App,
     Context,
     FPS,
@@ -13,15 +13,15 @@ from core import (
     Window,
 )
 
-from csg import (
+from .csg import (
     Solid,
 )
 
-from font import (
+from .font import (
     Font,
 )
 
-from geometry import (
+from .geometry import (
     Axes,
     Cone,
     Crosshairs,
@@ -32,26 +32,26 @@ from geometry import (
     Sphere,
 )
 
-from matrix import (
+from .matrix import (
     Matrix,
 )
 
-from noise import (
+from .noise import (
     Noise,
     simplex2,
 )
 
-from poisson import (
+from .poisson import (
     poisson_disc,
 )
 
-from programs import (
+from .programs import (
     DirectionalLightProgram,
     SolidColorProgram,
     TextProgram,
 )
 
-from util import (
+from .util import (
     add,
     cross,
     distance,
@@ -64,7 +64,7 @@ from util import (
     sub,
 )
 
-from wasd import (
+from .wasd import (
     WASD,
 )
 

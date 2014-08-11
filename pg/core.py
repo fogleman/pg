@@ -1,9 +1,9 @@
 from ctypes import *
 from OpenGL.GL import *
 from PIL import Image
-from matrix import Matrix
-from util import flatten, interleave, distinct
-import glfw
+from .matrix import Matrix
+from .util import flatten, interleave, distinct
+from . import glfw
 import os
 import time
 

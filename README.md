@@ -38,7 +38,7 @@ focus on your application-specific functionality instead.
 
     brew tap homebrew/versions
     brew install glfw3
-    pip install glfw Pillow PyOpenGL
+    pip install Pillow PyOpenGL
 
 ### Examples
 

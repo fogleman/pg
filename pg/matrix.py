@@ -1,7 +1,7 @@
 from __future__ import division
 
 from math import sin, cos, tan, pi
-from util import normalize
+from .util import normalize
 
 class Matrix(object):
     def __init__(self, value=None):

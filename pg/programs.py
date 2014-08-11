@@ -1,6 +1,6 @@
-from core import Program
-from matrix import Matrix
-from util import normalize
+from .core import Program
+from .matrix import Matrix
+from .util import normalize
 
 class BaseProgram(Program):
     def __init__(self):

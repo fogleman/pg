@@ -2,7 +2,10 @@ from OpenGL.GL import *
 from itertools import product
 from math import ceil, log
 from PIL import Image, ImageDraw, ImageFont
-import pg
+from .core import Context, Texture, VertexBuffer
+from .matrix import Matrix
+from .programs import TextProgram
+from .util import interleave
 
 class Font(object):
     def __init__(self, window, unit, name, size, fg=None, bg=None):
@@ -11,19 +14,19 @@ class Font(object):
         self.window = window
         self.kerning = {}
         self.load(name, size)
-        self.context = pg.Context(pg.TextProgram())
-        self.context.sampler = pg.Texture(unit, self.im)
+        self.context = Context(TextProgram())
+        self.context.sampler = Texture(unit, self.im)
     def render(self, text, coord=(0, 0), anchor=(0, 0)):
         size, position, uv = self.generate_vertex_data(text)
         ww, wh = self.window.size
         tx, ty = coord
         ax, ay = anchor
         tw, th = size
-        matrix = pg.Matrix()
+        matrix = Matrix()
         matrix = matrix.translate((tx - tw * ax, ty - th * ay, 0))
         matrix = matrix.orthographic(0, ww, wh, 0, -1, 1)
         self.context.matrix = matrix
-        vertex_buffer = pg.VertexBuffer(pg.interleave(position, uv))
+        vertex_buffer = VertexBuffer(interleave(position, uv))
         self.context.position, self.context.uv = vertex_buffer.slices(2, 2)
         glEnable(GL_BLEND)
         glDisable(GL_DEPTH_TEST)
