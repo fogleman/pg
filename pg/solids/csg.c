@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +16,7 @@
     { \
         type *name; \
         for (int i = 0; i < (list)->count; i++) { \
-            name = (type *)((list)->data + (list)->size * i);
+            name = list_ptr(list, i);
 
 #define END_FOR }}
 
@@ -46,7 +47,7 @@ typedef struct {
 
 typedef struct {
     Plane plane;
-    List vertices;
+    Vertex vertices[3];
 } Polygon;
 
 typedef struct Node Node;
@@ -95,15 +96,15 @@ void list_grow(List *list) {
 }
 
 void *list_ptr(List *list, int index) {
-    return list->data + list->size * index;
+    return (char *)list->data + list->size * index;
 }
 
 void list_get(List *list, int index, void *item) {
-    memcpy(item, list->data + list->size * index, list->size);
+    memcpy(item, list_ptr(list, index), list->size);
 }
 
 void list_set(List *list, int index, void *item) {
-    memcpy(list->data + list->size * index, item, list->size);
+    memcpy(list_ptr(list, index), item, list->size);
 }
 
 void list_append(List *list, void *item) {
@@ -179,9 +180,12 @@ float vec_len(Vector *a) {
 }
 
 void vec_cross(Vector *out, Vector *a, Vector *b) {
-    out->x = a->y * b->z - a->z * b->y;
-    out->y = a->z * b->x - a->x * b->z;
-    out->z = a->x * b->y - a->y * b->x;
+    float x = a->y * b->z - a->z * b->y;
+    float y = a->z * b->x - a->x * b->z;
+    float z = a->x * b->y - a->y * b->x;
+    out->x = x;
+    out->y = y;
+    out->z = z;
 }
 
 void vec_unit(Vector *out, Vector *a) {
@@ -206,16 +210,15 @@ void vertex_lerp(Vertex *out, Vertex *a, Vertex *b, float t) {
 }
 
 // plane functions
-void plane_copy(Plane *out, Plane *a) {
-    memcpy(out, a, sizeof(Plane));
+void plane_copy(Plane *dst, Plane *src) {
+    memcpy(dst, src, sizeof(Plane));
 }
 
 void plane_from_points(Plane *out, Vector *a, Vector *b, Vector *c) {
     Vector ab;
     Vector ac;
-    Plane plane;
     vec_sub(&ab, b, a);
-    vec_sub(&ab, c, a);
+    vec_sub(&ac, c, a);
     vec_cross(&out->normal, &ab, &ac);
     vec_unit(&out->normal, &out->normal);
     out->w = vec_dot(&out->normal, a);
@@ -230,22 +233,24 @@ void plane_split(
     Plane *plane, Polygon *polygon,
     List *co_front, List *co_back, List *front, List *back)
 {
+    Plane *p;
+    p = plane;
+    p = &polygon->plane;
     int polygon_type = 0;
-    List vertex_types;
-    list_alloc(&vertex_types, sizeof(int));
-    FOR (Vertex, vertex, &polygon->vertices) {
-        printf("%p\n", vertex);
+    int vertex_types[3];
+    for (int i = 0; i < 3; i++) {
+        Vertex *vertex = &polygon->vertices[i];
         float w = vec_dot(&plane->normal, &vertex->position) - plane->w;
         int t = COPLANAR;
-        if (w < EPS) {
+        if (w < -EPS) {
             t = BACK;
         }
         if (w > EPS) {
             t = FRONT;
         }
         polygon_type |= t;
-        list_append(&vertex_types, &t);
-    } END_FOR;
+        vertex_types[i] = t;
+    }
     if (polygon_type == COPLANAR) {
         if (vec_dot(&plane->normal, &polygon->plane.normal) > 0) {
             list_append(co_front, polygon);
@@ -263,69 +268,73 @@ void plane_split(
     else {
         List f;
         List b;
-        list_alloc(&f, sizeof(Polygon));
-        list_alloc(&b, sizeof(Polygon));
-        int n = polygon->vertices.count;
-        for (int i = 0; i < n; i++) {
-            int j = (i + 1) % n;
-            Vertex v1;
-            Vertex v2;
-            int t1;
-            int t2;
-            list_get(&polygon->vertices, i, &v1);
-            list_get(&polygon->vertices, j, &v2);
-            list_get(&vertex_types, i, &t1);
-            list_get(&vertex_types, j, &t2);
+        list_alloc(&f, sizeof(Vertex));
+        list_alloc(&b, sizeof(Vertex));
+        for (int i = 0; i < 3; i++) {
+            int j = (i + 1) % 3;
+            Vertex *v1 = &polygon->vertices[i];
+            Vertex *v2 = &polygon->vertices[j];
+            int t1 = vertex_types[i];
+            int t2 = vertex_types[j];
             if (t1 != BACK) {
-                list_append(&f, &v1);
+                list_append(&f, v1);
             }
             if (t1 != FRONT) {
-                list_append(&b, &v1);
+                list_append(&b, v1);
             }
             if ((t1 | t2) == BOTH) {
                 Vector d;
-                vec_sub(&d, &v2.position, &v1.position);
-                float ta = plane->w - vec_dot(&plane->normal, &v1.position);
+                vec_sub(&d, &v2->position, &v1->position);
+                float ta = plane->w - vec_dot(&plane->normal, &v1->position);
                 float tb = vec_dot(&plane->normal, &d);
                 Vertex v;
-                vertex_lerp(&v, &v1, &v2, ta / tb);
+                vertex_lerp(&v, v1, v2, ta / tb);
                 list_append(&f, &v);
                 list_append(&b, &v);
             }
         }
         if (f.count >= 3) {
             Polygon p;
-            Vertex *v1 = list_ptr(&f, 0);
-            Vertex *v2 = list_ptr(&f, 1);
-            Vertex *v3 = list_ptr(&f, 2);
-            plane_from_points(&p.plane,
-                &v1->position, &v2->position, &v3->position);
-            list_copy(&p.vertices, &f);
-            list_append(front, &p);
+            for (int i = 2; i < f.count; i++) {
+                list_get(&f, 0, &p.vertices[0]);
+                list_get(&f, i - 1, &p.vertices[1]);
+                list_get(&f, i, &p.vertices[2]);
+                plane_from_points(
+                    &p.plane,
+                    &p.vertices[0].position,
+                    &p.vertices[1].position,
+                    &p.vertices[2].position);
+                list_append(front, &p);
+            }
         }
         if (b.count >= 3) {
             Polygon p;
-            Vertex *v1 = list_ptr(&f, 0);
-            Vertex *v2 = list_ptr(&f, 1);
-            Vertex *v3 = list_ptr(&f, 2);
-            plane_from_points(&p.plane,
-                &v1->position, &v2->position, &v3->position);
-            list_copy(&p.vertices, &b);
-            list_append(back, &p);
+            for (int i = 2; i < b.count; i++) {
+                list_get(&b, 0, &p.vertices[0]);
+                list_get(&b, i - 1, &p.vertices[1]);
+                list_get(&b, i, &p.vertices[2]);
+                plane_from_points(
+                    &p.plane,
+                    &p.vertices[0].position,
+                    &p.vertices[1].position,
+                    &p.vertices[2].position);
+                list_append(back, &p);
+            }
         }
         list_free(&f);
         list_free(&b);
     }
-    list_free(&vertex_types);
 }
 
 // polygon functions
 void polygon_flip(Polygon *a) {
     plane_flip(&a->plane);
-    list_reverse(&a->vertices);
-    FOR (Vertex, vertex, &a->vertices) {
-        vertex_flip(vertex);
-    } END_FOR;
+    Vertex temp = a->vertices[0];
+    a->vertices[0] = a->vertices[2];
+    a->vertices[2] = temp;
+    for (int i = 0; i < 3; i++) {
+        vertex_flip(&a->vertices[i]);
+    }
 }
 
 // node functions
@@ -343,11 +352,11 @@ void node_free(Node *node) {
         node_free(node->back);
     }
     list_free(&node->polygons);
+    free(node);
 }
 
 void node_polygons(Node *node, List *list) {
     FOR (Polygon, polygon, &node->polygons) {
-        // TODO: clone?
         list_append(list, polygon);
     } END_FOR;
     if (node->front) {
@@ -363,7 +372,7 @@ void node_build(Node *node, List *polygons) {
         return;
     }
     if (node->polygons.count == 0) {
-        Polygon *p = list_ptr(&node->polygons, 0);
+        Polygon *p = list_ptr(polygons, 0);
         plane_copy(&node->plane, &p->plane);
     }
     List front;
@@ -377,12 +386,14 @@ void node_build(Node *node, List *polygons) {
     } END_FOR;
     if (front.count) {
         if (node->front == 0) {
+            node->front = malloc(sizeof(Node));
             node_alloc(node->front);
         }
         node_build(node->front, &front);
     }
     if (back.count) {
         if (node->back == 0) {
+            node->back = malloc(sizeof(Node));
             node_alloc(node->back);
         }
         node_build(node->back, &back);
@@ -464,69 +475,69 @@ void node_clip_to(Node *node, Node *other) {
 
 // csg functions
 void csg_union(List *out, List *m1, List *m2) {
-    Node a;
-    Node b;
-    node_from_polygons(&a, m1);
-    node_from_polygons(&b, m2);
-    node_clip_to(&a, &b);
-    node_clip_to(&b, &a);
-    node_invert(&b);
-    node_clip_to(&b, &a);
-    node_invert(&b);
-    node_build_from(&a, &b);
-    node_polygons(&a, out);
-    node_free(&a);
-    node_free(&b);
+    Node *a = malloc(sizeof(Node));
+    Node *b = malloc(sizeof(Node));
+    node_from_polygons(a, m1);
+    node_from_polygons(b, m2);
+    node_clip_to(a, b);
+    node_clip_to(b, a);
+    node_invert(b);
+    node_clip_to(b, a);
+    node_invert(b);
+    node_build_from(a, b);
+    node_polygons(a, out);
+    node_free(a);
+    node_free(b);
 }
 
 void csg_difference(List *out, List *m1, List *m2) {
-    Node a;
-    Node b;
-    node_from_polygons(&a, m1);
-    node_from_polygons(&b, m2);
-    node_invert(&a);
-    node_clip_to(&a, &b);
-    node_clip_to(&b, &a);
-    node_invert(&b);
-    node_clip_to(&b, &a);
-    node_invert(&b);
-    node_build_from(&a, &b);
-    node_invert(&a);
-    node_polygons(&a, out);
-    node_free(&a);
-    node_free(&b);
+    Node *a = malloc(sizeof(Node));
+    Node *b = malloc(sizeof(Node));
+    node_from_polygons(a, m1);
+    node_from_polygons(b, m2);
+    node_invert(a);
+    node_clip_to(a, b);
+    node_clip_to(b, a);
+    node_invert(b);
+    node_clip_to(b, a);
+    node_invert(b);
+    node_build_from(a, b);
+    node_invert(a);
+    node_polygons(a, out);
+    node_free(a);
+    node_free(b);
 }
 
 void csg_intersection(List *out, List *m1, List *m2) {
-    Node a;
-    Node b;
-    node_from_polygons(&a, m1);
-    node_from_polygons(&b, m2);
-    node_invert(&a);
-    node_clip_to(&b, &a);
-    node_invert(&b);
-    node_clip_to(&a, &b);
-    node_clip_to(&b, &a);
-    node_build_from(&a, &b);
-    node_invert(&a);
-    node_polygons(&a, out);
-    node_free(&a);
-    node_free(&b);
+    Node *a = malloc(sizeof(Node));
+    Node *b = malloc(sizeof(Node));
+    node_from_polygons(a, m1);
+    node_from_polygons(b, m2);
+    node_invert(a);
+    node_clip_to(b, a);
+    node_invert(b);
+    node_clip_to(a, b);
+    node_clip_to(b, a);
+    node_build_from(a, b);
+    node_invert(a);
+    node_polygons(a, out);
+    node_free(a);
+    node_free(b);
 }
 
 void csg_inverse(List *out, List *m1) {
-    Node a;
-    node_from_polygons(&a, m1);
-    node_invert(&a);
-    node_polygons(&a, out);
-    node_free(&a);
+    Node *a = malloc(sizeof(Node));
+    node_from_polygons(a, m1);
+    node_invert(a);
+    node_polygons(a, out);
+    node_free(a);
 }
 
 // interface
 void triangles(List *out, float *data, int count) {
     float *d = data;
     for (int i = 0; i < count; i++) {
-        Vertex vertices[3];
+        Polygon polygon;
         for (int j = 0; j < 3; j++) {
             float x = *(d++);
             float y = *(d++);
@@ -536,44 +547,38 @@ void triangles(List *out, float *data, int count) {
             float nz = *(d++);
             float u = *(d++);
             float v = *(d++);
-            vertices[j].position.x = x;
-            vertices[j].position.y = y;
-            vertices[j].position.z = z;
-            vertices[j].normal.x = nx;
-            vertices[j].normal.y = ny;
-            vertices[j].normal.z = nz;
-            vertices[j].uv.x = u;
-            vertices[j].uv.y = v;
-            vertices[j].uv.z = 0;
+            polygon.vertices[j].position.x = x;
+            polygon.vertices[j].position.y = y;
+            polygon.vertices[j].position.z = z;
+            polygon.vertices[j].normal.x = nx;
+            polygon.vertices[j].normal.y = ny;
+            polygon.vertices[j].normal.z = nz;
+            polygon.vertices[j].uv.x = u;
+            polygon.vertices[j].uv.y = v;
+            polygon.vertices[j].uv.z = 0;
         }
-        Polygon polygon;
-        list_alloc(&polygon.vertices, sizeof(Vertex));
-        list_append(&polygon.vertices, &vertices[0]);
-        list_append(&polygon.vertices, &vertices[1]);
-        list_append(&polygon.vertices, &vertices[2]);
         plane_from_points(
             &polygon.plane,
-            &vertices[0].position,
-            &vertices[1].position,
-            &vertices[2].position);
+            &polygon.vertices[0].position,
+            &polygon.vertices[1].position,
+            &polygon.vertices[2].position);
         list_append(out, &polygon);
     }
 }
 
-/*
-typedef struct {
-    Vector position;
-    Vector normal;
-    Vector uv;
-} Vertex;
-
-typedef struct {
-    Vector normal;
-    float w;
-} Plane;
-
-typedef struct {
-    Plane plane;
-    List vertices;
-} Polygon;
-*/
+void triangulate(List *polygons, float *data) {
+    float *d = data;
+    FOR (Polygon, polygon, polygons) {
+        for (int i = 0; i < 3; i++) {
+            Vertex *vertex = &polygon->vertices[i];
+            *(d++) = vertex->position.x;
+            *(d++) = vertex->position.y;
+            *(d++) = vertex->position.z;
+            *(d++) = vertex->normal.x;
+            *(d++) = vertex->normal.y;
+            *(d++) = vertex->normal.z;
+            *(d++) = vertex->uv.x;
+            *(d++) = vertex->uv.y;
+        }
+    } END_FOR;
+}
