@@ -11,6 +11,7 @@
 #define BOTH 3
 #define EPS 1e-5f
 
+
 // macros
 #define FOR(type, name, list) \
     { \
@@ -61,7 +62,7 @@ struct Node {
 
 // list functions
 void list_alloc(List *list, int size) {
-    list->capacity = 4;
+    list->capacity = 64;
     list->count = 0;
     list->size = size;
     list->data = malloc(list->size * list->capacity);
@@ -410,11 +411,6 @@ void node_build_from(Node *node, Node *other) {
     list_free(&polygons);
 }
 
-void node_from_polygons(Node *node, List *polygons) {
-    node_alloc(node);
-    node_build(node, polygons);
-}
-
 void node_invert(Node *node) {
     FOR (Polygon, polygon, &node->polygons) {
         polygon_flip(polygon);
@@ -475,10 +471,13 @@ void node_clip_to(Node *node, Node *other) {
 
 // csg functions
 void csg_union(List *out, List *m1, List *m2) {
+    printf("csg_union(%d, %d)\n", m1->count, m2->count);
     Node *a = malloc(sizeof(Node));
     Node *b = malloc(sizeof(Node));
-    node_from_polygons(a, m1);
-    node_from_polygons(b, m2);
+    node_alloc(a);
+    node_alloc(b);
+    node_build(a, m1);
+    node_build(b, m2);
     node_clip_to(a, b);
     node_clip_to(b, a);
     node_invert(b);
@@ -491,10 +490,13 @@ void csg_union(List *out, List *m1, List *m2) {
 }
 
 void csg_difference(List *out, List *m1, List *m2) {
+    printf("csg_difference(%d, %d)\n", m1->count, m2->count);
     Node *a = malloc(sizeof(Node));
     Node *b = malloc(sizeof(Node));
-    node_from_polygons(a, m1);
-    node_from_polygons(b, m2);
+    node_alloc(a);
+    node_alloc(b);
+    node_build(a, m1);
+    node_build(b, m2);
     node_invert(a);
     node_clip_to(a, b);
     node_clip_to(b, a);
@@ -509,10 +511,13 @@ void csg_difference(List *out, List *m1, List *m2) {
 }
 
 void csg_intersection(List *out, List *m1, List *m2) {
+    printf("csg_intersection(%d, %d)\n", m1->count, m2->count);
     Node *a = malloc(sizeof(Node));
     Node *b = malloc(sizeof(Node));
-    node_from_polygons(a, m1);
-    node_from_polygons(b, m2);
+    node_alloc(a);
+    node_alloc(b);
+    node_build(a, m1);
+    node_build(b, m2);
     node_invert(a);
     node_clip_to(b, a);
     node_invert(b);
@@ -526,8 +531,10 @@ void csg_intersection(List *out, List *m1, List *m2) {
 }
 
 void csg_inverse(List *out, List *m1) {
+    printf("csg_inverse(%d)\n", m1->count);
     Node *a = malloc(sizeof(Node));
-    node_from_polygons(a, m1);
+    node_alloc(a);
+    node_build(a, m1);
     node_invert(a);
     node_polygons(a, out);
     node_free(a);
@@ -535,6 +542,7 @@ void csg_inverse(List *out, List *m1) {
 
 // interface
 void triangles(List *out, float *data, int count) {
+    printf("triangles\n");
     float *d = data;
     for (int i = 0; i < count; i++) {
         Polygon polygon;
@@ -567,6 +575,7 @@ void triangles(List *out, float *data, int count) {
 }
 
 void triangulate(List *polygons, float *data) {
+    printf("triangulate\n");
     float *d = data;
     FOR (Polygon, polygon, polygons) {
         for (int i = 0; i < 3; i++) {

@@ -59,6 +59,8 @@ class Solid(object):
         if not isinstance(polygons, List):
             polygons = triangles(polygons)
         self.polygons = polygons
+    def __del__(self):
+        dll.list_free(byref(self.polygons))
     def triangulate(self):
         data = triangulate(self.polygons)
         position = [tuple(data[i:i+3]) for i in xrange(0, len(data), 8)]
