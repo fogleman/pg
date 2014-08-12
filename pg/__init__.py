@@ -13,9 +13,9 @@ from .core import (
     Window,
 )
 
-from .csg import (
-    Solid,
-)
+# from .csg import (
+#     Solid,
+# )
 
 from .font import (
     Font,
@@ -49,6 +49,10 @@ from .programs import (
     DirectionalLightProgram,
     SolidColorProgram,
     TextProgram,
+)
+
+from .solids import (
+    Solid,
 )
 
 from .util import (
