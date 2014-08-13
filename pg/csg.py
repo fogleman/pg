@@ -1,4 +1,5 @@
 from __future__ import division
+import random
 
 class Vector(object):
     def __init__(self, x, y, z):
@@ -186,7 +187,7 @@ class Node(object):
     def build(self, polygons):
         if not polygons:
             return
-        self.plane = self.plane or polygons[0].plane.clone()
+        self.plane = self.plane or random.choice(polygons).plane.clone()
         front = []
         back = []
         for polygon in polygons:
