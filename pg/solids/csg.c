@@ -11,7 +11,6 @@
 #define BOTH 3
 #define EPS 1e-5f
 
-
 // macros
 #define FOR(type, name, list) \
     { \
@@ -58,7 +57,15 @@ struct Node {
     List polygons;
     Node *front;
     Node *back;
+    int ok;
 };
+
+// helper functions
+int rand_int(int n) {
+    int result;
+    while (n <= (result = rand() / (RAND_MAX / n)));
+    return result;
+}
 
 // list functions
 void list_alloc(List *list, int size) {
@@ -70,7 +77,6 @@ void list_alloc(List *list, int size) {
 
 void list_free(List *list) {
     free(list->data);
-    // memset(list, 0, sizeof(List));
 }
 
 void list_copy(List *dst, List *src) {
@@ -343,6 +349,7 @@ void node_alloc(Node *node) {
     list_alloc(&node->polygons, sizeof(Polygon));
     node->front = 0;
     node->back = 0;
+    node->ok = 0;
 }
 
 void node_free(Node *node) {
@@ -357,9 +364,7 @@ void node_free(Node *node) {
 }
 
 void node_polygons(Node *node, List *list) {
-    FOR (Polygon, polygon, &node->polygons) {
-        list_append(list, polygon);
-    } END_FOR;
+    list_extend(list, &node->polygons);
     if (node->front) {
         node_polygons(node->front, list);
     }
@@ -372,8 +377,10 @@ void node_build(Node *node, List *polygons) {
     if (polygons->count == 0) {
         return;
     }
-    if (node->polygons.count == 0) {
-        Polygon *p = list_ptr(polygons, 0);
+    if (node->ok == 0) {
+        node->ok = 1;
+        int index = rand_int(polygons->count);
+        Polygon *p = list_ptr(polygons, index);
         plane_copy(&node->plane, &p->plane);
     }
     List front;
@@ -471,7 +478,7 @@ void node_clip_to(Node *node, Node *other) {
 
 // csg functions
 void csg_union(List *out, List *m1, List *m2) {
-    printf("csg_union(%d, %d)\n", m1->count, m2->count);
+    // printf("csg_union(%d, %d)\n", m1->count, m2->count);
     Node *a = malloc(sizeof(Node));
     Node *b = malloc(sizeof(Node));
     node_alloc(a);
@@ -490,7 +497,7 @@ void csg_union(List *out, List *m1, List *m2) {
 }
 
 void csg_difference(List *out, List *m1, List *m2) {
-    printf("csg_difference(%d, %d)\n", m1->count, m2->count);
+    // printf("csg_difference(%d, %d)\n", m1->count, m2->count);
     Node *a = malloc(sizeof(Node));
     Node *b = malloc(sizeof(Node));
     node_alloc(a);
@@ -511,7 +518,7 @@ void csg_difference(List *out, List *m1, List *m2) {
 }
 
 void csg_intersection(List *out, List *m1, List *m2) {
-    printf("csg_intersection(%d, %d)\n", m1->count, m2->count);
+    // printf("csg_intersection(%d, %d)\n", m1->count, m2->count);
     Node *a = malloc(sizeof(Node));
     Node *b = malloc(sizeof(Node));
     node_alloc(a);
@@ -531,7 +538,7 @@ void csg_intersection(List *out, List *m1, List *m2) {
 }
 
 void csg_inverse(List *out, List *m1) {
-    printf("csg_inverse(%d)\n", m1->count);
+    // printf("csg_inverse(%d)\n", m1->count);
     Node *a = malloc(sizeof(Node));
     node_alloc(a);
     node_build(a, m1);
@@ -541,8 +548,7 @@ void csg_inverse(List *out, List *m1) {
 }
 
 // interface
-void triangles(List *out, float *data, int count) {
-    printf("triangles\n");
+void import_triangles(List *out, float *data, int count) {
     float *d = data;
     for (int i = 0; i < count; i++) {
         Polygon polygon;
@@ -574,8 +580,7 @@ void triangles(List *out, float *data, int count) {
     }
 }
 
-void triangulate(List *polygons, float *data) {
-    printf("triangulate\n");
+void export_triangles(List *polygons, float *data) {
     float *d = data;
     FOR (Polygon, polygon, polygons) {
         for (int i = 0; i < 3; i++) {

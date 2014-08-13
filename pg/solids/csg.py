@@ -38,35 +38,32 @@ class Polygon(Structure):
         ('vertices', Vertex * 3),
     ]
 
-def triangles(shape):
+def import_triangles(shape):
     data = pg.interleave(shape.position, shape.normal, shape.uv)
     count = len(data) / 3
     data = pg.flatten(data)
     data = (c_float * len(data))(*data)
     polygons = List()
     dll.list_alloc(byref(polygons), sizeof(Polygon))
-    dll.triangles(byref(polygons), data, count)
+    dll.import_triangles(byref(polygons), data, count)
     return polygons
 
-def triangulate(polygons):
+def export_triangles(polygons):
     size = polygons.count * 8 * 3
     data = (c_float * size)()
-    dll.triangulate(byref(polygons), data)
+    dll.export_triangles(byref(polygons), data)
     return list(data)
 
 class Solid(object):
     def __init__(self, polygons=None):
         if not isinstance(polygons, List):
-            polygons = triangles(polygons)
+            polygons = import_triangles(polygons)
         self.polygons = polygons
     def __del__(self):
         dll.list_free(byref(self.polygons))
-    def triangulate(self):
-        data = triangulate(self.polygons)
-        position = [tuple(data[i:i+3]) for i in xrange(0, len(data), 8)]
-        normal = [tuple(data[i:i+3]) for i in xrange(3, len(data), 8)]
-        uv = [tuple(data[i:i+2]) for i in xrange(6, len(data), 8)]
-        return position, normal, uv
+    def get_data(self):
+        data = export_triangles(self.polygons)
+        return [tuple(data[i:i+8]) for i in xrange(0, len(data), 8)]
     def __or__(self, other):
         return self.union(other)
     def __and__(self, other):

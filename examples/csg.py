@@ -2,7 +2,7 @@ import pg
 
 class Window(pg.Window):
     def setup(self):
-        self.wasd = pg.WASD(self, speed=5)
+        self.wasd = pg.WASD(self, speed=2)
         self.wasd.look_at((-2, 2, 2), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
         self.context.sampler = pg.Texture(0, 'examples/bronze.jpg')
@@ -13,8 +13,8 @@ class Window(pg.Window):
         d = pg.Solid(pg.Cylinder((0, -1, 0), (0, 1, 0), 0.5, 36))
         e = pg.Solid(pg.Cylinder((0, 0, -1), (0, 0, 1), 0.5, 36))
         shape = (a & b) - (c | d | e)
-        position, normal, uv = shape.triangulate()
-        self.index, (position, normal, uv) = pg.index(position, normal, uv)
+        position, normal, uv = pg.VertexBuffer(
+            shape.get_data()).slices(3, 3, 2)
         self.context.position = position
         self.context.normal = normal
         self.context.uv = uv
@@ -26,7 +26,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context.draw(pg.GL_TRIANGLES, self.index)
+        self.context.draw(pg.GL_TRIANGLES)
 
 if __name__ == "__main__":
     app = pg.App()
