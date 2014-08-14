@@ -196,7 +196,7 @@ Here is the updated code::
             self.clear()
             self.context.draw(pg.GL_TRIANGLES)
 
-And here is what it looks like::
+And here is what it looks like.
 
 .. image:: images/tutorial2.png
 
