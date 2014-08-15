@@ -17,8 +17,6 @@ import os
 
 # Mock modules for readthedocs.org support.
 MOCK_MODULES = [
-    'glfw',
-    'pg.glfw',
 ]
 
 class Mock(object):

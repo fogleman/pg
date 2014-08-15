@@ -136,8 +136,6 @@ def _glfw_get_version(filename):
 
 _glfw = _load_library(['glfw', 'glfw3'], ['.so', '.dylib', '.dll'],
                       ['', '/usr/lib', '/usr/local/lib'], _glfw_get_version)
-if _glfw is None:
-    raise ImportError("Failed to load GLFW3 shared library.")
 
 _callback_repositories = []
 
@@ -526,6 +524,8 @@ def init():
     Wrapper for:
         int glfwInit(void);
     '''
+    if _glfw is None:
+        raise Exception("Failed to load GLFW3 shared library.")
     cwd = _getcwd()
     res = _glfw.glfwInit()
     os.chdir(cwd)
