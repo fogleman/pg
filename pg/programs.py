@@ -7,6 +7,12 @@ class BaseProgram(Program):
         super(BaseProgram, self).__init__(self.VS, self.FS)
 
 class SolidColorProgram(BaseProgram):
+    '''Renders all primitives with a single, solid color.
+
+    :param matrix: the model-view-projection matrix, required
+    :param position: vertex buffer containing vertex positions, required
+    :param color: the color to use (default: white)
+    '''
     VS = '''
     #version 120
 
@@ -31,6 +37,27 @@ class SolidColorProgram(BaseProgram):
         context.color = (1.0, 1.0, 1.0)
 
 class DirectionalLightProgram(BaseProgram):
+    '''Renders the scene with a single, directional light source. Optionally,
+    primitives can be textured or independently colored.
+
+    :param matrix: the model-view-projection matrix, required
+    :param model_matrix: the model matrix, required
+    :param position: vertex buffer containing vertex positions, required
+    :param normal: vertex buffer containing vertex normals, required
+    :param uv: vertex buffer containing vertex texture coordinates, required if use_texture == True
+    :param color: vertex buffer containing vertex colors, required if use_color == True
+    :param sampler: texture to use, required if use_texture == True
+    :param camera_position: the camera position in model space, required
+    :param normal_matrix: the normal matrix, transposed inverse of model matrix, required
+    :param light_direction: vector specifying light direction, default: (1, 1, 1) normalized
+    :param object_color: color for all vertices if textures and color attributes are disabled, default: (0.4, 0.6, 0.8)
+    :param ambient_color: ambient light color, default: (0.3, 0.3, 0.3)
+    :param light_color: directional light color, default: (0.7, 0.7, 0.7)
+    :param specular_power: controls exponent used in specular lighting, default: 32.0
+    :param specular_multiplier: controls intensity of specular lighting, default: 1.0
+    :param use_texture: controls whether a texture is to be used, default: False
+    :param use_color: controls whether per-vertex colors are provided, default: False
+    '''
     VS = '''
     #version 120
 
@@ -110,6 +137,13 @@ class DirectionalLightProgram(BaseProgram):
         context.use_color = False
 
 class TextProgram(BaseProgram):
+    '''Renders 2D text using a font texture. Used by the built-in ``pg.Font``.
+
+    :param matrix: the model-view-projection matrix, required
+    :param position: vertex buffer containing vertex positions, required
+    :param uv: vertex buffer containing vertex texture coordinates, required
+    :param sampler: font texture to use, required
+    '''
     VS = '''
     #version 120
 
