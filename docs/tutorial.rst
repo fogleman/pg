@@ -31,6 +31,13 @@ only construct and run the ``App`` inside of a ``__main__`` block::
         Window()
         app.run()
 
+This ``__main__`` block is so common that ``pg`` includes a shortcut::
+
+    if __name__ == "__main__":
+        pg.run(Window)
+
+Note that the ``run`` function takes a ``Window`` class, not an instance.
+
 Window Lifecycle
 ----------------
 
@@ -170,9 +177,9 @@ a circle right now.
 We can instead use the ``DirectionalLightProgram`` which renders the scene
 with a single, directional light source. This program has several uniforms
 that can be configured but most of them have sensible defaults. At a minimum
-we should set the camera_position so that the lighting will look correct::
+we should set the ``camera_position`` so that the lighting will look correct::
 
-    self.context.camera_position = (0, 0, -2)
+    self.context.camera_position = (0, 0, 2)
 
 We also now need to provide the sphere normal vectors to the program::
 
@@ -191,7 +198,7 @@ Here is the updated code::
             matrix = matrix.translate((0, 0, -2))
             matrix = matrix.perspective(65, self.aspect, 0.1, 100)
             self.context.matrix = matrix
-            self.context.camera_position = (0, 0, -2)
+            self.context.camera_position = (0, 0, 2)
         def draw(self):
             self.clear()
             self.context.draw(pg.GL_TRIANGLES)
