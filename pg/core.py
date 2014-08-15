@@ -425,7 +425,7 @@ class Window(object):
     def on_char(self, codepoint):
         pass
 
-def run(window_class):
+def run(window_class, *args, **kwargs):
     app = App()
-    window_class()
+    window_class(*args, **kwargs)
     app.run()
