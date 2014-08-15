@@ -64,9 +64,7 @@ Here is a basic code template for starting a new ``pg`` project::
             pass
 
     if __name__ == "__main__":
-        app = pg.App()
-        Window()
-        app.run()
+        pg.run(Window)
 
 GLSL Shaders and Programs
 -------------------------
@@ -260,6 +258,4 @@ Complete Example
             self.context.draw(pg.GL_TRIANGLES)
 
     if __name__ == "__main__":
-        app = pg.App()
-        Window()
-        app.run()
+        pg.run(Window)
