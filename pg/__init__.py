@@ -6,6 +6,7 @@ from .core import (
     index,
     IndexBuffer,
     Program,
+    run,
     Shader,
     Texture,
     VertexBuffer,

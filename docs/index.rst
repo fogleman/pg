@@ -5,6 +5,7 @@ Python Graphics (pg) Documentation
    :maxdepth: 2
 
    tutorial
+   programs
 
 Indices and tables
 ==================

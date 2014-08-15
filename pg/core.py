@@ -424,3 +424,8 @@ class Window(object):
         self.call('on_char', codepoint)
     def on_char(self, codepoint):
         pass
+
+def run(window_class):
+    app = App()
+    window_class()
+    app.run()

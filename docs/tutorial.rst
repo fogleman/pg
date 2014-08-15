@@ -14,7 +14,7 @@ object owns the main window loop. Then you can instantiate one or more
     import pg
 
     app = pg.App()
-    pg.Window((800, 600))
+    pg.Window()
     app.run()
 
 This will create your first blank window. However, typically we will want
@@ -24,13 +24,19 @@ only construct and run the ``App`` inside of a ``__main__`` block::
     import pg
 
     class Window(pg.Window):
-        def __init__(self):
-            super(Window, self).__init__((800, 600))
+        pass
 
     if __name__ == "__main__":
         app = pg.App()
         Window()
         app.run()
+
+This ``__main__`` block is so common that ``pg`` includes a shortcut::
+
+    if __name__ == "__main__":
+        pg.run(Window)
+
+Note that the ``run`` function takes a ``Window`` class, not an instance.
 
 Window Lifecycle
 ----------------
@@ -48,8 +54,6 @@ Here is a basic code template for starting a new ``pg`` project::
     import pg
 
     class Window(pg.Window):
-        def __init__(self):
-            super(Window, self).__init__((800, 600))
         def setup(self):
             pass
         def update(self, t, dt):
@@ -60,9 +64,7 @@ Here is a basic code template for starting a new ``pg`` project::
             pass
 
     if __name__ == "__main__":
-        app = pg.App()
-        Window()
-        app.run()
+        pg.run(Window)
 
 GLSL Shaders and Programs
 -------------------------
@@ -107,7 +109,7 @@ Built-in Geometric Shapes
 -------------------------
 
 ``pg`` includes functions for generating several 3-dimensional primitives
-including spheres, cuboids, cylinders, planes, axes, etc.
+including spheres, cuboids, cylinders, cones, planes, axes, etc.
 
 Let's create a sphere::
 
@@ -170,6 +172,39 @@ a circle right now.
 
 .. image:: images/tutorial1.png
 
+We can instead use the ``DirectionalLightProgram`` which renders the scene
+with a single, directional light source. This program has several uniforms
+that can be configured but most of them have sensible defaults. At a minimum
+we should set the ``camera_position`` so that the lighting will look correct::
+
+    self.context.camera_position = (0, 0, 2)
+
+We also now need to provide the sphere normal vectors to the program::
+
+    self.context.normal = pg.VertexBuffer(sphere.normal)
+
+Here is the updated code::
+
+    class Window(pg.Window):
+        def setup(self):
+            self.program = pg.DirectionalLightProgram()
+            self.context = pg.Context(self.program)
+            sphere = pg.Sphere(3, 0.5, (0, 0, 0))
+            self.context.position = pg.VertexBuffer(sphere.position)
+            self.context.normal = pg.VertexBuffer(sphere.normal)
+            matrix = pg.Matrix()
+            matrix = matrix.translate((0, 0, -2))
+            matrix = matrix.perspective(65, self.aspect, 0.1, 100)
+            self.context.matrix = matrix
+            self.context.camera_position = (0, 0, 2)
+        def draw(self):
+            self.clear()
+            self.context.draw(pg.GL_TRIANGLES)
+
+And here is what it looks like.
+
+.. image:: images/tutorial2.png
+
 Flying Around with WASD
 -----------------------
 
@@ -185,7 +220,7 @@ First, let's construct the ``WASD`` object in our ``setup`` function::
 The initial camera position and viewing target can be set with
 ``WASD.look_at``::
 
-    self.wasd.look_at((0, 0, -2), (0, 0, 0))
+    self.wasd.look_at((0, 0, 2), (0, 0, 0))
 
 Now we need to update our context's matrix each frame. The matrix code is
 removed from the ``setup`` function and goes in the ``update`` function
@@ -195,6 +230,7 @@ with a few changes::
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)
         self.context.matrix = matrix
+        self.context.camera_position = self.wasd.position
 
 Complete Example
 ----------------
@@ -204,25 +240,22 @@ Complete Example
     import pg
 
     class Window(pg.Window):
-        def __init__(self):
-            super(Window, self).__init__((800, 600))
         def setup(self):
             self.wasd = pg.WASD(self)
-            self.wasd.look_at((0, 0, -2), (0, 0, 0))
-            self.program = pg.SolidColorProgram()
+            self.wasd.look_at((0, 0, 2), (0, 0, 0))
+            self.program = pg.DirectionalLightProgram()
             self.context = pg.Context(self.program)
-            self.context.color = (1, 1, 1)
             sphere = pg.Sphere(3, 0.5, (0, 0, 0))
             self.context.position = pg.VertexBuffer(sphere.position)
+            self.context.normal = pg.VertexBuffer(sphere.normal)
         def update(self, t, dt):
             matrix = self.wasd.get_matrix()
             matrix = matrix.perspective(65, self.aspect, 0.1, 100)
             self.context.matrix = matrix
+            self.context.camera_position = self.wasd.position
         def draw(self):
             self.clear()
             self.context.draw(pg.GL_TRIANGLES)
 
     if __name__ == "__main__":
-        app = pg.App()
-        Window()
-        app.run()
+        pg.run(Window)
