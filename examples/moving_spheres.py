@@ -38,6 +38,4 @@ class Window(pg.Window):
         self.font.render(text, (5, 0))
 
 if __name__ == "__main__":
-    app = pg.App()
-    Window()
-    app.run()
+    pg.run(Window)

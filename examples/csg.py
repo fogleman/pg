@@ -29,6 +29,4 @@ class Window(pg.Window):
         self.context.draw(pg.GL_TRIANGLES, self.index)
 
 if __name__ == "__main__":
-    app = pg.App()
-    Window()
-    app.run()
+    pg.run(Window)

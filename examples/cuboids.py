@@ -80,6 +80,4 @@ class Window(pg.Window):
             self.bullets.append(bullet)
 
 if __name__ == "__main__":
-    app = pg.App()
-    Window()
-    app.run()
+    pg.run(Window)

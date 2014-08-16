@@ -10,6 +10,4 @@ class Window(pg.Window):
         self.font.render('Hello, world!', (w / 2, h / 2), (0.5, 0.5))
 
 if __name__ == "__main__":
-    app = pg.App()
-    Window()
-    app.run()
+    pg.run(Window)

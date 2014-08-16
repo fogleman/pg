@@ -42,6 +42,4 @@ class Window(pg.Window):
         self.axes.draw(pg.GL_LINES)
 
 if __name__ == "__main__":
-    app = pg.App()
-    Window()
-    app.run()
+    pg.run(Window)
