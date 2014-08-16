@@ -14,7 +14,7 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self, speed=5)
         self.wasd.look_at((14, 0, 0), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        sphere = pg.Sphere(3, 0.4, (0, 0, 0))
+        sphere = pg.Sphere(5, 0.4, (0, 0, 0))
         self.context.position = pg.VertexBuffer(sphere.position)
         self.context.normal = pg.VertexBuffer(sphere.normal)
         self.context.ambient_color = (0.4, 0.4, 0.4)
@@ -26,7 +26,7 @@ class Window(pg.Window):
         matrix = matrix.perspective(65, self.aspect, 0.01, 100)
         for z in range(-2, 3):
             for x in range(-10, 11):
-                y = sin(self.time * pi + x * 0.5 + z * pi) * 3
+                y = sin(self.time * pi / 4 + x * 0.5 + z * pi) * 3
                 model_matrix = pg.Matrix().translate((x, y, z * 3))
                 self.context.model_matrix = model_matrix
                 self.context.matrix = matrix * model_matrix

@@ -27,6 +27,15 @@ class FragmentShader(Shader):
     def __init__(self, shader_source):
         super(FragmentShader, self).__init__(GL_FRAGMENT_SHADER, shader_source)
 
+class Cache(object):
+    def __init__(self):
+        self.data = {}
+    def set(self, key, value):
+        if key in self.data and self.data[key] == value:
+            return False
+        self.data[key] = value
+        return True
+
 class VertexBuffer(object):
     def __init__(self, data=None):
         self.handle = glGenBuffers(1)
@@ -142,6 +151,9 @@ class Attribute(object):
         self.data_type = data_type
     def bind(self, value):
         glEnableVertexAttribArray(self.location)
+        cache = App.instance.current_window.cache
+        if not cache.set(self.location, value):
+            return
         value.bind(self.location)
     def unbind(self):
         glDisableVertexAttribArray(self.location)
@@ -170,6 +182,9 @@ class Uniform(object):
         except Exception:
             value = [value]
             count = 1
+        cache = App.instance.current_window.current_program.cache
+        if not cache.set(self.location, value):
+            return
         if self.data_type in Uniform.MATS:
             funcs = {
                 4: glUniformMatrix2fv,
@@ -214,8 +229,10 @@ class Program(object):
         log = glGetProgramInfoLog(self.handle)
         if log:
             raise Exception(log)
+        self.cache = Cache()
     def use(self):
         glUseProgram(self.handle)
+        App.instance.current_window.set_current_program(self)
     def set_defaults(self, context):
         pass
     def get_attributes(self):
@@ -250,7 +267,6 @@ class Context(object):
         self._uniforms = dict((x.name, x) for x in program.get_uniforms())
         self._attribute_values = {}
         self._uniform_values = {}
-        self._dirty = set()
         self._program.set_defaults(self)
     def __setattr__(self, name, value):
         if name.startswith('_'):
@@ -259,7 +275,6 @@ class Context(object):
             self._attribute_values[name] = value
         elif name in self._uniforms:
             self._uniform_values[name] = value
-            self._dirty.add(name)
         else:
             super(Context, self).__setattr__(name, value)
     def __getattr__(self, name):
@@ -274,9 +289,7 @@ class Context(object):
     def draw(self, mode, index_buffer=None):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
-            if name in self._dirty:
-                self._uniforms[name].bind(value)
-        self._dirty.clear()
+            self._uniforms[name].bind(value)
         for name, value in self._attribute_values.iteritems():
             self._attributes[name].bind(value)
         if index_buffer is None:
@@ -297,6 +310,13 @@ class App(object):
             raise Exception
         App.instance = self
         self.windows = []
+        self.current_window = None
+    def add_window(self, window):
+        self.windows.append(window)
+    def remove_window(self, window):
+        self.windows.remove(window)
+    def set_current_window(self, window):
+        self.current_window = window
     def run(self):
         while self.windows:
             self.tick()
@@ -326,6 +346,8 @@ class Window(object):
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
+        self.cache = Cache()
+        self.current_program = None
         self.use()
         self.configure()
         self.aspect = float(width) / height
@@ -335,7 +357,7 @@ class Window(object):
         self.listeners = [self]
         self.set_callbacks()
         self.call('setup')
-        App.instance.windows.append(self)
+        App.instance.add_window(self)
     @property
     def t(self):
         return time.time() - self.start
@@ -356,6 +378,8 @@ class Window(object):
             glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
         else:
             glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
+    def set_current_program(self, program):
+        self.current_program = program
     def setup(self):
         pass
     def update(self, t, dt):
@@ -366,6 +390,7 @@ class Window(object):
         pass
     def use(self):
         glfw.make_context_current(self.handle)
+        App.instance.set_current_window(self)
     def clear(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     def clear_color_buffer(self):
@@ -377,7 +402,7 @@ class Window(object):
         self.use()
         if glfw.window_should_close(self.handle):
             self.call('teardown')
-            App.instance.windows.remove(self)
+            App.instance.remove_window(self)
             glfw.destroy_window(self.handle)
             return
         now = time.time()
