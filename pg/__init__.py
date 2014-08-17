@@ -42,6 +42,11 @@ from .noise import (
     simplex2,
 )
 
+from .obj import (
+    OBJ,
+    parse_obj,
+)
+
 from .poisson import (
     poisson_disc,
 )
@@ -61,7 +66,9 @@ from .util import (
     hex_color,
     interleave,
     mul,
+    normal_from_points,
     normalize,
+    smooth_normals,
     sub,
 )
 

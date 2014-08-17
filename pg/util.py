@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 def hex_color(value):
     '''Accepts a hexadecimal color `value` in the format ``0xrrggbb`` and
     returns an (r, g, b) tuple where 0.0 <= r, g, b <= 1.0.
@@ -43,6 +45,23 @@ def mul(v, s):
     '''Multiplies a vector and a scalar.
     '''
     return tuple(a * s for a in v)
+
+def normal_from_points(a, b, c):
+    '''Computes a normal vector given three points.
+    '''
+    return normalize(cross(sub(b, a), sub(c, a)))
+
+def smooth_normals(positions, normals):
+    '''Assigns an averaged normal to each position based on all of the normals
+    originally used for the position.
+    '''
+    lookup = defaultdict(list)
+    for position, normal in zip(positions, normals):
+        lookup[position].append(normal)
+    result = []
+    for position in positions:
+        result.append(normalize(reduce(add, lookup[position])))
+    return result
 
 def interleave(*args):
     '''Interleaves the elements of the provided arrays.
