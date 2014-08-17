@@ -63,6 +63,31 @@ def smooth_normals(positions, normals):
         result.append(normalize(reduce(add, lookup[position])))
     return result
 
+def bounding_box(positions):
+    '''Computes the bounding box for a list of 3-dimensional points.
+    '''
+    (x0, y0, z0) = (x1, y1, z1) = positions[0]
+    for x, y, z in positions:
+        x0 = min(x0, x)
+        y0 = min(y0, y)
+        z0 = min(z0, z)
+        x1 = max(x1, x)
+        y1 = max(y1, y)
+        z1 = max(z1, z)
+    return (x0, y0, z0), (x1, y1, z1)
+
+def recenter(positions):
+    '''Returns a list of new positions centered around the origin.
+    '''
+    (x0, y0, z0), (x1, y1, z1) = bounding_box(positions)
+    dx = x1 - (x1 - x0) / 2.0
+    dy = y1 - (y1 - y0) / 2.0
+    dz = z1 - (z1 - z0) / 2.0
+    result = []
+    for x, y, z in positions:
+        result.append((x - dx, y - dy, z - dz))
+    return result
+
 def interleave(*args):
     '''Interleaves the elements of the provided arrays.
 

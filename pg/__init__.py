@@ -59,6 +59,7 @@ from .programs import (
 
 from .util import (
     add,
+    bounding_box,
     cross,
     distance,
     distinct,
@@ -68,6 +69,7 @@ from .util import (
     mul,
     normal_from_points,
     normalize,
+    recenter,
     smooth_normals,
     sub,
 )
