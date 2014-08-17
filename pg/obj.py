@@ -36,7 +36,7 @@ def parse_obj(path):
             for b, c in zip(data[1:], data[2:]):
                 try:
                     n = normal_from_points(*[lu_v[x[0]] for x in [a, b, c]])
-                except Exception:
+                except ZeroDivisionError:
                     continue
                 for vertex in [a, b, c]:
                     v, vt, vn = vertex

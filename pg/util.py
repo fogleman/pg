@@ -60,7 +60,12 @@ def smooth_normals(positions, normals):
         lookup[position].append(normal)
     result = []
     for position in positions:
-        result.append(normalize(reduce(add, lookup[position])))
+        tx = ty = tz = 0
+        for x, y, z in lookup[position]:
+            tx += x
+            ty += y
+            tz += z
+        result.append(normalize((tx, ty, tz)))
     return result
 
 def bounding_box(positions):
