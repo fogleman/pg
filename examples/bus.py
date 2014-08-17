@@ -9,12 +9,7 @@ class Window(pg.Window):
         self.context.light_color = (0.3, 0.3, 0.3)
         self.context.use_texture = True
         self.context.sampler = pg.Texture(0, 'examples/bus.jpg')
-        shape = pg.OBJ('examples/bus.obj')
-        position = pg.recenter(shape.position)
-        smooth = pg.smooth_normals(position, shape.normal)
-        self.context.position, self.context.normal, self.context.uv = (
-            pg.VertexBuffer(pg.interleave(
-                position, smooth, shape.uv)).slices(3, 3, 2))
+        self.mesh = pg.OBJ('examples/bus.obj').centered().smoothed()
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = self.wasd.get_matrix(matrix)
@@ -23,7 +18,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context.draw(pg.GL_TRIANGLES)
+        self.mesh.draw(self.context)
 
 if __name__ == "__main__":
     pg.run(Window)

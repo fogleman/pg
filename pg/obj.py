@@ -1,3 +1,4 @@
+from .core import Mesh
 from .util import normal_from_points
 import os
 
@@ -50,8 +51,9 @@ def parse_obj(path):
                         normal.append(n)
     return position, normal, uv
 
-class OBJ(object):
+class OBJ(Mesh):
     def __init__(self, path):
+        super(OBJ, self).__init__()
         position, normal, uv = parse_obj(path)
         self.position = position
         self.normal = normal

@@ -1,4 +1,5 @@
 from __future__ import division
+from .core import Mesh
 import random
 
 class Vector(object):
@@ -252,7 +253,7 @@ class Model(object):
         for polygon in polygons:
             polygon.flip()
         return Model(polygons)
-    def triangulate(self):
+    def mesh(self):
         position = []
         normal = []
         uv = []
@@ -270,7 +271,7 @@ class Model(object):
                 uv.append(a.uv.get_tuple()[:2])
                 uv.append(b.uv.get_tuple()[:2])
                 uv.append(c.uv.get_tuple()[:2])
-        return position, normal, uv
+        return Mesh(position, normal, uv)
 
 class Solid(Model):
     def __init__(self, shape):

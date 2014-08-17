@@ -2,7 +2,7 @@ from ctypes import *
 from OpenGL.GL import *
 from PIL import Image
 from .matrix import Matrix
-from .util import flatten, interleave, distinct
+from .util import flatten, interleave, distinct, recenter, smooth_normals
 from . import glfw
 import os
 import time
@@ -36,6 +36,46 @@ class Cache(object):
         self.data[key] = value
         return True
 
+class Mesh(object):
+    def __init__(self, position=None, normal=None, uv=None):
+        self.position = position or []
+        self.normal = normal or []
+        self.uv = uv or []
+        self.index = None
+        self.vertex_buffer = None
+        self.slices = None
+    def __del__(self):
+        if self.vertex_buffer:
+            self.vertex_buffer.delete()
+    def __add__(self, other):
+        position = self.position + other.position
+        normal = self.normal + other.normal
+        uv = self.uv + other.uv
+        return Mesh(position, normal, uv)
+    def __rmul__(self, other):
+        if isinstance(other, Matrix):
+            position = [other * x for x in self.position]
+            normal = list(self.normal)
+            uv = list(self.uv)
+            return Mesh(position, normal, uv)
+        raise NotImplemented
+    def centered(self):
+        position = recenter(self.position)
+        normal = list(self.normal)
+        uv = list(self.uv)
+        return Mesh(position, normal, uv)
+    def smoothed(self):
+        position = list(self.position)
+        normal = smooth_normals(self.position, self.normal)
+        uv = list(self.uv)
+        return Mesh(position, normal, uv)
+    def draw(self, context, mode=GL_TRIANGLES):
+        if not self.vertex_buffer:
+            self.index, self.vertex_buffer, self.slices = index(
+                self.position, self.normal, self.uv)
+        context.position, context.normal, context.uv = self.slices
+        context.draw(mode, self.index)
+
 class VertexBuffer(object):
     def __init__(self, data=None):
         self.handle = glGenBuffers(1)
@@ -63,8 +103,11 @@ class VertexBuffer(object):
         offset = 0
         result = []
         for components in args:
-            result.append(self.slice(components, offset))
-            offset += components
+            if components:
+                result.append(self.slice(components, offset))
+                offset += components
+            else:
+                result.append(None)
         return result
     def bind(self, location):
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
@@ -105,14 +148,14 @@ class IndexBuffer(object):
         glDeleteBuffers(1, self.handle)
 
 def index(*args):
-    sizes = [len(x[0]) for x in args]
-    data = interleave(*args)
+    sizes = [len(x[0]) if x else None for x in args]
+    data = interleave(*filter(None, args))
     unique = list(distinct(data))
     lookup = dict((x, i) for i, x in enumerate(unique))
     indices = [lookup[x] for x in data]
     vertex_buffer = VertexBuffer(unique)
     index_buffer = IndexBuffer(indices)
-    return index_buffer, vertex_buffer.slices(*sizes)
+    return index_buffer, vertex_buffer, vertex_buffer.slices(*sizes)
 
 class Texture(object):
     UNITS = [
@@ -286,22 +329,25 @@ class Context(object):
             return self._uniform_values[name]
         else:
             super(Context, self).__getattr__(name)
-    def draw(self, mode, index_buffer=None):
+    def draw(self, mode=GL_TRIANGLES, index_buffer=None):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
-            self._uniforms[name].bind(value)
+            if value is not None:
+                self._uniforms[name].bind(value)
         for name, value in self._attribute_values.iteritems():
-            self._attributes[name].bind(value)
+            if value is not None:
+                self._attributes[name].bind(value)
         if index_buffer is None:
-            vertex_count = min(
-                x.vertex_count for x in self._attribute_values.itervalues())
+            vertex_count = min(x.vertex_count for x in
+                self._attribute_values.itervalues() if x is not None)
             glDrawArrays(mode, 0, vertex_count)
         else:
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.handle)
             glDrawElements(mode, index_buffer.size, GL_UNSIGNED_INT, c_void_p())
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-        for name in self._attribute_values:
-            self._attributes[name].unbind()
+        for name, value in self._attribute_values.iteritems():
+            if value is not None:
+                self._attributes[name].unbind()
 
 class App(object):
     instance = None

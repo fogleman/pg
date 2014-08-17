@@ -7,12 +7,8 @@ class Window(pg.Window):
         self.program = pg.DirectionalLightProgram()
         self.context1 = pg.Context(self.program)
         self.context2 = pg.Context(self.program)
-        sphere = pg.Sphere(4, 0.5, (2, 0, 0))
-        self.context1.position = pg.VertexBuffer(sphere.position)
-        self.context1.normal = pg.VertexBuffer(sphere.normal)
-        sphere = pg.Sphere(4, 0.5, (-2, 0, 0))
-        self.context2.position = pg.VertexBuffer(sphere.position)
-        self.context2.normal = pg.VertexBuffer(sphere.normal)
+        self.sphere1 = pg.Sphere(4, 0.5, (2, 0, 0))
+        self.sphere2 = pg.Sphere(4, 0.5, (-2, 0, 0))
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = self.wasd.get_matrix(matrix)
@@ -24,8 +20,8 @@ class Window(pg.Window):
         self.context2.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context1.draw(pg.GL_TRIANGLES)
-        self.context2.draw(pg.GL_TRIANGLES)
+        self.sphere1.draw(self.context1)
+        self.sphere2.draw(self.context2)
 
 if __name__ == "__main__":
     pg.run(Window)

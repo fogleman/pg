@@ -5,9 +5,7 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self)
         self.wasd.look_at((-1, 1, 1), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        sphere = pg.Sphere(4, 0.5, (0, 0, 0))
-        self.context.position = pg.VertexBuffer(sphere.position)
-        self.context.normal = pg.VertexBuffer(sphere.normal)
+        self.sphere = pg.Sphere(4, 0.5, (0, 0, 0))
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = self.wasd.get_matrix(matrix)
@@ -16,7 +14,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context.draw(pg.GL_TRIANGLES)
+        self.sphere.draw(self.context)
 
 if __name__ == "__main__":
     pg.run(Window)

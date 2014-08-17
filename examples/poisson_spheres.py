@@ -7,10 +7,7 @@ class Window(pg.Window):
         self.context = pg.Context(pg.DirectionalLightProgram())
         self.points = pg.poisson_disc(-10, -10, 10, 10, 1.5, 32)
         self.mats = [pg.Matrix().translate((x, 0, z)) for x, z in self.points]
-        sphere = pg.Sphere(4, 0.7)
-        data = pg.interleave(sphere.position, sphere.normal)
-        self.context.position, self.context.normal = (
-            pg.VertexBuffer(data).slices(3, 3))
+        self.sphere = pg.Sphere(4, 0.7)
     def draw(self):
         self.clear()
         self.context.camera_position = self.wasd.position
@@ -19,7 +16,7 @@ class Window(pg.Window):
         for (x, z), mat in zip(self.points, self.mats):
             self.context.model_matrix = mat
             self.context.matrix = matrix * mat
-            self.context.draw(pg.GL_TRIANGLES)
+            self.sphere.draw(self.context)
 
 if __name__ == "__main__":
     pg.run(Window)

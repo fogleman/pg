@@ -5,15 +5,8 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self)
         self.wasd.look_at((0, 0, 3), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        shape = pg.OBJ('examples/suzanne.obj')
-        position = pg.recenter(shape.position)
-        normal = shape.normal
-        smooth = pg.smooth_normals(position, normal)
-        vb1 = pg.VertexBuffer(pg.interleave(position, normal))
-        vb2 = pg.VertexBuffer(pg.interleave(position, smooth))
-        self.data = [vb1.slices(3, 3), vb2.slices(3, 3)]
+        self.mesh = pg.OBJ('examples/suzanne.obj').centered().smoothed()
     def update(self, t, dt):
-        self.context.position, self.context.normal = self.data[int(t % 2.0)]
         matrix = pg.Matrix()
         matrix = self.wasd.get_matrix(matrix)
         matrix = matrix.perspective(65, self.aspect, 0.01, 100)
@@ -21,7 +14,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context.draw(pg.GL_TRIANGLES)
+        self.mesh.draw(self.context)
 
 if __name__ == "__main__":
     pg.run(Window)

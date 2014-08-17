@@ -1,17 +1,16 @@
 from __future__ import division
 
 from math import asin, pi, atan2, hypot, sin, cos
+from .core import Mesh
 from .matrix import Matrix
 from .util import distance, normalize
 
-class Sphere(object):
+class Sphere(Mesh):
     def __init__(self, detail, radius=0.5, center=(0, 0, 0)):
+        super(Sphere, self).__init__()
         self.detail = detail
         self.radius = radius
         self.center = center
-        self.position = []
-        self.normal = []
-        self.uv = []
         self.setup()
     def setup(self):
         indices = [
@@ -58,11 +57,9 @@ class Sphere(object):
             self._setup(detail - 1, (c, ac, bc))
             self._setup(detail - 1, (ab, bc, ac))
 
-class Cone(object):
+class Cone(Mesh):
     def __init__(self, p1, p2, radius, detail):
-        self.position = []
-        self.normal = []
-        self.uv = []
+        super(Cone, self).__init__()
         self.setup(p1, p2, radius, detail)
     def setup(self, p1, p2, radius, detail):
         x1, y1, z1 = p1
@@ -108,11 +105,9 @@ class Cone(object):
             for uv in uvs:
                 self.uv.append(uv)
 
-class Cylinder(object):
+class Cylinder(Mesh):
     def __init__(self, p1, p2, radius, detail):
-        self.position = []
-        self.normal = []
-        self.uv = []
+        super(Cylinder, self).__init__()
         self.setup(p1, p2, radius, detail)
     def setup(self, p1, p2, radius, detail):
         x1, y1, z1 = p1
@@ -163,11 +158,9 @@ class Cylinder(object):
             for uv in uvs:
                 self.uv.append(uv)
 
-class Cuboid(object):
+class Cuboid(Mesh):
     def __init__(self, x1, x2, y1, y2, z1, z2):
-        self.position = []
-        self.normal = []
-        self.uv = []
+        super(Cuboid, self).__init__()
         self.setup(x1, x2, y1, y2, z1, z2)
     def setup(self, x1, x2, y1, y2, z1, z2):
         positions = [
@@ -209,11 +202,9 @@ class Cuboid(object):
                 self.normal.append(normals[i])
                 self.uv.append(uvs[i][j])
 
-class Plane(object):
+class Plane(Mesh):
     def __init__(self, point, normal, size=0.5, both=True):
-        self.position = []
-        self.normal = []
-        self.uv = []
+        super(Plane, self).__init__()
         nx, ny, nz = normal
         self.setup(point, (nx, ny, nz), size)
         if both:
@@ -243,8 +234,9 @@ class Plane(object):
         for uv in uvs:
             self.uv.append(uv)
 
-class Axes(object):
+class Axes(Mesh):
     def __init__(self, size=1):
+        super(Axes, self).__init__()
         n = size
         self.position = [
             (0, 0, 0), (n, 0, 0),
@@ -255,24 +247,23 @@ class Axes(object):
             (0, 0, 0), (0, 0, -n),
         ]
 
-class CylinderAxes(object):
+class CylinderAxes(Mesh):
     def __init__(self, size=1, radius=0.0625, detail=12):
+        super(CylinderAxes, self).__init__()
         n = size
         cylinders = [
             Cylinder((-n, 0, 0), (n, 0, 0), radius, detail),
             Cylinder((0, -n, 0), (0, n, 0), radius, detail),
             Cylinder((0, 0, -n), (0, 0, n), radius, detail),
         ]
-        self.position = []
-        self.normal = []
-        self.uv = []
         for cylinder in cylinders:
             self.position.extend(cylinder.position)
             self.normal.extend(cylinder.normal)
             self.uv.extend(cylinder.uv)
 
-class Crosshairs(object):
+class Crosshairs(Mesh):
     def __init__(self, size=10):
+        super(Crosshairs, self).__init__()
         n = size
         self.position = [
             (0, -n), (0, n),

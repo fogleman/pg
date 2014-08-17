@@ -14,9 +14,7 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self, speed=5)
         self.wasd.look_at((14, 0, 0), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        sphere = pg.Sphere(5, 0.4, (0, 0, 0))
-        self.context.position = pg.VertexBuffer(sphere.position)
-        self.context.normal = pg.VertexBuffer(sphere.normal)
+        self.sphere = pg.Sphere(5, 0.4, (0, 0, 0))
         self.context.ambient_color = (0.4, 0.4, 0.4)
         self.context.light_color = (0.6, 0.6, 0.6)
     def draw(self):
@@ -31,7 +29,7 @@ class Window(pg.Window):
                 self.context.model_matrix = model_matrix
                 self.context.matrix = matrix * model_matrix
                 self.context.object_color = COLORS[(z + x) % len(COLORS)]
-                self.context.draw(pg.GL_TRIANGLES)
+                self.sphere.draw(self.context)
         w, h = self.size
         self.font.render('%.1f fps' % self.fps, (w - 5, 0), (1, 0))
         text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position

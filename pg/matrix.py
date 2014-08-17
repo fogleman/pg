@@ -28,7 +28,7 @@ class Matrix(object):
         elif len(other) == 4:
             return self.vector_multiply(other)
         else:
-            raise Exception
+            raise NotImplemented
     # def __getitem__(self, index):
     #     return self.value[self.index(index)]
     # def __setitem__(self, index, value):
