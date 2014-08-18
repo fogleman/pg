@@ -106,10 +106,10 @@ class Cone(Mesh):
                 self.uv.append(uv)
 
 class Cylinder(Mesh):
-    def __init__(self, p1, p2, radius, detail):
+    def __init__(self, p1, p2, radius, detail, hollow=False):
         super(Cylinder, self).__init__()
-        self.setup(p1, p2, radius, detail)
-    def setup(self, p1, p2, radius, detail):
+        self.setup(p1, p2, radius, detail, hollow)
+    def setup(self, p1, p2, radius, detail, hollow):
         x1, y1, z1 = p1
         x2, y2, z2 = p2
         dx, dy, dz = x2 - x1, y2 - y1, z2 - z1
@@ -151,6 +151,10 @@ class Cylinder(Mesh):
                 (u1, 0), (u1, 1), (u2, 0),
                 (u2, 0), (u1, 1), (u2, 1),
             ]
+            if hollow:
+                positions = positions[6:]
+                normals = normals[6:]
+                uvs = uvs[6:]
             for position in positions:
                 self.position.append(matrix * position)
             for normal in normals:

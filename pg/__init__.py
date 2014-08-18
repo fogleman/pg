@@ -5,6 +5,7 @@ from .core import (
     FragmentShader,
     index,
     IndexBuffer,
+    Mesh,
     Program,
     run,
     Shader,
