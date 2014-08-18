@@ -83,21 +83,57 @@ class Mesh(object):
 class VertexBuffer(object):
     def __init__(self, data=None):
         self.handle = glGenBuffers(1)
-        if data is not None:
-            self.set_data(data)
-    def set_data(self, data):
-        self.vertex_count = len(data)
-        self.components = len(data[0]) if self.vertex_count else 1
-        self.size = self.vertex_count * self.components
+        self.components = 0
+        self.vertex_count = 0
+        self.vertex_capacity = 0
+        self.extend(data)
+    def extend(self, data):
+        if not data:
+            return
+        if self.components:
+            if len(data[0]) != self.components:
+                raise Exception
+        else:
+            self.components = len(data[0])
+        offset = self.vertex_count * self.components
+        size = len(data) * self.components
         flat = flatten(data)
-        if len(flat) != self.size:
+        if len(flat) != size:
             raise Exception
+        old_size = self.components * self.vertex_capacity
+        self.vertex_count += len(data)
+        if self.vertex_count > self.vertex_capacity:
+            self.vertex_capacity = max(
+                self.vertex_count, self.vertex_capacity * 2)
+            new_size = self.components * self.vertex_capacity
+            if old_size:
+                self.resize(old_size, new_size)
+            else:
+                self.allocate(new_size)
+        glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+        glBufferSubData(
+            GL_ARRAY_BUFFER,
+            sizeof(c_float) * offset,
+            sizeof(c_float) * size,
+            (c_float * size)(*flat))
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+    def allocate(self, size):
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
         glBufferData(
             GL_ARRAY_BUFFER,
-            sizeof(c_float) * self.size,
-            (c_float * self.size)(*flat),
-            GL_STATIC_DRAW)
+            sizeof(c_float) * size,
+            None,
+            GL_DYNAMIC_DRAW)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+    def resize(self, old_size, new_size):
+        old_size = sizeof(c_float) * old_size
+        new_size = sizeof(c_float) * new_size
+        temp = (ctypes.c_byte * new_size)()
+        glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+        data = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY)
+        memmove(temp, data, min(old_size, new_size))
+        glUnmapBuffer(GL_ARRAY_BUFFER)
+        glBufferData(GL_ARRAY_BUFFER, new_size, temp, GL_DYNAMIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def delete(self):
         glDeleteBuffers(1, self.handle)
@@ -123,9 +159,11 @@ class VertexBuffer(object):
 class VertexBufferSlice(object):
     def __init__(self, parent, components, offset):
         self.parent = parent
-        self.vertex_count = self.parent.vertex_count
         self.components = components
         self.offset = offset
+    @property
+    def vertex_count(self):
+        return self.parent.vertex_count
     def bind(self, location):
         glBindBuffer(GL_ARRAY_BUFFER, self.parent.handle)
         glVertexAttribPointer(
