@@ -22,13 +22,16 @@ class Matrix(object):
     def __mul__(self, other):
         if isinstance(other, Matrix):
             return self.matrix_multiply(other)
-        elif len(other) == 3:
-            x, y, z = other
-            return self.vector_multiply((x, y, z, 1))[:3]
-        elif len(other) == 4:
-            return self.vector_multiply(other)
+        elif isinstance(other, (tuple, list)):
+            if len(other) == 3:
+                x, y, z = other
+                return self.vector_multiply((x, y, z, 1))[:3]
+            elif len(other) == 4:
+                return self.vector_multiply(other)
+            else:
+                return NotImplemented
         else:
-            raise NotImplemented
+            return NotImplemented
     # def __getitem__(self, index):
     #     return self.value[self.index(index)]
     # def __setitem__(self, index, value):

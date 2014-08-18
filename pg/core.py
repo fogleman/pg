@@ -45,6 +45,8 @@ class Mesh(object):
         self.vertex_buffer = None
         self.slices = None
     def __del__(self):
+        if self.index:
+            self.index.delete()
         if self.vertex_buffer:
             self.vertex_buffer.delete()
     def __add__(self, other):
@@ -54,11 +56,13 @@ class Mesh(object):
         return Mesh(position, normal, uv)
     def __rmul__(self, other):
         if isinstance(other, Matrix):
-            position = [other * x for x in self.position]
-            normal = list(self.normal)
-            uv = list(self.uv)
-            return Mesh(position, normal, uv)
-        raise NotImplemented
+            return self.multiply(other)
+        return NotImplemented
+    def multiply(self, matrix):
+        position = [matrix * x for x in self.position]
+        normal = list(self.normal)
+        uv = list(self.uv)
+        return Mesh(position, normal, uv)
     def centered(self):
         position = recenter(self.position)
         normal = list(self.normal)
