@@ -5,7 +5,9 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self)
         self.wasd.look_at((0, 0, 3), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        self.mesh = pg.OBJ('examples/suzanne.obj').centered().smoothed()
+        mesh1 = pg.OBJ('examples/suzanne.obj').centered()
+        mesh2 = mesh1.smoothed()
+        self.meshes = [mesh1, mesh2]
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = self.wasd.get_matrix(matrix)
@@ -14,7 +16,8 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.mesh.draw(self.context)
+        mesh = self.meshes[int(self.time % len(self.meshes))]
+        mesh.draw(self.context)
 
 if __name__ == "__main__":
     pg.run(Window)
