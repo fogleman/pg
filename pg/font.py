@@ -17,7 +17,7 @@ class Font(object):
         self.context = Context(TextProgram())
         self.context.sampler = Texture(unit, self.im)
     def render(self, text, coord=(0, 0), anchor=(0, 0)):
-        size, position, uv = self.generate_vertex_data(text)
+        size, positions, uvs = self.generate_vertex_data(text)
         ww, wh = self.window.size
         tx, ty = coord
         ax, ay = anchor
@@ -26,7 +26,7 @@ class Font(object):
         matrix = matrix.translate((tx - tw * ax, ty - th * ay, 0))
         matrix = matrix.orthographic(0, ww, wh, 0, -1, 1)
         self.context.matrix = matrix
-        vertex_buffer = VertexBuffer(interleave(position, uv))
+        vertex_buffer = VertexBuffer(interleave(positions, uvs))
         self.context.position, self.context.uv = vertex_buffer.slices(2, 2)
         glEnable(GL_BLEND)
         glDisable(GL_DEPTH_TEST)
@@ -36,8 +36,8 @@ class Font(object):
         glDisable(GL_BLEND)
         vertex_buffer.delete()
     def generate_vertex_data(self, text):
-        position = []
-        uv = []
+        positions = []
+        uvs = []
         data = [
             (0, 0), (0, 1), (1, 0),
             (0, 1), (1, 1), (1, 0),
@@ -57,12 +57,12 @@ class Font(object):
             k = self.get_kerning(previous, c) if previous else 0
             x += k
             for i, j in data:
-                position.append((x + i * self.dx + ox, y + j * self.dy + oy))
-                uv.append((u + i * self.du, 1 - v - j * self.dv))
+                positions.append((x + i * self.dx + ox, y + j * self.dy + oy))
+                uvs.append((u + i * self.du, 1 - v - j * self.dv))
             x += ox + sx
             previous = c
         size = (x, self.dy)
-        return size, position, uv
+        return size, positions, uvs
     def get_kerning(self, c1, c2):
         key = c1 + c2
         if key not in self.kerning:

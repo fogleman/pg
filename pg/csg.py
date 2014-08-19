@@ -254,32 +254,32 @@ class Model(object):
             polygon.flip()
         return Model(polygons)
     def mesh(self):
-        position = []
-        normal = []
-        uv = []
+        positions = []
+        normals = []
+        uvs = []
         for polygon in self.get_polygons():
             for i in xrange(2, len(polygon.vertices)):
                 a = polygon.vertices[0]
                 b = polygon.vertices[i - 1]
                 c = polygon.vertices[i]
-                position.append(a.position.get_tuple())
-                position.append(b.position.get_tuple())
-                position.append(c.position.get_tuple())
-                normal.append(a.normal.get_tuple())
-                normal.append(b.normal.get_tuple())
-                normal.append(c.normal.get_tuple())
-                uv.append(a.uv.get_tuple()[:2])
-                uv.append(b.uv.get_tuple()[:2])
-                uv.append(c.uv.get_tuple()[:2])
-        return Mesh(position, normal, uv)
+                positions.append(a.position.get_tuple())
+                positions.append(b.position.get_tuple())
+                positions.append(c.position.get_tuple())
+                normals.append(a.normal.get_tuple())
+                normals.append(b.normal.get_tuple())
+                normals.append(c.normal.get_tuple())
+                uvs.append(a.uv.get_tuple()[:2])
+                uvs.append(b.uv.get_tuple()[:2])
+                uvs.append(c.uv.get_tuple()[:2])
+        return Mesh(positions, normals, uvs)
 
 class Solid(Model):
     def __init__(self, shape):
         polygons = []
-        for i in xrange(0, len(shape.position), 3):
-            positions = shape.position[i:i+3]
-            normals = shape.normal[i:i+3]
-            uvs = shape.uv[i:i+3]
+        for i in xrange(0, len(shape.positions), 3):
+            positions = shape.positions[i:i+3]
+            normals = shape.normals[i:i+3]
+            uvs = shape.uvs[i:i+3]
             vertices = [Vertex(Vector(*a), Vector(*b), Vector(c[0], c[1], 0))
                 for a, b, c in zip(positions, normals, uvs)]
             polygon = Polygon(vertices, None)

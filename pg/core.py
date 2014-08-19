@@ -37,10 +37,10 @@ class Cache(object):
         return True
 
 class Mesh(object):
-    def __init__(self, position=None, normal=None, uv=None):
-        self.position = position or []
-        self.normal = normal or []
-        self.uv = uv or []
+    def __init__(self, positions=None, normals=None, uvs=None):
+        self.positions = positions or []
+        self.normals = normals or []
+        self.uvs = uvs or []
         self.index = None
         self.vertex_buffer = None
         self.slices = None
@@ -50,33 +50,33 @@ class Mesh(object):
         if self.vertex_buffer:
             self.vertex_buffer.delete()
     def __add__(self, other):
-        position = self.position + other.position
-        normal = self.normal + other.normal
-        uv = self.uv + other.uv
-        return Mesh(position, normal, uv)
+        positions = self.positions + other.positions
+        normals = self.normals + other.normals
+        uvs = self.uvs + other.uvs
+        return Mesh(positions, normals, uvs)
     def __rmul__(self, other):
         if isinstance(other, Matrix):
             return self.multiply(other)
         return NotImplemented
     def multiply(self, matrix):
-        position = [matrix * x for x in self.position]
-        normal = list(self.normal)
-        uv = list(self.uv)
-        return Mesh(position, normal, uv)
+        positions = [matrix * x for x in self.positions]
+        normals = list(self.normals)
+        uvs = list(self.uvs)
+        return Mesh(positions, normals, uvs)
     def centered(self):
-        position = recenter(self.position)
-        normal = list(self.normal)
-        uv = list(self.uv)
-        return Mesh(position, normal, uv)
+        positions = recenter(self.positions)
+        normals = list(self.normals)
+        uvs = list(self.uvs)
+        return Mesh(positions, normals, uvs)
     def smoothed(self):
-        position = list(self.position)
-        normal = smooth_normals(self.position, self.normal)
-        uv = list(self.uv)
-        return Mesh(position, normal, uv)
+        positions = list(self.positions)
+        normals = smooth_normals(self.positions, self.normals)
+        uvs = list(self.uvs)
+        return Mesh(positions, normals, uvs)
     def draw(self, context, mode=GL_TRIANGLES):
         if not self.vertex_buffer:
             self.index, self.vertex_buffer, self.slices = index(
-                self.position, self.normal, self.uv)
+                self.positions, self.normals, self.uvs)
         context.position, context.normal, context.uv = self.slices
         context.draw(mode, self.index)
 

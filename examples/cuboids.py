@@ -25,9 +25,9 @@ class Window(pg.Window):
             y = random.randint(-n, n)
             cuboid = pg.Cuboid(x, x + 1, y - 0.5, y + 0.5, z - 0.5, z + 0.5)
             color = pg.hex_color(random.randint(0, 0xffffff))
-            color = [color] * len(cuboid.position)
+            colors = [color] * len(cuboid.positions)
             data.extend(pg.interleave(
-                cuboid.position, cuboid.normal, color))
+                cuboid.positions, cuboid.normals, colors))
         self.context.position, self.context.normal, self.context.color = (
             pg.VertexBuffer(data).slices(3, 3, 3))
         # bullets
@@ -35,12 +35,12 @@ class Window(pg.Window):
         self.bullet.ambient_color = (0.5, 0.5, 0.5)
         self.bullet.light_color = (0.5, 0.5, 0.5)
         sphere = pg.Sphere(3, 0.05, (0, 0, 0))
-        self.bullet.position = pg.VertexBuffer(sphere.position)
-        self.bullet.normal = pg.VertexBuffer(sphere.normal)
+        self.bullet.position = pg.VertexBuffer(sphere.positions)
+        self.bullet.normal = pg.VertexBuffer(sphere.normals)
         self.bullets = []
         # crosshairs
         self.crosshairs = pg.Context(pg.SolidColorProgram())
-        self.crosshairs.position = pg.VertexBuffer(pg.Crosshairs().position)
+        self.crosshairs.position = pg.VertexBuffer(pg.Crosshairs().positions)
     def draw(self):
         self.wasd.x = -10
         self.clear()

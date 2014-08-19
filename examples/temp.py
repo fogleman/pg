@@ -12,20 +12,20 @@ class Window(pg.Window):
             noise = pg.simplex2(10 + x * 0.25, 10 + z * 0.25, 4)
             y = (noise + 1) / 1
             shape = pg.Cone((x, 0, z), (x, y, z), 0.4, 36)
-            data.extend(pg.interleave(shape.position, shape.normal))
+            data.extend(pg.interleave(shape.positions, shape.normals))
             shape = pg.Sphere(3, 0.3, (x, y, z))
-            data.extend(pg.interleave(shape.position, shape.normal))
+            data.extend(pg.interleave(shape.positions, shape.normals))
         self.context.position, self.context.normal = (
             pg.VertexBuffer(data).slices(3, 3))
         self.plane = pg.Context(pg.DirectionalLightProgram())
         self.plane.object_color = (1, 1, 1)
         shape = pg.Plane((0, -0.1, 0), (0, 1, 0), 5)
-        data = pg.interleave(shape.position, shape.normal)
+        data = pg.interleave(shape.positions, shape.normals)
         self.plane.position, self.plane.normal = (
             pg.VertexBuffer(data).slices(3, 3))
         self.axes = pg.Context(pg.SolidColorProgram())
         self.axes.color = (0.3, 0.3, 0.3)
-        self.axes.position = pg.VertexBuffer(pg.Axes(100).position)
+        self.axes.position = pg.VertexBuffer(pg.Axes(100).positions)
     def update(self, t, dt):
         matrix = pg.Matrix()#.rotate((0, 1, 0), t * 2 * pi / 60)
         matrix = self.wasd.get_matrix(matrix)

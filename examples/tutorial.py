@@ -7,8 +7,8 @@ class Window(pg.Window):
         self.program = pg.DirectionalLightProgram()
         self.context = pg.Context(self.program)
         sphere = pg.Sphere(3, 0.5, (0, 0, 0))
-        self.context.position = pg.VertexBuffer(sphere.position)
-        self.context.normal = pg.VertexBuffer(sphere.normal)
+        self.context.position = pg.VertexBuffer(sphere.positions)
+        self.context.normal = pg.VertexBuffer(sphere.normals)
     def update(self, t, dt):
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)

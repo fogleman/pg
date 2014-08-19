@@ -29,12 +29,12 @@ class Sphere(Mesh):
         r = self.radius
         p = self.center
         if detail == 0:
-            self.normal.append(a)
-            self.normal.append(b)
-            self.normal.append(c)
-            self.position.append(tuple(r * a[i] + p[i] for i in xrange(3)))
-            self.position.append(tuple(r * b[i] + p[i] for i in xrange(3)))
-            self.position.append(tuple(r * c[i] + p[i] for i in xrange(3)))
+            self.normals.append(a)
+            self.normals.append(b)
+            self.normals.append(c)
+            self.positions.append(tuple(r * a[i] + p[i] for i in xrange(3)))
+            self.positions.append(tuple(r * b[i] + p[i] for i in xrange(3)))
+            self.positions.append(tuple(r * c[i] + p[i] for i in xrange(3)))
             ta = [0.5 + atan2(a[0], a[2]) / (2 * pi), 0.5 + asin(a[1]) / pi]
             tb = [0.5 + atan2(b[0], b[2]) / (2 * pi), 0.5 + asin(b[1]) / pi]
             tc = [0.5 + atan2(c[0], c[2]) / (2 * pi), 0.5 + asin(c[1]) / pi]
@@ -45,9 +45,9 @@ class Sphere(Mesh):
                 ta[0] = (ta[0] + 1) % 1.0
                 tb[0] = (tb[0] + 1) % 1.0
                 tc[0] = (tc[0] + 1) % 1.0
-            self.uv.append(tuple(ta))
-            self.uv.append(tuple(tb))
-            self.uv.append(tuple(tc))
+            self.uvs.append(tuple(ta))
+            self.uvs.append(tuple(tb))
+            self.uvs.append(tuple(tc))
         else:
             ab = normalize([(a[i] + b[i]) / 2.0 for i in xrange(3)])
             ac = normalize([(a[i] + c[i]) / 2.0 for i in xrange(3)])
@@ -99,11 +99,11 @@ class Cone(Mesh):
                 (0.5, 0.5), uv2, uv1,
             ]
             for position in positions:
-                self.position.append(matrix * position)
+                self.positions.append(matrix * position)
             for normal in normals:
-                self.normal.append(normal_matrix * normal)
+                self.normals.append(normal_matrix * normal)
             for uv in uvs:
-                self.uv.append(uv)
+                self.uvs.append(uv)
 
 class Cylinder(Mesh):
     def __init__(self, p1, p2, radius, detail, hollow=False):
@@ -156,11 +156,11 @@ class Cylinder(Mesh):
                 normals = normals[6:]
                 uvs = uvs[6:]
             for position in positions:
-                self.position.append(matrix * position)
+                self.positions.append(matrix * position)
             for normal in normals:
-                self.normal.append(normal_matrix * normal)
+                self.normals.append(normal_matrix * normal)
             for uv in uvs:
-                self.uv.append(uv)
+                self.uvs.append(uv)
 
 class Cuboid(Mesh):
     def __init__(self, x1, x2, y1, y2, z1, z2):
@@ -202,9 +202,9 @@ class Cuboid(Mesh):
         for i in xrange(6):
             for v in xrange(6):
                 j = indices[i][v]
-                self.position.append(positions[i][j])
-                self.normal.append(normals[i])
-                self.uv.append(uvs[i][j])
+                self.positions.append(positions[i][j])
+                self.normals.append(normals[i])
+                self.uvs.append(uvs[i][j])
 
 class Plane(Mesh):
     def __init__(self, point, normal, size=0.5, both=True):
@@ -233,16 +233,16 @@ class Plane(Mesh):
         matrix = matrix.rotate((rx, 0, rz), b)
         matrix = matrix.translate(point)
         for position in positions:
-            self.position.append(matrix * position)
-        self.normal.extend([normal] * 6)
+            self.positions.append(matrix * position)
+        self.normals.extend([normal] * 6)
         for uv in uvs:
-            self.uv.append(uv)
+            self.uvs.append(uv)
 
 class Axes(Mesh):
     def __init__(self, size=1):
         super(Axes, self).__init__()
         n = size
-        self.position = [
+        self.positions = [
             (0, 0, 0), (n, 0, 0),
             (0, 0, 0), (0, n, 0),
             (0, 0, 0), (0, 0, n),
@@ -261,15 +261,15 @@ class CylinderAxes(Mesh):
             Cylinder((0, 0, -n), (0, 0, n), radius, detail),
         ]
         for cylinder in cylinders:
-            self.position.extend(cylinder.position)
-            self.normal.extend(cylinder.normal)
-            self.uv.extend(cylinder.uv)
+            self.positions.extend(cylinder.positions)
+            self.normals.extend(cylinder.normals)
+            self.uvs.extend(cylinder.uvs)
 
 class Crosshairs(Mesh):
     def __init__(self, size=10):
         super(Crosshairs, self).__init__()
         n = size
-        self.position = [
+        self.positions = [
             (0, -n), (0, n),
             (-n, 0), (n, 0),
         ]

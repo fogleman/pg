@@ -129,7 +129,7 @@ texture coordinates. For the ``SolidColorProgram``, we only need the positions.
 Now it's time to load this data into a vertex buffer so our graphics card can
 access it::
 
-    self.context.position = pg.VertexBuffer(sphere.position)
+    self.context.position = pg.VertexBuffer(sphere.positions)
 
 Transformation Matrices
 -----------------------
@@ -152,7 +152,7 @@ Now our setup function is complete::
         self.context = pg.Context(self.program)
         self.context.color = (1, 1, 1)
         sphere = pg.Sphere(3, 0.5, (0, 0, 0))
-        self.context.position = pg.VertexBuffer(sphere.position)
+        self.context.position = pg.VertexBuffer(sphere.positions)
         matrix = pg.Matrix()
         matrix = matrix.translate((0, 0, -2))
         matrix = matrix.perspective(65, self.aspect, 0.1, 100)
@@ -181,7 +181,7 @@ we should set the ``camera_position`` so that the lighting will look correct::
 
 We also now need to provide the sphere normal vectors to the program::
 
-    self.context.normal = pg.VertexBuffer(sphere.normal)
+    self.context.normal = pg.VertexBuffer(sphere.normals)
 
 Here is the updated code::
 
@@ -190,8 +190,8 @@ Here is the updated code::
             self.program = pg.DirectionalLightProgram()
             self.context = pg.Context(self.program)
             sphere = pg.Sphere(3, 0.5, (0, 0, 0))
-            self.context.position = pg.VertexBuffer(sphere.position)
-            self.context.normal = pg.VertexBuffer(sphere.normal)
+            self.context.position = pg.VertexBuffer(sphere.positions)
+            self.context.normal = pg.VertexBuffer(sphere.normals)
             matrix = pg.Matrix()
             matrix = matrix.translate((0, 0, -2))
             matrix = matrix.perspective(65, self.aspect, 0.1, 100)
@@ -246,8 +246,8 @@ Complete Example
             self.program = pg.DirectionalLightProgram()
             self.context = pg.Context(self.program)
             sphere = pg.Sphere(3, 0.5, (0, 0, 0))
-            self.context.position = pg.VertexBuffer(sphere.position)
-            self.context.normal = pg.VertexBuffer(sphere.normal)
+            self.context.position = pg.VertexBuffer(sphere.positions)
+            self.context.normal = pg.VertexBuffer(sphere.normals)
         def update(self, t, dt):
             matrix = self.wasd.get_matrix()
             matrix = matrix.perspective(65, self.aspect, 0.1, 100)

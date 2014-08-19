@@ -37,12 +37,12 @@ class Pipe(object):
         self.restart()
     def add_cylinder(self, position, axis):
         mesh = pg.Matrix().translate(position) * CYLINDERS[axis]
-        self.positions.extend(mesh.position)
-        self.normals.extend(mesh.normal)
+        self.positions.extend(mesh.positions)
+        self.normals.extend(mesh.normals)
     def add_sphere(self, position):
         mesh = pg.Matrix().translate(position) * SPHERE
-        self.positions.extend(mesh.position)
-        self.normals.extend(mesh.normal)
+        self.positions.extend(mesh.positions)
+        self.normals.extend(mesh.normals)
     def restart(self):
         while True:
             x = random.randint(-SIZE, SIZE)

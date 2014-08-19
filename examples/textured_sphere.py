@@ -9,9 +9,9 @@ class Window(pg.Window):
         self.context.sampler = pg.Texture(0, 'examples/earth.png')
         self.context.use_texture = True
         sphere = pg.Sphere(4, 0.5, (0, 0, 0))
-        self.context.position = pg.VertexBuffer(sphere.position)
-        self.context.normal = pg.VertexBuffer(sphere.normal)
-        self.context.uv = pg.VertexBuffer(sphere.uv)
+        self.context.position = pg.VertexBuffer(sphere.positions)
+        self.context.normal = pg.VertexBuffer(sphere.normals)
+        self.context.uv = pg.VertexBuffer(sphere.uvs)
     def update(self, t, dt):
         matrix = pg.Matrix()
         self.context.model_matrix = matrix

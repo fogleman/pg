@@ -10,9 +10,9 @@ def parse_obj(path):
     lu_v = []
     lu_vt = []
     lu_vn = []
-    position = []
-    normal = []
-    uv = []
+    positions = []
+    normals = []
+    uvs = []
     for line in lines:
         line = line.strip()
         if not line or line.startswith('#'):
@@ -42,19 +42,19 @@ def parse_obj(path):
                 for vertex in [a, b, c]:
                     v, vt, vn = vertex
                     if v is not None:
-                        position.append(lu_v[v])
+                        positions.append(lu_v[v])
                     if vt is not None:
-                        uv.append(lu_vt[vt])
+                        uvs.append(lu_vt[vt])
                     if vn is not None:
-                        normal.append(lu_vn[vn])
+                        normals.append(lu_vn[vn])
                     else:
-                        normal.append(n)
-    return position, normal, uv
+                        normals.append(n)
+    return positions, normals, uvs
 
 class OBJ(Mesh):
     def __init__(self, path):
         super(OBJ, self).__init__()
-        position, normal, uv = parse_obj(path)
-        self.position = position
-        self.normal = normal
-        self.uv = uv
+        positions, normals, uvs = parse_obj(path)
+        self.positions = positions
+        self.normals = normals
+        self.uvs = uvs
