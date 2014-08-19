@@ -27,22 +27,22 @@ CYLINDERS = [
     pg.Cylinder((0, 0, -0.5), (0, 0, 0.5), 0.25, 18, True),
 ]
 
-def add_cylinder(vb, position, axis):
-    mesh = pg.Matrix().translate(position) * CYLINDERS[axis]
-    vb.extend(pg.interleave(mesh.position, mesh.normal))
-
-def add_sphere(vb, position):
-    mesh = pg.Matrix().translate(position) * SPHERE
-    vb.extend(pg.interleave(mesh.position, mesh.normal))
-
 class Pipe(object):
     def __init__(self, occupied):
         self.occupied = occupied
-        self.vb = pg.VertexBuffer()
         self.context = pg.Context(pg.DirectionalLightProgram())
         self.context.object_color = pg.hex_color(random.choice(COLORS))
-        self.context.position, self.context.normal = self.vb.slices(3, 3)
+        self.context.position = self.positions = pg.VertexBuffer()
+        self.context.normal = self.normals = pg.VertexBuffer()
         self.restart()
+    def add_cylinder(self, position, axis):
+        mesh = pg.Matrix().translate(position) * CYLINDERS[axis]
+        self.positions.extend(mesh.position)
+        self.normals.extend(mesh.normal)
+    def add_sphere(self, position):
+        mesh = pg.Matrix().translate(position) * SPHERE
+        self.positions.extend(mesh.position)
+        self.normals.extend(mesh.normal)
     def restart(self):
         while True:
             x = random.randint(-SIZE, SIZE)
@@ -53,7 +53,7 @@ class Pipe(object):
         self.position = (x, y, z)
         self.direction = random.choice(DIRECTIONS)
         self.occupied.add(self.position)
-        add_sphere(self.vb, self.position)
+        self.add_sphere(self.position)
     def update(self):
         x, y, z = self.position
         directions = list(DIRECTIONS)
@@ -71,11 +71,12 @@ class Pipe(object):
             self.position = (nx, ny, nz)
             self.occupied.add(self.position)
             mx, my, mz = x + dx / 2.0, y + dy / 2.0, z + dz / 2.0
-            add_cylinder(self.vb, (mx, my, mz), axis)
+            self.add_cylinder((mx, my, mz), axis)
             if direction != self.direction:
-                add_sphere(self.vb, (x, y, z))
+                self.add_sphere((x, y, z))
             self.direction = direction
             return
+        self.add_sphere((x, y, z))
         self.restart()
 
 class Window(pg.Window):
@@ -88,7 +89,8 @@ class Window(pg.Window):
         self.last_restart = 0
     def restart(self):
         for pipe in self.pipes:
-            pipe.vb.delete()
+            pipe.positions.delete()
+            pipe.normals.delete()
         occupied = set()
         self.pipes = [Pipe(occupied) for _ in xrange(PIPES)]
     def update(self, t, dt):

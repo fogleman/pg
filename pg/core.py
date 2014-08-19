@@ -100,9 +100,9 @@ class VertexBuffer(object):
         flat = flatten(data)
         if len(flat) != size:
             raise Exception
-        old_size = self.components * self.vertex_capacity
         self.vertex_count += len(data)
         if self.vertex_count > self.vertex_capacity:
+            old_size = self.components * self.vertex_capacity
             self.vertex_capacity = max(
                 self.vertex_count, self.vertex_capacity * 2)
             new_size = self.components * self.vertex_capacity

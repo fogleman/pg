@@ -24,10 +24,9 @@ class Matrix(object):
             return self.matrix_multiply(other)
         elif isinstance(other, (tuple, list)):
             if len(other) == 3:
-                x, y, z = other
-                return self.vector_multiply((x, y, z, 1))[:3]
+                return self.vector3_multiply(other)
             elif len(other) == 4:
-                return self.vector_multiply(other)
+                return self.vector4_multiply(other)
             else:
                 return NotImplemented
         else:
@@ -70,7 +69,18 @@ class Matrix(object):
         return Matrix([
             c00, c10, c20, c30, c01, c11, c21, c31,
             c02, c12, c22, c32, c03, c13, c23, c33])
-    def vector_multiply(self, other):
+    def vector3_multiply(self, other):
+        (
+            a00, a10, a20, a30, a01, a11, a21, a31,
+            a02, a12, a22, a32, a03, a13, a23, a33,
+        ) = self.value
+        b0, b1, b2 = other
+        return (
+            a00 * b0 + a01 * b1 + a02 * b2 + a03,
+            a10 * b0 + a11 * b1 + a12 * b2 + a13,
+            a20 * b0 + a21 * b1 + a22 * b2 + a23,
+        )
+    def vector4_multiply(self, other):
         (
             a00, a10, a20, a30, a01, a11, a21, a31,
             a02, a12, a22, a32, a03, a13, a23, a33,
