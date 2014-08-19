@@ -22,9 +22,9 @@ COLORS = [
 SPHERE = pg.Sphere(2, 0.25, (0, 0, 0))
 
 CYLINDERS = [
-    pg.Cylinder((-0.5, 0, 0), (0.5, 0, 0), 0.25, 18, True),
-    pg.Cylinder((0, -0.5, 0), (0, 0.5, 0), 0.25, 18, True),
-    pg.Cylinder((0, 0, -0.5), (0, 0, 0.5), 0.25, 18, True),
+    pg.Cylinder((-0.5, 0, 0), (0.5, 0, 0), 0.25, 16, True),
+    pg.Cylinder((0, -0.5, 0), (0, 0.5, 0), 0.25, 16, True),
+    pg.Cylinder((0, 0, -0.5), (0, 0, 0.5), 0.25, 16, True),
 ]
 
 class Pipe(object):
