@@ -2,8 +2,8 @@ import pg
 import random
 
 SPEED = 250
-COUNT = 2500
-FIELD_SIZE = 500
+COUNT = 10000
+FIELD_SIZE = 2000
 FIELD_DEPTH = 2500
 
 class Window(pg.Window):
@@ -26,7 +26,7 @@ class Window(pg.Window):
         for m in xrange(-1, 2):
             z = m * FIELD_DEPTH + (-self.time * SPEED) % FIELD_DEPTH
             matrix = pg.Matrix().translate((0, 0, -z))
-            matrix = matrix.perspective(65, self.aspect, 1, 500)
+            matrix = matrix.perspective(65, self.aspect, 1, 1000)
             self.context.matrix = matrix
             self.context.camera_position = (0, 0, z)
             self.context.draw()
