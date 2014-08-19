@@ -45,7 +45,6 @@ from .noise import (
 
 from .obj import (
     OBJ,
-    parse_obj,
 )
 
 from .poisson import (
@@ -56,6 +55,10 @@ from .programs import (
     DirectionalLightProgram,
     SolidColorProgram,
     TextProgram,
+)
+
+from .stl import (
+    STL,
 )
 
 from .util import (
