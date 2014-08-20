@@ -7,13 +7,20 @@ from .matrix import Matrix
 from .programs import TextProgram
 from .util import interleave
 
+def check_font_name(name):
+    import sys, os
+    if sys.platform == "win32":
+        basename = os.path.basename(name)
+        name = os.path.join("C:\\Windows\\Fonts", basename)
+    return name
+
 class Font(object):
     def __init__(self, window, unit, name, size, fg=None, bg=None):
         self.fg = fg or (255, 255, 255, 255)
         self.bg = bg or (0, 0, 0, 0)
         self.window = window
         self.kerning = {}
-        self.load(name, size)
+        self.load(check_font_name(name), size)
         self.context = Context(TextProgram())
         self.context.sampler = Texture(unit, self.im)
     def render(self, text, coord=(0, 0), anchor=(0, 0)):
