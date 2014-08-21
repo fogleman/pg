@@ -2,11 +2,28 @@ from .core import Mesh
 import os
 import struct
 
-def parse_binary_stl(path):
-    if os.path.exists(path):
-        with open(path, 'rb') as fp:
-            path = fp.read()
-    data = path
+def parse_ascii_stl(data):
+    if os.path.exists(data):
+        with open(data, 'r') as fp:
+            data = fp.read()
+    rows = []
+    for line in data.split('\n'):
+        args = line.strip().lower().split()
+        if 'vertex' in args or 'normal' in args:
+            rows.append(tuple(map(float, args[-3:])))
+    positions = []
+    normals = []
+    uvs = []
+    for i in xrange(0, len(rows), 4):
+        n, v1, v2, v3 = rows[i:i+4]
+        positions.extend([v1, v2, v3])
+        normals.extend([n, n, n])
+    return positions, normals, uvs
+
+def parse_binary_stl(data):
+    if os.path.exists(data):
+        with open(data, 'rb') as fp:
+            data = fp.read()
     positions = []
     normals = []
     uvs = []
@@ -26,7 +43,10 @@ def parse_binary_stl(path):
 class STL(Mesh):
     def __init__(self, path):
         super(STL, self).__init__()
-        positions, normals, uvs = parse_binary_stl(path)
+        try:
+            positions, normals, uvs = parse_binary_stl(path)
+        except Exception:
+            positions, normals, uvs = parse_ascii_stl(path)
         self.positions = positions
         self.normals = normals
         self.uvs = uvs
