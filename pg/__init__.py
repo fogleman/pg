@@ -71,6 +71,7 @@ from .util import (
     hex_color,
     interleave,
     mul,
+    neg,
     normal_from_points,
     normalize,
     recenter,

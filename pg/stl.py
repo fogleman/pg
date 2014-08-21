@@ -1,4 +1,5 @@
 from .core import Mesh
+from .util import normal_from_points
 import os
 import struct
 
@@ -16,6 +17,11 @@ def parse_ascii_stl(data):
     uvs = []
     for i in xrange(0, len(rows), 4):
         n, v1, v2, v3 = rows[i:i+4]
+        if not any(n):
+            try:
+                n = normal_from_points(v1, v2, v3)
+            except ZeroDivisionError:
+                continue
         positions.extend([v1, v2, v3])
         normals.extend([n, n, n])
     return positions, normals, uvs
@@ -30,14 +36,15 @@ def parse_binary_stl(data):
     count = struct.unpack('<I', data[80:84])[0]
     for i in xrange(count):
         index = 84 + i * 50
-        face = struct.unpack('<ffffffffffff', data[index:index+48])
-        nx, ny, nz, x1, y1, z1, x2, y2, z2, x3, y3, z3 = face
-        positions.append((x1, y1, z1))
-        positions.append((x2, y2, z2))
-        positions.append((x3, y3, z3))
-        normals.append((nx, ny, nz))
-        normals.append((nx, ny, nz))
-        normals.append((nx, ny, nz))
+        n, v1, v2, v3 = [struct.unpack('<fff', data[i:i+12])
+            for i in xrange(index, index + 48, 12)]
+        if not any(n):
+            try:
+                n = normal_from_points(v1, v2, v3)
+            except ZeroDivisionError:
+                continue
+        positions.extend([v1, v2, v3])
+        normals.extend([n, n, n])
     return positions, normals, uvs
 
 class STL(Mesh):

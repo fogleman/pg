@@ -1,8 +1,9 @@
 from ctypes import *
 from OpenGL.GL import *
 from PIL import Image
+from math import copysign
 from .matrix import Matrix
-from .util import flatten, interleave, distinct, recenter, smooth_normals
+from .util import flatten, interleave, distinct, recenter, smooth_normals, neg
 from . import glfw
 import os
 import time
@@ -71,6 +72,21 @@ class Mesh(object):
     def smoothed(self):
         positions = list(self.positions)
         normals = smooth_normals(self.positions, self.normals)
+        uvs = list(self.uvs)
+        return Mesh(positions, normals, uvs)
+    def reversed_winding(self):
+        positions = []
+        for i in xrange(0, len(self.positions), 3):
+            v1, v2, v3 = self.positions[i:i+3]
+            positions.extend([v3, v2, v1])
+        normals = [neg(x) for x in self.normals]
+        uvs = list(self.uvs)
+        return Mesh(positions, normals, uvs)
+    def swapped_axes(self, i, j, k):
+        si, sj, sk = copysign(1, i), copysign(1, j), copysign(1, k)
+        i, j, k = abs(i), abs(j), abs(k)
+        positions = [(v[i] * si, v[j] * sj, v[k] * sk) for v in self.positions]
+        normals = [(v[i] * si, v[j] * sj, v[k] * sk) for v in self.normals]
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
     def draw(self, context, mode=GL_TRIANGLES):

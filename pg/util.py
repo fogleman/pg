@@ -46,6 +46,11 @@ def mul(v, s):
     '''
     return tuple(a * s for a in v)
 
+def neg(vector):
+    '''Negates a vector.
+    '''
+    return tuple(-x for x in vector)
+
 def normal_from_points(a, b, c):
     '''Computes a normal vector given three points.
     '''
