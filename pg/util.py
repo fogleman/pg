@@ -46,10 +46,22 @@ def mul(v, s):
     '''
     return tuple(a * s for a in v)
 
+def neg(vector):
+    '''Negates a vector.
+    '''
+    return tuple(-x for x in vector)
+
 def normal_from_points(a, b, c):
     '''Computes a normal vector given three points.
     '''
-    return normalize(cross(sub(b, a), sub(c, a)))
+    x1, y1, z1 = a
+    x2, y2, z2 = b
+    x3, y3, z3 = c
+    ab = (x2 - x1, y2 - y1, z2 - z1)
+    ac = (x3 - x1, y3 - y1, z3 - z1)
+    x, y, z = cross(ab, ac)
+    d = (x * x + y * y + z * z) ** 0.5
+    return (x / d, y / d, z / d)
 
 def smooth_normals(positions, normals):
     '''Assigns an averaged normal to each position based on all of the normals
@@ -65,7 +77,8 @@ def smooth_normals(positions, normals):
             tx += x
             ty += y
             tz += z
-        result.append(normalize((tx, ty, tz)))
+        d = (tx * tx + ty * ty + tz * tz) ** 0.5
+        result.append((tx / d, ty / d, tz / d))
     return result
 
 def bounding_box(positions):

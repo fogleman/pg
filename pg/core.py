@@ -1,9 +1,11 @@
 from ctypes import *
 from OpenGL.GL import *
 from PIL import Image
+from math import copysign
 from .matrix import Matrix
-from .util import flatten, interleave, distinct, recenter, smooth_normals
+from .util import flatten, interleave, distinct, recenter, smooth_normals, neg
 from . import glfw
+import cPickle as pickle
 import os
 import time
 
@@ -37,6 +39,11 @@ class Cache(object):
         return True
 
 class Mesh(object):
+    @staticmethod
+    def load_pickle(path):
+        with open(path, 'rb') as fp:
+            positions, normals, uvs = pickle.load(fp)
+            return Mesh(positions, normals, uvs)
     def __init__(self, positions=None, normals=None, uvs=None):
         self.positions = positions or []
         self.normals = normals or []
@@ -63,16 +70,35 @@ class Mesh(object):
         normals = list(self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
-    def centered(self):
+    def center(self):
         positions = recenter(self.positions)
         normals = list(self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
-    def smoothed(self):
+    def smooth_normals(self):
         positions = list(self.positions)
         normals = smooth_normals(self.positions, self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
+    def reverse_winding(self):
+        positions = []
+        for i in xrange(0, len(self.positions), 3):
+            v1, v2, v3 = self.positions[i:i+3]
+            positions.extend([v3, v2, v1])
+        normals = [neg(x) for x in self.normals]
+        uvs = list(self.uvs)
+        return Mesh(positions, normals, uvs)
+    def swap_axes(self, i, j, k):
+        si, sj, sk = copysign(1, i), copysign(1, j), copysign(1, k)
+        i, j, k = abs(i), abs(j), abs(k)
+        positions = [(v[i] * si, v[j] * sj, v[k] * sk) for v in self.positions]
+        normals = [(v[i] * si, v[j] * sj, v[k] * sk) for v in self.normals]
+        uvs = list(self.uvs)
+        return Mesh(positions, normals, uvs)
+    def save_pickle(self, path):
+        obj = (self.positions, self.normals, self.uvs)
+        with open(path, 'wb') as fp:
+            pickle.dump(obj, fp, -1)
     def draw(self, context, mode=GL_TRIANGLES):
         if not self.vertex_buffer:
             self.index, self.vertex_buffer, self.slices = index(

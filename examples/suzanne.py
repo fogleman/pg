@@ -5,8 +5,8 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self)
         self.wasd.look_at((0, 0, 3), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        mesh1 = pg.OBJ('examples/suzanne.obj').centered()
-        mesh2 = mesh1.smoothed()
+        mesh1 = pg.OBJ('examples/suzanne.obj').center()
+        mesh2 = mesh1.smooth_normals()
         self.meshes = [mesh1, mesh2]
     def update(self, t, dt):
         matrix = pg.Matrix()
