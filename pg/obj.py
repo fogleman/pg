@@ -1,5 +1,6 @@
 from .core import Mesh
 from .util import normal_from_points
+from itertools import izip_longest
 import os
 
 def parse_obj(path):
@@ -50,6 +51,35 @@ def parse_obj(path):
                     else:
                         normals.append(n)
     return positions, normals, uvs
+
+def save_obj(self, path):
+    lines = []
+    v = sorted(set(self.positions))
+    vt = sorted(set(self.uvs))
+    vn = sorted(set(self.normals))
+    lu_v = dict((x, i + 1) for i, x in enumerate(v))
+    lu_vt = dict((x, i + 1) for i, x in enumerate(vt))
+    lu_vn = dict((x, i + 1) for i, x in enumerate(vn))
+    for x in v:
+        lines.append('v %f %f %f' % x)
+    for x in vt:
+        lines.append('vt %f %f' % x)
+    for x in vn:
+        lines.append('vn %f %f %f' % x)
+    f = []
+    for v, vt, vn in izip_longest(self.positions, self.uvs, self.normals):
+        v = lu_v.get(v, '')
+        vt = lu_vt.get(vt, '')
+        vn = lu_vn.get(vn, '')
+        f.append(('%s/%s/%s' % (v, vt, vn)).strip('/'))
+        if len(f) == 3:
+            lines.append('f %s' % ' '.join(f))
+            f = []
+    data = '\n'.join(lines)
+    with open(path, 'w') as fp:
+        fp.write(data)
+
+Mesh.save_obj = save_obj
 
 class OBJ(Mesh):
     def __init__(self, path):

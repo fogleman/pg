@@ -5,6 +5,7 @@ from math import copysign
 from .matrix import Matrix
 from .util import flatten, interleave, distinct, recenter, smooth_normals, neg
 from . import glfw
+import cPickle as pickle
 import os
 import time
 
@@ -38,6 +39,11 @@ class Cache(object):
         return True
 
 class Mesh(object):
+    @staticmethod
+    def load_pickle(path):
+        with open(path, 'rb') as fp:
+            positions, normals, uvs = pickle.load(fp)
+            return Mesh(positions, normals, uvs)
     def __init__(self, positions=None, normals=None, uvs=None):
         self.positions = positions or []
         self.normals = normals or []
@@ -89,6 +95,10 @@ class Mesh(object):
         normals = [(v[i] * si, v[j] * sj, v[k] * sk) for v in self.normals]
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
+    def save_pickle(self, path):
+        obj = (self.positions, self.normals, self.uvs)
+        with open(path, 'wb') as fp:
+            pickle.dump(obj, fp, -1)
     def draw(self, context, mode=GL_TRIANGLES):
         if not self.vertex_buffer:
             self.index, self.vertex_buffer, self.slices = index(
