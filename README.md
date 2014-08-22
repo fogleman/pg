@@ -28,6 +28,8 @@ focus on your application-specific functionality instead.
 * textures
 * geometric shapes
     * sphere, cuboid, plane, cylinder, cone, axes
+* models
+    * .obj and .stl file formats
 * WASD movement
     * built-in!
 * windowing and input
@@ -51,6 +53,10 @@ Clone the repository and run main.py to see these and several other examples.
 #### Gusev Crater: [gusev.py](https://github.com/fogleman/pg/blob/master/examples/gusev.py)
 
 ![Screenshot](http://i.imgur.com/fiIJKIt.png)
+
+#### OBJ and STL Models: [suzanne.py](https://github.com/fogleman/pg/blob/master/examples/suzanne.py)
+
+![Screenshot](http://i.imgur.com/Jictnlz.png)
 
 #### Constructive Solid Geometry (CSG): [csg.py](https://github.com/fogleman/pg/blob/master/examples/csg.py)
 
