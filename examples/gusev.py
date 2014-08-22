@@ -7,8 +7,8 @@ import pg
 class Window(pg.Window):
     def setup(self):
         self.set_clear_color(0.87, 0.81, 0.70)
-        self.wasd = pg.WASD(self, speed=20)
-        self.wasd.look_at((-55, 20, -5), (0, 0, 0))
+        self.wasd = pg.WASD(self, speed=10)
+        self.wasd.look_at((0, 0, 0), (30, -5, 30))
         self.context = pg.Context(pg.DirectionalLightProgram())
         self.context.specular_multiplier = 0.25
         self.context.ambient_color = (0.5, 0.5, 0.5)
