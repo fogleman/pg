@@ -1,5 +1,6 @@
 from .core import Mesh
 from .util import normal_from_points
+from itertools import izip_longest
 import os
 import struct
 
@@ -36,8 +37,8 @@ def parse_binary_stl(data):
     count = struct.unpack('<I', data[80:84])[0]
     for i in xrange(count):
         index = 84 + i * 50
-        n, v1, v2, v3 = [struct.unpack('<fff', data[i:i+12])
-            for i in xrange(index, index + 48, 12)]
+        n, v1, v2, v3 = [struct.unpack('<fff', data[i:i+12]) for i in
+            xrange(index, index + 48, 12)]
         if not any(n):
             try:
                 n = normal_from_points(v1, v2, v3)
@@ -46,6 +47,22 @@ def parse_binary_stl(data):
         positions.extend([v1, v2, v3])
         normals.extend([n, n, n])
     return positions, normals, uvs
+
+def save_binary_stl(self, path):
+    p = self.positions
+    data = []
+    data.append('\x00' * 80)
+    data.append(struct.pack('<I', len(p) / 3))
+    for vertices in zip(p[::3], p[1::3], p[2::3]):
+        data.append(struct.pack('<fff', 0.0, 0.0, 0.0))
+        for vertex in vertices:
+            data.append(struct.pack('<fff', *vertex))
+        data.append(struct.pack('<H', 0))
+    data = ''.join(data)
+    with open(path, 'wb') as fp:
+        fp.write(data)
+
+Mesh.save_binary_stl = save_binary_stl
 
 class STL(Mesh):
     def __init__(self, path):

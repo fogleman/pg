@@ -15,14 +15,11 @@ class Window(pg.Window):
         self.context.light_color = (0.5, 0.5, 0.5)
         self.context.use_texture = True
         self.context.sampler = pg.Texture(0, 'examples/gusev.jpg')
-        # self.context.normal_sampler = pg.Texture(1, 'examples/normal_sand.jpg')
-        mesh = pg.STL('examples/gusev.stl')
-        mesh = mesh.reverse_winding().swap_axes(1, 2, 0).smooth_normals()
-        minx, minz = -90.0, -57.6337509155
-        maxx, maxz = 47.7562522888, 93.75
+        mesh = pg.STL('examples/gusev.stl').smooth_normals()
+        (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
         for x, y, z in mesh.positions:
-            u = 1 - (z - minz) / (maxz - minz)
-            v = 1 - (x - minx) / (maxx - minx)
+            u = 1 - (z - z0) / (z1 - z0)
+            v = 1 - (x - x0) / (x1 - x0)
             mesh.uvs.append((u, v))
         self.mesh = mesh
     def update(self, t, dt):
