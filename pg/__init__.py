@@ -74,6 +74,7 @@ from .util import (
     neg,
     normal_from_points,
     normalize,
+    ray_triangle_intersection,
     recenter,
     smooth_normals,
     sub,
