@@ -44,24 +44,14 @@ focus on your application-specific functionality instead.
 
 Clone the repository and run main.py to see these and several other examples.
 
-#### 3D Pipes
+#### 3D Pipes: [pipes.py](https://github.com/fogleman/pg/blob/master/examples/pipes.py)
 
-**[pipes.py](https://github.com/fogleman/pg/blob/master/examples/pipes.py)**
+![Screenshot](http://i.imgur.com/za11AqP.png)
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=KpsjFiYDp5g
-" target="_blank"><img src="http://img.youtube.com/vi/KpsjFiYDp5g/0.jpg" 
-alt="3D Pipes" width="800" height="600" border="10" /></a>
-
-#### Gusev Crater
-
-**[gusev.py](https://github.com/fogleman/pg/blob/master/examples/gusev.py)**
+#### Gusev Crater: [gusev.py](https://github.com/fogleman/pg/blob/master/examples/gusev.py)
 
 ![Screenshot](http://i.imgur.com/fiIJKIt.png)
 
-#### CSG (Constructive Solid Geometry)
-
-pg includes basic support for constructive solid geometry (CSG).
-
-**[csg.py](https://github.com/fogleman/pg/blob/master/examples/csg.py)**
+#### Constructive Solid Geometry (CSG): [csg.py](https://github.com/fogleman/pg/blob/master/examples/csg.py)
 
 ![Screenshot](http://i.imgur.com/3QJFHw1.png)
