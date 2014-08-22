@@ -1,8 +1,8 @@
 from OpenGL.GL import glClearColor
 import pg
 
-# download the .stl file here:
-# http://www.thingiverse.com/thing:429480
+# download the gusev.stl file here:
+# http://www.michaelfogleman.com/static/gusev.stl.zip
 
 class Window(pg.Window):
     def setup(self):
