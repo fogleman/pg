@@ -10,8 +10,7 @@ from .util import interleave
 def check_font_name(name):
     import sys, os
     if sys.platform == "win32":
-        basename = os.path.basename(name)
-        name = os.path.join("C:\\Windows\\Fonts", basename)
+        name = os.path.basename(name)
     return name
 
 class Font(object):
