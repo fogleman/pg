@@ -6,7 +6,7 @@ import pg
 
 class Window(pg.Window):
     def setup(self):
-        glClearColor(0.87, 0.81, 0.70, 1.00)
+        self.set_clear_color(0.87, 0.81, 0.70)
         self.wasd = pg.WASD(self, speed=20)
         self.wasd.look_at((-55, 20, -5), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
@@ -22,14 +22,12 @@ class Window(pg.Window):
             v = 1 - (x - x0) / (x1 - x0)
             mesh.uvs.append((u, v))
         self.mesh = mesh
-    def update(self, t, dt):
-        matrix = pg.Matrix()
-        matrix = self.wasd.get_matrix(matrix)
+    def draw(self):
+        self.clear()
+        matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 0.1, 1000)
         self.context.matrix = matrix
         self.context.camera_position = self.wasd.position
-    def draw(self):
-        self.clear()
         self.mesh.draw(self.context)
 
 if __name__ == "__main__":

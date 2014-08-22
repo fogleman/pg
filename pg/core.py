@@ -511,6 +511,8 @@ class Window(object):
         glClear(GL_COLOR_BUFFER_BIT)
     def clear_depth_buffer(self):
         glClear(GL_DEPTH_BUFFER_BIT)
+    def set_clear_color(self, r, g, b, a=1.0):
+        glClearColor(r, g, b, a)
     def tick(self):
         self._fps.tick()
         self.use()

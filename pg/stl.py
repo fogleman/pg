@@ -54,7 +54,10 @@ def save_binary_stl(self, path):
     data.append('\x00' * 80)
     data.append(struct.pack('<I', len(p) / 3))
     for vertices in zip(p[::3], p[1::3], p[2::3]):
-        data.append(struct.pack('<fff', 0.0, 0.0, 0.0))
+        try:
+            data.append(struct.pack('<fff', *normal_from_points(*vertices)))
+        except ZeroDivisionError:
+            data.append(struct.pack('<fff', 0.0, 0.0, 0.0))
         for vertex in vertices:
             data.append(struct.pack('<fff', *vertex))
         data.append(struct.pack('<H', 0))
