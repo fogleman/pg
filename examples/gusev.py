@@ -1,4 +1,3 @@
-from OpenGL.GL import glClearColor
 import pg
 
 # download the gusev.stl file here:
