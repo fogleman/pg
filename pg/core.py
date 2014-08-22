@@ -64,17 +64,17 @@ class Mesh(object):
         normals = list(self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
-    def centered(self):
+    def center(self):
         positions = recenter(self.positions)
         normals = list(self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
-    def smoothed(self):
+    def smooth_normals(self):
         positions = list(self.positions)
         normals = smooth_normals(self.positions, self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
-    def reversed_winding(self):
+    def reverse_winding(self):
         positions = []
         for i in xrange(0, len(self.positions), 3):
             v1, v2, v3 = self.positions[i:i+3]
@@ -82,7 +82,7 @@ class Mesh(object):
         normals = [neg(x) for x in self.normals]
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
-    def swapped_axes(self, i, j, k):
+    def swap_axes(self, i, j, k):
         si, sj, sk = copysign(1, i), copysign(1, j), copysign(1, k)
         i, j, k = abs(i), abs(j), abs(k)
         positions = [(v[i] * si, v[j] * sj, v[k] * sk) for v in self.positions]

@@ -9,7 +9,7 @@ class Window(pg.Window):
         self.context.light_color = (0.3, 0.3, 0.3)
         self.context.use_texture = True
         self.context.sampler = pg.Texture(0, 'examples/bus.jpg')
-        self.mesh = pg.OBJ('examples/bus.obj').centered().smoothed()
+        self.mesh = pg.OBJ('examples/bus.obj').center().smooth_normals()
     def update(self, t, dt):
         matrix = pg.Matrix()
         matrix = self.wasd.get_matrix(matrix)

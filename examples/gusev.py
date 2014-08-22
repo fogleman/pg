@@ -1,12 +1,25 @@
+from OpenGL.GL import glClearColor
 import pg
+
+# download the .stl file here:
+# http://www.thingiverse.com/thing:429480
 
 class Window(pg.Window):
     def setup(self):
-        self.wasd = pg.WASD(self, speed=100)
-        self.wasd.look_at((0, 0, 3), (0, 0, 0))
+        glClearColor(0.87, 0.81, 0.70, 1.00)
+        self.wasd = pg.WASD(self, speed=20)
+        self.wasd.look_at((-55, 20, -5), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
+        self.context.use_texture = True
+        self.context.sampler = pg.Texture(0, 'examples/gusev.jpg')
         mesh = pg.STL('examples/gusev.stl')
-        mesh = mesh.centered().reversed_winding().swapped_axes(1, 2, 0)
+        mesh = mesh.reverse_winding().swap_axes(1, 2, 0).smooth_normals()
+        minx, minz = -90.0, -57.6337509155
+        maxx, maxz = 47.7562522888, 93.75
+        for x, y, z in mesh.positions:
+            u = (x - minx) / (maxx - minx)
+            v = (z + minz) / (maxz - minz)
+            mesh.uvs.append((u, v))
         self.mesh = mesh
     def update(self, t, dt):
         matrix = pg.Matrix()

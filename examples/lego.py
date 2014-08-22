@@ -20,7 +20,7 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self, speed=10)
         self.wasd.look_at((0, 8, 30), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        self.mesh = pg.OBJ('examples/lego.obj').centered().smoothed()
+        self.mesh = pg.OBJ('examples/lego.obj').center().smooth_normals()
         self.men = [LegoMan() for _ in xrange(50)]
     def update(self, t, dt):
         self.wasd.y = 1.5
