@@ -511,6 +511,8 @@ class Window(object):
         glClear(GL_COLOR_BUFFER_BIT)
     def clear_depth_buffer(self):
         glClear(GL_DEPTH_BUFFER_BIT)
+    def set_clear_color(self, r, g, b, a=1.0):
+        glClearColor(r, g, b, a)
     def tick(self):
         self._fps.tick()
         self.use()
@@ -531,6 +533,14 @@ class Window(object):
         im = Image.frombytes('RGB', (width, height), data)
         im = im.transpose(Image.FLIP_TOP_BOTTOM)
         im.save(path)
+    def screenshot(self):
+        counter = 0
+        while True:
+            path = 'pg%04d.png' % counter
+            if not os.path.exists(path):
+                self.save_image(path)
+                break
+            counter += 1
     def set_callbacks(self):
         glfw.set_window_size_callback(self.handle, self._on_size)
         glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
@@ -557,6 +567,8 @@ class Window(object):
         pass
     def _on_key(self, window, key, scancode, action, mods):
         self.call('on_key', key, scancode, action, mods)
+        if action == glfw.PRESS and key == glfw.KEY_F12:
+            self.screenshot()
     def on_key(self, key, scancode, action, mods):
         pass
     def _on_char(self, window, codepoint):

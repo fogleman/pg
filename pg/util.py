@@ -31,6 +31,13 @@ def cross(v1, v2):
         v1[0] * v2[1] - v1[1] * v2[0],
     )
 
+def dot(v1, v2):
+    '''Computes the dot product of two vectors.
+    '''
+    x1, y1, z1 = v1
+    x2, y2, z2 = v2
+    return x1 * x2 + y1 * y2 + z1 * z2
+
 def add(v1, v2):
     '''Adds two vectors.
     '''
@@ -146,3 +153,27 @@ def distinct(iterable, keyfunc=None):
         if key not in seen:
             seen.add(key)
             yield item
+
+def ray_triangle_intersection(v1, v2, v3, o, d):
+    '''Computes the distance from a point to a triangle given a ray.
+    '''
+    eps = 1e-6
+    e1 = sub(v2, v1)
+    e2 = sub(v3, v1)
+    p = cross(d, e2)
+    det = dot(e1, p)
+    if abs(det) < eps:
+        return None
+    inv = 1.0 / det
+    t = sub(o, v1)
+    u = dot(t, p) * inv
+    if u < 0 or u > 1:
+        return None
+    q = cross(t, e1)
+    v = dot(d, q) * inv
+    if v < 0 or v > 1:
+        return None
+    t = dot(e2, q) * inv
+    if t > eps:
+        return t
+    return None

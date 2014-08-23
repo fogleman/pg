@@ -9,8 +9,7 @@ class Window(pg.Window):
         mesh2 = mesh1.smooth_normals()
         self.meshes = [mesh1, mesh2]
     def update(self, t, dt):
-        matrix = pg.Matrix()
-        matrix = self.wasd.get_matrix(matrix)
+        matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 0.01, 100)
         self.context.matrix = matrix
         self.context.camera_position = self.wasd.position
