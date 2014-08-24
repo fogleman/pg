@@ -105,7 +105,7 @@ class Program(pg.Program):
         norm = norm.xzy;
         vec3 color = object_color;
         if (use_texture) {
-            color *= vec3(texture2D(sampler, frag_uv)) + vec3(0.3);
+            color = color * 0.6 + color * vec3(texture2D(sampler, frag_uv)) * 0.4;
         }
         float diffuse = max(dot(mat3(normal_matrix) * norm,
             light_direction), 0.0);
