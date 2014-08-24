@@ -1,9 +1,10 @@
 from collections import defaultdict
+from pg import glfw
 import pg
 
 STEP = 32
-HEIGHT = 10
-SPEED = 1200
+HEIGHT = 16
+SPEED = 120
 
 class Window(pg.Window):
     def setup(self):
@@ -30,7 +31,6 @@ class Window(pg.Window):
         mesh = pg.STL('examples/output.stl').center()
         print 'generating uvs'
         (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
-        # print (x0, y0, z0), (x1, y1, z1)
         for x, y, z in mesh.positions:
             u = (z - z0) / (z1 - z0)
             v = 1 - (x - x0) / (x1 - x0)
@@ -46,22 +46,34 @@ class Window(pg.Window):
             x, z = int(round(x / STEP)), int(round(z / STEP))
             self.lookup[(x, z)].append((v1, v2, v3))
         print '%d triangles' % (len(p) / 3)
-    def adjust_height(self):
+        self.dy = 0
+    def get_height(self):
         p = x, y, z = self.wasd.position
         x, z = int(round(x / STEP)), int(round(z / STEP))
         for i in xrange(x - 1, x + 2):
             for j in xrange(z - 1, z + 2):
                 for v1, v2, v3 in self.lookup[(i, j)]:
                     t = pg.ray_triangle_intersection(v1, v2, v3, p, (0, -1, 0))
-                    if t and t < HEIGHT:
-                        self.wasd.y -= t - HEIGHT
-                        return
+                    if t:
+                        return t
                     t = pg.ray_triangle_intersection(v1, v2, v3, p, (0, 1, 0))
                     if t:
-                        self.wasd.y += t + HEIGHT
-                        return
+                        return -t
+        return None
+    def on_key(self, key, scancode, action, mods):
+        if key == glfw.KEY_SPACE and action == glfw.PRESS:
+            if self.dy == 0:
+                self.dy = 2.0
+    def update(self, t, dt):
+        self.dy = max(self.dy - dt * 2.5, -25.0)
+        self.wasd.y += self.dy
+        h = self.get_height()
+        if h is None:
+            return
+        if h < HEIGHT:
+            self.dy = 0
+            self.wasd.y -= h - HEIGHT
     def draw(self):
-        self.adjust_height()
         self.clear()
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.aspect, 1, 100000)
