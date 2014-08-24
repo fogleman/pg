@@ -7,6 +7,8 @@ SPEED = 1200
 
 class Window(pg.Window):
     def setup(self):
+        fg = (0, 0, 0, 255)
+        self.font = pg.Font(self, 2, '/Library/Fonts/Arial.ttf', 24, fg)
         self.set_clear_color(0.87, 0.81, 0.70)
         self.wasd = pg.WASD(self, speed=SPEED)
         self.wasd.look_at((0, 0, 0), (30, -5, 30))
@@ -16,39 +18,45 @@ class Window(pg.Window):
         self.context.ambient_color = (0.5, 0.5, 0.5)
         self.context.light_color = (0.5, 0.5, 0.5)
         self.context.light_direction = pg.normalize((-1, 1, 1))
+        print 'loading normal map'
         self.context.normal_sampler = pg.Texture(0, 'examples/output.png')
+        print 'loading intensity texture'
         try:
-            self.context.sampler = pg.Texture(1, 'examples/texture.jp2')
+            self.context.sampler = pg.Texture(1, 'examples/texture.png')
             self.context.use_texture = True
         except IOError:
             self.context.use_texture = False
+        print 'loading mesh'
         mesh = pg.STL('examples/output.stl').center()
+        print 'generating uvs'
         (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
-        print (x0, y0, z0), (x1, y1, z1)
+        # print (x0, y0, z0), (x1, y1, z1)
         for x, y, z in mesh.positions:
             u = (z - z0) / (z1 - z0)
             v = 1 - (x - x0) / (x1 - x0)
             mesh.uvs.append((u, v))
+        print 'generating vertex buffers'
         self.context.position = pg.VertexBuffer(mesh.positions)
         self.context.uv = pg.VertexBuffer(mesh.uvs)
+        print 'storing height map'
         p = mesh.positions
         self.lookup = defaultdict(list)
         for v1, v2, v3 in zip(p[::3], p[1::3], p[2::3]):
             x, y, z = v1
             x, z = int(round(x / STEP)), int(round(z / STEP))
             self.lookup[(x, z)].append((v1, v2, v3))
+        print '%d triangles' % (len(p) / 3)
     def adjust_height(self):
-        o = x, y, z = self.wasd.position
-        d = (0, -1, 0)
+        p = x, y, z = self.wasd.position
         x, z = int(round(x / STEP)), int(round(z / STEP))
         for i in xrange(x - 1, x + 2):
             for j in xrange(z - 1, z + 2):
                 for v1, v2, v3 in self.lookup[(i, j)]:
-                    t = pg.ray_triangle_intersection(v1, v2, v3, o, (0, -1, 0))
+                    t = pg.ray_triangle_intersection(v1, v2, v3, p, (0, -1, 0))
                     if t and t < HEIGHT:
                         self.wasd.y -= t - HEIGHT
                         return
-                    t = pg.ray_triangle_intersection(v1, v2, v3, o, (0, 1, 0))
+                    t = pg.ray_triangle_intersection(v1, v2, v3, p, (0, 1, 0))
                     if t:
                         self.wasd.y += t + HEIGHT
                         return
@@ -60,6 +68,10 @@ class Window(pg.Window):
         self.context.matrix = matrix
         self.context.camera_position = self.wasd.position
         self.context.draw()
+        w, h = self.size
+        self.font.render('%.1f fps' % self.fps, (w - 5, 0), (1, 0))
+        text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position
+        self.font.render(text, (5, 0))
 
 class Program(pg.Program):
     VS = '''
@@ -105,7 +117,8 @@ class Program(pg.Program):
         norm = norm.xzy;
         vec3 color = object_color;
         if (use_texture) {
-            color = color * 0.6 + color * vec3(texture2D(sampler, frag_uv)) * 0.4;
+            vec3 intensity = vec3(texture2D(sampler, frag_uv));
+            color = color * 0.6 + color * intensity * 0.4;
         }
         float diffuse = max(dot(mat3(normal_matrix) * norm,
             light_direction), 0.0);
