@@ -548,7 +548,7 @@ class Window(object):
         glfw.set_key_callback(self.handle, self._on_key)
         glfw.set_char_callback(self.handle, self._on_char)
     def call(self, name, *args, **kwargs):
-        for listener in self.listeners:
+        for listener in list(self.listeners):
             if hasattr(listener, name):
                 getattr(listener, name)(*args, **kwargs)
     def _on_size(self, window, width, height):

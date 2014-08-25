@@ -21,7 +21,7 @@ class WASD(object):
         self.discard = True
         if self.exclusive:
             self.window.set_exclusive()
-        self.window.listeners.append(self)
+        self.window.listeners.insert(0, self)
     @property
     def position(self):
         return (self.x, self.y, self.z)
