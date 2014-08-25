@@ -2,7 +2,8 @@ from collections import defaultdict
 from pg import glfw
 import pg
 
-STEP = 8
+NAME = 'ESP_013688_1540'
+STEP = 16
 HEIGHT = 1.8288 * 10
 SPEED = 1.34 * 100
 
@@ -10,12 +11,12 @@ class Window(pg.Window):
     def setup(self):
         fg = (0, 0, 0, 255)
         self.font = pg.Font(self, 2, '/Library/Fonts/Arial.ttf', 24, fg)
-        self.set_clear_color(0.87, 0.81, 0.70)
+        self.set_clear_color(0.74, 0.70, 0.64)
         self.wasd = pg.WASD(self, speed=SPEED)
         self.wasd.look_at((0, 0, 0), (0, 0, -1))
         self.context = pg.Context(Program())
         print 'loading normal map'
-        self.context.normal_sampler = pg.Texture(0, 'examples/output.png')
+        self.context.normal_sampler = pg.Texture(0, 'examples/%s.png' % NAME)
         # print 'loading intensity texture'
         # try:
         #     self.context.sampler = pg.Texture(1, 'examples/texture.png')
@@ -23,17 +24,13 @@ class Window(pg.Window):
         # except IOError:
         #     self.context.use_texture = False
         print 'loading mesh'
-        mesh = pg.STL('examples/output.stl').center()
-        print 'generating uvs'
+        mesh = pg.STL('examples/%s.stl' % NAME).center()
         (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
-        for x, y, z in mesh.positions:
-            u = (x - x0) / (x1 - x0)
-            v = 1 - (z - z0) / (z1 - z0)
-            mesh.uvs.append((u, v))
+        self.context.uv0 = (x0, z0)
+        self.context.uv1 = (x1, z1)
         print 'generating vertex buffers'
         self.context.position = pg.VertexBuffer(mesh.positions)
-        self.context.uv = pg.VertexBuffer(mesh.uvs)
-        print 'storing height map'
+        print 'generating height map'
         p = mesh.positions
         self.lookup = defaultdict(list)
         for v1, v2, v3 in zip(p[::3], p[1::3], p[2::3]):
@@ -86,9 +83,10 @@ class Program(pg.Program):
 
     uniform mat4 matrix;
     uniform mat4 model_matrix;
+    uniform vec2 uv0;
+    uniform vec2 uv1;
 
     attribute vec4 position;
-    attribute vec2 uv;
 
     varying vec3 frag_position;
     varying vec2 frag_uv;
@@ -96,7 +94,9 @@ class Program(pg.Program):
     void main() {
         gl_Position = matrix * position;
         frag_position = vec3(model_matrix * position);
-        frag_uv = uv;
+        float u = (position.x - uv0.x) / (uv1.x - uv0.x);
+        float v = 1.0 - (position.z - uv0.y) / (uv1.y - uv0.y);
+        frag_uv = vec2(u, v);
     }
     '''
     FS = '''
@@ -149,10 +149,10 @@ class Program(pg.Program):
         context.use_color = False
         context.specular_power = 32.0
         context.specular_multiplier = 0.2
-        context.object_color = (0.48, 0.36, 0.22)
-        context.ambient_color = (0.2, 0.2, 0.2)
+        context.object_color = (0.64, 0.44, 0.34)
+        context.ambient_color = (0.4, 0.4, 0.4)
         context.light_color = (0.8, 0.8, 0.8)
-        context.light_direction = pg.normalize((-1, 1, 1))
+        context.light_direction = pg.normalize((-1, 0.5, 1))
 
 if __name__ == "__main__":
     pg.run(Window)
