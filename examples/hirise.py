@@ -2,9 +2,9 @@ from collections import defaultdict
 from pg import glfw
 import pg
 
-STEP = 32
-HEIGHT = 16
-SPEED = 120
+STEP = 8
+HEIGHT = 1.8288 * 10
+SPEED = 1.34 * 100
 
 class Window(pg.Window):
     def setup(self):
@@ -12,13 +12,8 @@ class Window(pg.Window):
         self.font = pg.Font(self, 2, '/Library/Fonts/Arial.ttf', 24, fg)
         self.set_clear_color(0.87, 0.81, 0.70)
         self.wasd = pg.WASD(self, speed=SPEED)
-        self.wasd.look_at((0, 0, 0), (30, -5, 30))
+        self.wasd.look_at((0, 0, 0), (-1, 1, 1))
         self.context = pg.Context(Program())
-        self.context.specular_multiplier = 0.25
-        self.context.object_color = (0.48, 0.36, 0.22)
-        self.context.ambient_color = (0.5, 0.5, 0.5)
-        self.context.light_color = (0.5, 0.5, 0.5)
-        self.context.light_direction = pg.normalize((-1, 1, 1))
         print 'loading normal map'
         self.context.normal_sampler = pg.Texture(0, 'examples/output.png')
         print 'loading intensity texture'
@@ -66,7 +61,7 @@ class Window(pg.Window):
                 self.dy = 2.0
     def update(self, t, dt):
         self.dy = max(self.dy - dt * 2.5, -25.0)
-        self.wasd.y += self.dy
+        # self.wasd.y += self.dy
         h = self.get_height()
         if h is None:
             return
@@ -150,14 +145,14 @@ class Program(pg.Program):
     def set_defaults(self, context):
         context.model_matrix = pg.Matrix()
         context.normal_matrix = pg.Matrix().inverse().transpose()
-        context.light_direction = pg.normalize((1, 1, 1))
-        context.object_color = (0.4, 0.6, 0.8)
-        context.ambient_color = (0.3, 0.3, 0.3)
-        context.light_color = (0.7, 0.7, 0.7)
-        context.specular_power = 32.0
-        context.specular_multiplier = 1.0
         context.use_texture = False
         context.use_color = False
+        context.specular_power = 32.0
+        context.specular_multiplier = 0.2
+        context.object_color = (0.48, 0.36, 0.22)
+        context.ambient_color = (0.2, 0.2, 0.2)
+        context.light_color = (0.8, 0.8, 0.8)
+        context.light_direction = pg.normalize((-1, 1, 1))
 
 if __name__ == "__main__":
     pg.run(Window)
