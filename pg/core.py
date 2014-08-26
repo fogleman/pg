@@ -7,6 +7,8 @@ from .util import flatten, interleave, distinct, recenter, smooth_normals, neg
 from . import glfw
 import cPickle as pickle
 import os
+import Queue
+import threading
 import time
 
 class Shader(object):
@@ -417,29 +419,6 @@ class Context(object):
             if value is not None:
                 self._attributes[name].unbind()
 
-class App(object):
-    instance = None
-    def __init__(self):
-        if not glfw.init():
-            raise Exception
-        App.instance = self
-        self.windows = []
-        self.current_window = None
-    def add_window(self, window):
-        self.windows.append(window)
-    def remove_window(self, window):
-        self.windows.remove(window)
-    def set_current_window(self, window):
-        self.current_window = window
-    def run(self):
-        while self.windows:
-            self.tick()
-        glfw.terminate()
-    def tick(self):
-        glfw.poll_events()
-        for window in list(self.windows):
-            window.tick()
-
 class FPS(object):
     def __init__(self):
         self.time = time.time()
@@ -575,6 +554,45 @@ class Window(object):
         self.call('on_char', codepoint)
     def on_char(self, codepoint):
         pass
+
+class App(object):
+    instance = None
+    def __init__(self):
+        if not glfw.init():
+            raise Exception
+        App.instance = self
+        self.windows = []
+        self.current_window = None
+        self.queue = Queue.Queue()
+    def add_window(self, window):
+        self.windows.append(window)
+    def remove_window(self, window):
+        self.windows.remove(window)
+    def set_current_window(self, window):
+        self.current_window = window
+    def call_after(self, func, *args, **kwargs):
+        self.queue.put((func, args, kwargs))
+    def process_queue(self):
+        while self.queue.qsize():
+            func, args, kwargs = self.queue.get()
+            func(*args, **kwargs)
+    def run(self):
+        while self.windows:
+            self.tick()
+        glfw.terminate()
+    def tick(self):
+        glfw.poll_events()
+        self.process_queue()
+        for window in list(self.windows):
+            window.tick()
+
+def call_after(func, *args, **kwargs):
+    App.instance.call_after(func, *args, **kwargs)
+
+def async(func, *args, **kwargs):
+    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+    thread.setDaemon(True)
+    thread.start()
 
 def run(window_class, *args, **kwargs):
     app = App()
