@@ -3,8 +3,8 @@ from OpenGL.GL import *
 from PIL import Image
 from math import copysign
 from .matrix import Matrix
-from .util import flatten, interleave, distinct, recenter, smooth_normals, neg
 from . import glfw
+from . import util
 import cPickle as pickle
 import os
 import Queue
@@ -72,14 +72,16 @@ class Mesh(object):
         normals = list(self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
+    def bounding_box(self):
+        return util.bounding_box(self.positions)
     def center(self):
-        positions = recenter(self.positions)
+        positions = util.recenter(self.positions)
         normals = list(self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
     def smooth_normals(self):
         positions = list(self.positions)
-        normals = smooth_normals(self.positions, self.normals)
+        normals = util.smooth_normals(self.positions, self.normals)
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
     def reverse_winding(self):
@@ -87,7 +89,7 @@ class Mesh(object):
         for i in xrange(0, len(self.positions), 3):
             v1, v2, v3 = self.positions[i:i+3]
             positions.extend([v3, v2, v1])
-        normals = [neg(x) for x in self.normals]
+        normals = [util.neg(x) for x in self.normals]
         uvs = list(self.uvs)
         return Mesh(positions, normals, uvs)
     def swap_axes(self, i, j, k):
@@ -125,7 +127,7 @@ class VertexBuffer(object):
             self.components = len(data[0])
         offset = self.vertex_count * self.components
         size = len(data) * self.components
-        flat = flatten(data)
+        flat = util.flatten(data)
         if len(flat) != size:
             raise Exception
         self.vertex_count += len(data)
@@ -219,8 +221,8 @@ class IndexBuffer(object):
 
 def index(*args):
     sizes = [len(x[0]) if x else None for x in args]
-    data = interleave(*filter(None, args))
-    unique = list(distinct(data))
+    data = util.interleave(*filter(None, args))
+    unique = list(util.distinct(data))
     lookup = dict((x, i) for i, x in enumerate(unique))
     indices = [lookup[x] for x in data]
     vertex_buffer = VertexBuffer(unique)
