@@ -1,12 +1,15 @@
 from math import sin, cos, pi, atan2, asin
+from .core import Scene
 from .matrix import Matrix
 from .util import normalize
 from . import glfw
 
 class WASD(object):
-    def __init__(self, window,
+    def __init__(self, scene_or_window,
         speed=1.0, sensitivity=2.5, invert=False, exclusive=True):
-        self.window = window
+        self.window = scene_or_window
+        if isinstance(scene_or_window, Scene):
+            self.window = scene_or_window.window
         self.speed = speed
         self.sensitivity = sensitivity
         self.invert = invert
@@ -21,7 +24,7 @@ class WASD(object):
         self.discard = True
         if self.exclusive:
             self.window.set_exclusive()
-        self.window.listeners.insert(0, self)
+        scene_or_window.listeners.insert(0, self)
     @property
     def position(self):
         return (self.x, self.y, self.z)

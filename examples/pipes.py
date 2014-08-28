@@ -79,7 +79,7 @@ class Pipe(object):
         self.add_sphere((x, y, z))
         self.restart()
 
-class Window(pg.Window):
+class Scene(pg.Scene):
     def setup(self):
         self.wasd = pg.WASD(self, speed=10)
         self.wasd.look_at((SIZE + 10, 0, 0), (0, 0, 0))
@@ -103,12 +103,12 @@ class Window(pg.Window):
                 pipe.update()
     def draw(self):
         matrix = self.wasd.get_matrix()
-        matrix = matrix.perspective(65, self.aspect, 0.1, 1000)
-        self.clear()
+        matrix = matrix.perspective(65, self.window.aspect, 0.1, 1000)
+        self.window.clear()
         for pipe in self.pipes:
             pipe.context.matrix = matrix
             pipe.context.camera_position = self.wasd.position
             pipe.context.draw()
 
 if __name__ == "__main__":
-    pg.run(Window)
+    pg.run(Scene)

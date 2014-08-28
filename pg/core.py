@@ -419,23 +419,60 @@ class Context(object):
             if value is not None:
                 self._attributes[name].unbind()
 
-class FPS(object):
+class Ticker(object):
     def __init__(self):
-        self.time = time.time()
-        self.counter = 0
-        self.value = 0
+        self.start_time = time.time()
+        self.last_time = self.start_time
+        self.t = 0
+        self.dt = 0
+        self.ticks = 0
+        self.fps_time = self.start_time
+        self.fps_ticks = 0
+        self.fps = 0
     def tick(self):
-        self.counter += 1
         now = time.time()
-        elapsed = now - self.time
-        if elapsed >= 1:
-            self.value = self.counter / elapsed
-            self.counter = 0
-            self.time = now
+        self.t = now - self.start_time
+        self.dt = now - self.last_time
+        self.last_time = now
+        self.ticks += 1
+        self.fps_ticks += 1
+        if now - self.fps_time >= 1:
+            self.fps = self.fps_ticks / (now - self.fps_time)
+            self.fps_ticks = 0
+            self.fps_time = now
+
+class Scene(object):
+    def __init__(self, window):
+        self.window = window
+        self.listeners = [self]
+        self.call('setup')
+    def __del__(self):
+        try:
+            self.call('teardown')
+        except Exception:
+            pass
+    def call(self, name, *args, **kwargs):
+        for listener in list(self.listeners):
+            if hasattr(listener, name):
+                getattr(listener, name)(*args, **kwargs)
+    def setup(self):
+        pass
+    def enter(self):
+        pass
+    def update(self, t, dt):
+        pass
+    def draw(self):
+        pass
+    def exit(self):
+        pass
+    def teardown(self):
+        pass
+    # pass-through to Window?
 
 class Window(object):
     def __init__(self, size=(800, 600), title='Python Graphics'):
         self.size = width, height = size
+        self.aspect = float(width) / height
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
@@ -443,20 +480,34 @@ class Window(object):
         self.current_program = None
         self.use()
         self.configure()
-        self.aspect = float(width) / height
         self.exclusive = False
-        self.start = self.time = time.time()
-        self._fps = FPS()
+        self.ticker = Ticker()
         self.listeners = [self]
+        self.scene_stack = []
         self.set_callbacks()
         self.call('setup')
         App.instance.add_window(self)
     @property
+    def current_scene(self):
+        return self.scene_stack[-1] if self.scene_stack else None
+    def push_scene(self, scene):
+        self.scene_stack.append(scene)
+        scene.window = self
+        scene.call('enter')
+    def pop_scene(self):
+        scene = self.current_scene
+        scene.call('exit')
+        scene.window = None
+        self.scene_stack.pop()
+    def replace_scene(self, scene):
+        self.pop_scene()
+        self.push_scene(scene)
+    @property
     def t(self):
-        return time.time() - self.start
+        return self.ticker.t
     @property
     def fps(self):
-        return self._fps.value
+        return self.ticker.fps
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -493,16 +544,14 @@ class Window(object):
     def set_clear_color(self, r, g, b, a=1.0):
         glClearColor(r, g, b, a)
     def tick(self):
-        self._fps.tick()
         self.use()
         if glfw.window_should_close(self.handle):
             self.call('teardown')
             App.instance.remove_window(self)
             glfw.destroy_window(self.handle)
             return
-        now = time.time()
-        self.call('update', now - self.start, now - self.time)
-        self.time = now
+        self.ticker.tick()
+        self.call('update', self.ticker.t, self.ticker.dt)
         self.call('draw')
         glfw.swap_buffers(self.handle)
     def save_image(self, path):
@@ -530,6 +579,9 @@ class Window(object):
         for listener in list(self.listeners):
             if hasattr(listener, name):
                 getattr(listener, name)(*args, **kwargs)
+        scene = self.current_scene
+        if scene is not None:
+            scene.call(name, *args, **kwargs)
     def _on_size(self, window, width, height):
         self.size = (width, height)
         self.aspect = float(width) / height
@@ -594,7 +646,13 @@ def async(func, *args, **kwargs):
     thread.setDaemon(True)
     thread.start()
 
-def run(window_class, *args, **kwargs):
+def run(cls, *args, **kwargs):
     app = App()
-    window_class(*args, **kwargs)
+    if issubclass(cls, Window):
+        window = cls(*args, **kwargs)
+    else:
+        window = Window()
+    if issubclass(cls, Scene):
+        scene = cls(window, *args, **kwargs)
+        window.push_scene(scene)
     app.run()
