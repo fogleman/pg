@@ -444,7 +444,7 @@ class Ticker(object):
 class Scene(object):
     def __init__(self, window):
         self.window = window
-        self.listeners = [self]
+        self.listeners = []
         self.call('setup')
     def __del__(self):
         try:
@@ -452,9 +452,11 @@ class Scene(object):
         except Exception:
             pass
     def call(self, name, *args, **kwargs):
-        for listener in list(self.listeners):
+        for listener in self.listeners + [self]:
             if hasattr(listener, name):
-                getattr(listener, name)(*args, **kwargs)
+                if getattr(listener, name)(*args, **kwargs):
+                    return
+    # listener functions
     def setup(self):
         pass
     def enter(self):
@@ -467,7 +469,16 @@ class Scene(object):
         pass
     def teardown(self):
         pass
-    # pass-through to Window?
+    def on_size(self, width, height):
+        pass
+    def on_cursor_pos(self, x, y):
+        pass
+    def on_mouse_button(self, button, action, mods):
+        pass
+    def on_key(self, key, scancode, action, mods):
+        pass
+    def on_char(self, codepoint):
+        pass
 
 class Window(object):
     def __init__(self, size=(800, 600), title='Python Graphics'):
@@ -482,7 +493,7 @@ class Window(object):
         self.configure()
         self.exclusive = False
         self.ticker = Ticker()
-        self.listeners = [self]
+        self.listeners = []
         self.scene_stack = []
         self.set_callbacks()
         self.call('setup')
@@ -491,16 +502,17 @@ class Window(object):
     def current_scene(self):
         return self.scene_stack[-1] if self.scene_stack else None
     def push_scene(self, scene):
+        if scene.window != self:
+            raise Exception
         self.scene_stack.append(scene)
-        scene.window = self
         scene.call('enter')
     def pop_scene(self):
         scene = self.current_scene
         scene.call('exit')
-        scene.window = None
         self.scene_stack.pop()
-    def replace_scene(self, scene):
-        self.pop_scene()
+    def set_scene(self, scene):
+        if self.current_scene:
+            self.pop_scene()
         self.push_scene(scene)
     @property
     def t(self):
@@ -524,14 +536,6 @@ class Window(object):
             glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
     def set_current_program(self, program):
         self.current_program = program
-    def setup(self):
-        pass
-    def update(self, t, dt):
-        pass
-    def draw(self):
-        pass
-    def teardown(self):
-        pass
     def use(self):
         glfw.make_context_current(self.handle)
         App.instance.set_current_window(self)
@@ -576,9 +580,12 @@ class Window(object):
         glfw.set_key_callback(self.handle, self._on_key)
         glfw.set_char_callback(self.handle, self._on_char)
     def call(self, name, *args, **kwargs):
-        for listener in list(self.listeners):
+        for listener in self.listeners + [self]:
             if hasattr(listener, name):
-                getattr(listener, name)(*args, **kwargs)
+                if getattr(listener, name)(*args, **kwargs):
+                    return
+        if name in ['setup', 'teardown']:
+            return
         scene = self.current_scene
         if scene is not None:
             scene.call(name, *args, **kwargs)
@@ -586,24 +593,33 @@ class Window(object):
         self.size = (width, height)
         self.aspect = float(width) / height
         self.call('on_size', width, height)
-    def on_size(self, width, height):
-        pass
     def _on_cursor_pos(self, window, x, y):
         self.call('on_cursor_pos', x, y)
-    def on_cursor_pos(self, x, y):
-        pass
     def _on_mouse_button(self, window, button, action, mods):
         self.call('on_mouse_button', button, action, mods)
-    def on_mouse_button(self, button, action, mods):
-        pass
     def _on_key(self, window, key, scancode, action, mods):
         self.call('on_key', key, scancode, action, mods)
         if action == glfw.PRESS and key == glfw.KEY_F12:
             self.screenshot()
-    def on_key(self, key, scancode, action, mods):
-        pass
     def _on_char(self, window, codepoint):
         self.call('on_char', codepoint)
+    # listener functions
+    def setup(self):
+        pass
+    def update(self, t, dt):
+        pass
+    def draw(self):
+        pass
+    def teardown(self):
+        pass
+    def on_size(self, width, height):
+        pass
+    def on_cursor_pos(self, x, y):
+        pass
+    def on_mouse_button(self, button, action, mods):
+        pass
+    def on_key(self, key, scancode, action, mods):
+        pass
     def on_char(self, codepoint):
         pass
 

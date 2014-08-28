@@ -24,7 +24,7 @@ class WASD(object):
         self.discard = True
         if self.exclusive:
             self.window.set_exclusive()
-        scene_or_window.listeners.insert(0, self)
+        scene_or_window.listeners.append(self)
     @property
     def position(self):
         return (self.x, self.y, self.z)
@@ -37,11 +37,14 @@ class WASD(object):
         self.z = pz
         self.rx = 2 * pi - (atan2(dx, dz) + pi)
         self.ry = asin(dy)
+    def enter(self):
+        self.discard = True
     def on_mouse_button(self, button, action, mods):
-        if self.exclusive:
+        if self.exclusive and not self.window.exclusive:
             if button == glfw.MOUSE_BUTTON_1 and action == glfw.PRESS:
                 self.window.set_exclusive()
                 self.discard = True
+                return True
     def on_key(self, key, scancode, action, mods):
         if self.exclusive:
             if key == glfw.KEY_ESCAPE:

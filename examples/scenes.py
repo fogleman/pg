@@ -1,12 +1,14 @@
-from pg import glfw
 import pg
 
 class SphereScene(pg.Scene):
     def setup(self):
+        print 'SphereScene.setup()'
         self.wasd = pg.WASD(self)
         self.wasd.look_at((-1, 1, 1), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
         self.sphere = pg.Sphere(4, 0.5, (0, 0, 0))
+    def enter(self):
+        print 'SphereScene.enter()'
     def update(self, t, dt):
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.window.aspect, 0.01, 100)
@@ -15,16 +17,23 @@ class SphereScene(pg.Scene):
     def draw(self):
         self.window.clear()
         self.sphere.draw(self.context)
+    def exit(self):
+        print 'SphereScene.exit()'
+    def teardown(self):
+        print 'SphereScene.teardown()'
     def on_mouse_button(self, button, action, mods):
-        if action == glfw.PRESS:
-            self.window.replace_scene(self.window.cube_scene)
+        if action == pg.PRESS:
+            self.window.set_scene(CylinderScene(self.window))
 
-class CubeScene(pg.Scene):
+class CylinderScene(pg.Scene):
     def setup(self):
+        print 'CylinderScene.setup()'
         self.wasd = pg.WASD(self)
         self.wasd.look_at((-1, 1, 1), (0, 0, 0))
         self.context = pg.Context(pg.DirectionalLightProgram())
-        self.cube = pg.Cuboid(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5)
+        self.cylinder = pg.Cylinder((0, -0.5, 0), (0, 0.5, 0), 0.5, 18)
+    def enter(self):
+        print 'CylinderScene.enter()'
     def update(self, t, dt):
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.window.aspect, 0.01, 100)
@@ -32,17 +41,18 @@ class CubeScene(pg.Scene):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.window.clear()
-        self.cube.draw(self.context)
+        self.cylinder.draw(self.context)
+    def exit(self):
+        print 'CylinderScene.exit()'
+    def teardown(self):
+        print 'CylinderScene.teardown()'
     def on_mouse_button(self, button, action, mods):
-        if action == glfw.PRESS:
-            self.window.replace_scene(self.window.sphere_scene)
+        if action == pg.PRESS:
+            self.window.set_scene(SphereScene(self.window))
 
 class Window(pg.Window):
-    def __init__(self):
-        super(Window, self).__init__()
-        self.sphere_scene = SphereScene(self)
-        self.cube_scene = CubeScene(self)
-        self.push_scene(self.sphere_scene)
+    def setup(self):
+        self.set_scene(SphereScene(self))
 
 if __name__ == "__main__":
     pg.run(Window)
