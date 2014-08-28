@@ -58,6 +58,11 @@ def neg(vector):
     '''
     return tuple(-x for x in vector)
 
+def interpolate(v1, v2, t):
+    '''Interpolate from one vector to another.
+    '''
+    return add(v1, mul(sub(v2, v1), t))
+
 def normal_from_points(a, b, c):
     '''Computes a normal vector given three points.
     '''

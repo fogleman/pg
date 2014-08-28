@@ -447,10 +447,7 @@ class Scene(object):
         self.listeners = []
         self.call('setup')
     def __del__(self):
-        try:
-            self.call('teardown')
-        except Exception:
-            pass
+        self.call('teardown')
     def call(self, name, *args, **kwargs):
         for listener in self.listeners + [self]:
             if hasattr(listener, name):

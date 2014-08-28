@@ -23,7 +23,7 @@ class SphereScene(pg.Scene):
         print 'SphereScene.teardown()'
     def on_mouse_button(self, button, action, mods):
         if action == pg.PRESS:
-            self.window.set_scene(CylinderScene(self.window))
+            self.window.set_scene(self.window.cylinder_scene)
 
 class CylinderScene(pg.Scene):
     def setup(self):
@@ -48,11 +48,13 @@ class CylinderScene(pg.Scene):
         print 'CylinderScene.teardown()'
     def on_mouse_button(self, button, action, mods):
         if action == pg.PRESS:
-            self.window.set_scene(SphereScene(self.window))
+            self.window.set_scene(self.window.sphere_scene)
 
 class Window(pg.Window):
     def setup(self):
-        self.set_scene(SphereScene(self))
+        self.sphere_scene = SphereScene(self)
+        self.cylinder_scene = CylinderScene(self)
+        self.set_scene(self.sphere_scene)
 
 if __name__ == "__main__":
     pg.run(Window)

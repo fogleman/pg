@@ -1,11 +1,11 @@
 from collections import defaultdict
-from pg import glfw
+from math import atan2
 import pg
 
 NAME = 'ESP_013688_1540'
 STEP = 16
 HEIGHT = 1.8288 * 10
-SPEED = 1.34 * 100
+SPEED = 1.34 * 500
 
 class Window(pg.Window):
     def setup(self):
@@ -13,7 +13,6 @@ class Window(pg.Window):
         self.font = pg.Font(self, 2, '/Library/Fonts/Arial.ttf', 24, fg)
         self.set_clear_color(0.74, 0.70, 0.64)
         self.wasd = pg.WASD(self, speed=SPEED)
-        self.wasd.look_at((0, 0, 0), (0, 0, -1))
         self.context = pg.Context(Program())
         print 'loading normal texture'
         self.context.normal_sampler = pg.Texture(0, 'examples/%s.png' % NAME)
@@ -53,10 +52,17 @@ class Window(pg.Window):
                         return -t
         return None
     def on_key(self, key, scancode, action, mods):
-        if key == glfw.KEY_SPACE and action == glfw.PRESS:
+        if key == pg.KEY_SPACE and action == pg.PRESS:
             if self.dy == 0:
                 self.dy = 2.0
     def update(self, t, dt):
+        p = abs((t * 0.01) % 2 - 1) / 1.0
+        a = (-920, 2000, -7760)
+        b = (895, 2000, 7530)
+        x, y, z = pg.interpolate(a, b, p)
+        self.wasd.look_at((x, y, z), (x, 0, z))
+        self.wasd.rx = atan2(b[2] - a[2], b[0] - a[0])
+        return
         self.dy = max(self.dy - dt * 2.5, -25.0)
         # self.wasd.y += self.dy
         h = self.get_height()
@@ -72,10 +78,10 @@ class Window(pg.Window):
         self.context.matrix = matrix
         self.context.camera_position = self.wasd.position
         self.context.draw()
-        w, h = self.size
-        self.font.render('%.1f fps' % self.fps, (w - 5, 0), (1, 0))
-        text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position
-        self.font.render(text, (5, 0))
+        # w, h = self.size
+        # self.font.render('%.1f fps' % self.fps, (w - 5, 0), (1, 0))
+        # text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position
+        # self.font.render(text, (5, 0))
 
 class Program(pg.Program):
     VS = '''

@@ -73,6 +73,7 @@ from .util import (
     flatten,
     hex_color,
     interleave,
+    interpolate,
     mul,
     neg,
     normal_from_points,
