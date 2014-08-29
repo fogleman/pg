@@ -2,10 +2,10 @@ from collections import defaultdict
 from math import atan2
 import pg
 
-NAME = 'ESP_013688_1540'
+NAME = 'PSP_009149_1750'
 STEP = 16
 HEIGHT = 1.8288 * 10
-SPEED = 1.34 * 500
+SPEED = 1.34 * 100
 
 class Window(pg.Window):
     def setup(self):
@@ -16,12 +16,13 @@ class Window(pg.Window):
         self.context = pg.Context(Program())
         print 'loading normal texture'
         self.context.normal_sampler = pg.Texture(0, 'examples/%s.png' % NAME)
-        # print 'loading color texture'
-        # try:
-        #     self.context.sampler = pg.Texture(1, 'examples/texture.jpg')
-        #     self.context.use_texture = True
-        # except IOError:
-        #     self.context.use_texture = False
+        print 'loading color texture'
+        try:
+            self.context.sampler = pg.Texture(1, 'examples/%s.jpg' % NAME)
+            self.context.use_texture = True
+        except IOError:
+            raise
+            self.context.use_texture = False
         print 'loading mesh'
         mesh = pg.STL('examples/%s.stl' % NAME).center()
         (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
@@ -56,15 +57,15 @@ class Window(pg.Window):
             if self.dy == 0:
                 self.dy = 2.0
     def update(self, t, dt):
-        p = abs((t * 0.01) % 2 - 1) / 1.0
-        a = (-920, 2000, -7760)
-        b = (895, 2000, 7530)
-        x, y, z = pg.interpolate(a, b, p)
-        self.wasd.look_at((x, y, z), (x, 0, z))
-        self.wasd.rx = atan2(b[2] - a[2], b[0] - a[0])
-        return
+        # p = abs((t * 0.01) % 2 - 1) / 1.0
+        # a = (-920, 2000, -7760)
+        # b = (895, 2000, 7530)
+        # x, y, z = pg.interpolate(a, b, p)
+        # self.wasd.look_at((x, y, z), (x, 0, z))
+        # self.wasd.rx = atan2(b[2] - a[2], b[0] - a[0])
+        # return
         self.dy = max(self.dy - dt * 2.5, -25.0)
-        # self.wasd.y += self.dy
+        self.wasd.y += self.dy
         h = self.get_height()
         if h is None:
             return
@@ -130,7 +131,10 @@ class Program(pg.Program):
         norm = norm.yzx;
         vec3 color = object_color;
         if (use_texture) {
-            color = vec3(texture2D(sampler, frag_uv));
+            vec3 color1 = vec3(0.47, 0.31, 0.24) * 0.8;
+            vec3 color2 = vec3(0.82, 0.56, 0.39) * 1.4;
+            float pct = vec3(texture2D(sampler, frag_uv)).r;
+            color = mix(color1, color2, pct);
         }
         float diffuse = max(dot(mat3(normal_matrix) * norm,
             light_direction), 0.0);
@@ -140,9 +144,13 @@ class Program(pg.Program):
             specular = pow(max(dot(camera_vector,
                 reflect(-light_direction, norm)), 0.0), specular_power);
         }
+        float camera_distance = distance(camera_position, frag_position);
+        float fog_factor = pow(clamp(camera_distance / 6000, 0.0, 1.0), 3.0);
         vec3 light = ambient_color + light_color * diffuse +
             specular * specular_multiplier;
-        gl_FragColor = vec4(min(color * light, vec3(1.0)), 1.0);
+        color = min(color * light, vec3(1.0));
+        color = mix(color, vec3(0.74, 0.70, 0.64), fog_factor);
+        gl_FragColor = vec4(color, 1.0);
     }
     '''
     def __init__(self):
