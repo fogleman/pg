@@ -2,42 +2,61 @@ from collections import defaultdict
 from math import atan2
 import pg
 
-NAME = 'PSP_009149_1750'
+NAME = 'ESP_012551_1750'
 STEP = 16
 HEIGHT = 1.8288 * 10
-SPEED = 1.34 * 100
+SPEED = 1.34 * 500
 
-class Window(pg.Window):
+class LoadingScene(pg.Scene):
     def setup(self):
+        self.message = ''
         fg = (0, 0, 0, 255)
-        self.font = pg.Font(self, 2, '/Library/Fonts/Arial.ttf', 24, fg)
-        self.set_clear_color(0.74, 0.70, 0.64)
-        self.wasd = pg.WASD(self, speed=SPEED)
-        self.context = pg.Context(Program())
-        print 'loading normal texture'
-        self.context.normal_sampler = pg.Texture(0, 'examples/%s.png' % NAME)
-        print 'loading color texture'
+        self.font = pg.Font(self.window, 2, '/Library/Fonts/Arial.ttf', 36, fg)
+        self.window.set_clear_color(0.74, 0.70, 0.64)
+    def enter(self):
+        context = pg.Context(Program())
+        self.set_message('loading normal texture')
+        context.normal_sampler = pg.Texture(0, 'examples/%s.png' % NAME)
+        self.set_message('loading color texture')
         try:
-            self.context.sampler = pg.Texture(1, 'examples/%s.jpg' % NAME)
-            self.context.use_texture = True
+            context.sampler = pg.Texture(1, 'examples/%s.jpg' % NAME)
+            context.use_texture = True
         except IOError:
-            raise
-            self.context.use_texture = False
-        print 'loading mesh'
+            context.use_texture = False
+        self.set_message('loading mesh')
         mesh = pg.STL('examples/%s.stl' % NAME).center()
+        self.set_message('computing bounding box')
         (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
-        self.context.uv0 = (x0, z0)
-        self.context.uv1 = (x1, z1)
-        print 'generating vertex buffers'
-        self.context.position = pg.VertexBuffer(mesh.positions)
-        print 'generating height map'
+        context.uv0 = (x0, z0)
+        context.uv1 = (x1, z1)
+        self.set_message('generating vertex buffer')
+        context.position = pg.VertexBuffer(mesh.positions)
+        self.set_message('generating height map')
         p = mesh.positions
-        self.lookup = defaultdict(list)
+        lookup = defaultdict(list)
         for v1, v2, v3 in zip(p[::3], p[1::3], p[2::3]):
             x, y, z = v1
             x, z = int(round(x / STEP)), int(round(z / STEP))
-            self.lookup[(x, z)].append((v1, v2, v3))
-        print '%d triangles' % (len(p) / 3)
+            lookup[(x, z)].append((v1, v2, v3))
+        self.set_message('%d triangles' % (len(p) / 3))
+        scene = MainScene(self.window)
+        scene.context = context
+        scene.lookup = lookup
+        self.window.set_scene(scene)
+    def set_message(self, message):
+        self.message = message
+        pg.App.instance.tick() # yikes!
+    def draw(self):
+        self.window.clear()
+        w, h = self.window.size
+        self.font.render(self.message, (w / 2, h / 2), (0.5, 0.5))
+
+class MainScene(pg.Scene):
+    def setup(self):
+        fg = (0, 0, 0, 255)
+        self.font = pg.Font(self.window, 2, '/Library/Fonts/Arial.ttf', 24, fg)
+        self.window.set_clear_color(0.74, 0.70, 0.64)
+        self.wasd = pg.WASD(self, speed=SPEED)
         self.dy = 0
     def get_height(self):
         p = x, y, z = self.wasd.position
@@ -65,7 +84,7 @@ class Window(pg.Window):
         # self.wasd.rx = atan2(b[2] - a[2], b[0] - a[0])
         # return
         self.dy = max(self.dy - dt * 2.5, -25.0)
-        self.wasd.y += self.dy
+        # self.wasd.y += self.dy
         h = self.get_height()
         if h is None:
             return
@@ -73,16 +92,20 @@ class Window(pg.Window):
             self.dy = 0
             self.wasd.y -= h - HEIGHT
     def draw(self):
-        self.clear()
+        self.window.clear()
         matrix = self.wasd.get_matrix()
-        matrix = matrix.perspective(65, self.aspect, 1, 100000)
+        matrix = matrix.perspective(65, self.window.aspect, 1, 100000)
         self.context.matrix = matrix
         self.context.camera_position = self.wasd.position
         self.context.draw()
-        # w, h = self.size
+        # w, h = self.window.size
         # self.font.render('%.1f fps' % self.fps, (w - 5, 0), (1, 0))
         # text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position
         # self.font.render(text, (5, 0))
+
+class Window(pg.Window):
+    def setup(self):
+        pg.call_after(self.set_scene, LoadingScene(self)) # ick...
 
 class Program(pg.Program):
     VS = '''
@@ -118,6 +141,8 @@ class Program(pg.Program):
     uniform vec3 object_color;
     uniform vec3 ambient_color;
     uniform vec3 light_color;
+    uniform vec3 fog_color;
+    uniform float fog_distance;
     uniform float specular_power;
     uniform float specular_multiplier;
     uniform bool use_texture;
@@ -144,12 +169,12 @@ class Program(pg.Program):
             specular = pow(max(dot(camera_vector,
                 reflect(-light_direction, norm)), 0.0), specular_power);
         }
-        float camera_distance = distance(camera_position, frag_position);
-        float fog_factor = pow(clamp(camera_distance / 6000, 0.0, 1.0), 3.0);
         vec3 light = ambient_color + light_color * diffuse +
             specular * specular_multiplier;
         color = min(color * light, vec3(1.0));
-        color = mix(color, vec3(0.74, 0.70, 0.64), fog_factor);
+        float camera_distance = distance(camera_position, frag_position);
+        float fog_factor = pow(min(camera_distance / fog_distance, 1.0), 4.0);
+        color = mix(color, fog_color, fog_factor);
         gl_FragColor = vec4(color, 1.0);
     }
     '''
@@ -165,6 +190,8 @@ class Program(pg.Program):
         context.object_color = (0.64, 0.44, 0.34)
         context.ambient_color = (0.4, 0.4, 0.4)
         context.light_color = (0.8, 0.8, 0.8)
+        context.fog_color = (0.74, 0.70, 0.64)
+        context.fog_distance = 6000
         context.light_direction = pg.normalize((-1, 0.5, 1))
 
 if __name__ == "__main__":
