@@ -7,6 +7,7 @@ from .core import (
     index,
     IndexBuffer,
     Mesh,
+    poll_events,
     Program,
     run,
     Scene,

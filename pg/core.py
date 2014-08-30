@@ -243,7 +243,7 @@ class Texture(object):
         if isinstance(im, basestring):
             im = Image.open(im)
         im = im.convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
-        width, height = im.size
+        self.size = width, height = im.size
         data = im.tobytes()
         self.handle = glGenTextures(1)
         glActiveTexture(Texture.UNITS[unit])
@@ -484,6 +484,7 @@ class Window(object):
         self.handle = glfw.create_window(width, height, title, None, None)
         if not self.handle:
             raise Exception
+        App.instance.add_window(self)
         self.cache = Cache()
         self.current_program = None
         self.use()
@@ -494,7 +495,6 @@ class Window(object):
         self.scene_stack = []
         self.set_callbacks()
         self.call('setup')
-        App.instance.add_window(self)
     @property
     def current_scene(self):
         return self.scene_stack[-1] if self.scene_stack else None
@@ -553,6 +553,8 @@ class Window(object):
             return
         self.ticker.tick()
         self.call('update', self.ticker.t, self.ticker.dt)
+        self.redraw()
+    def redraw(self):
         self.call('draw')
         glfw.swap_buffers(self.handle)
     def save_image(self, path):
@@ -646,10 +648,13 @@ class App(object):
             self.tick()
         glfw.terminate()
     def tick(self):
-        glfw.poll_events()
+        poll_events()
         self.process_queue()
         for window in list(self.windows):
             window.tick()
+
+def poll_events():
+    glfw.poll_events()
 
 def call_after(func, *args, **kwargs):
     App.instance.call_after(func, *args, **kwargs)

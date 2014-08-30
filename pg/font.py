@@ -2,15 +2,25 @@ from OpenGL.GL import *
 from itertools import product
 from math import ceil, log
 from PIL import Image, ImageDraw, ImageFont
-from .core import Context, Texture, VertexBuffer
+from .core import Context, Texture, VertexBuffer, Scene
 from .matrix import Matrix
 from .programs import TextProgram
 from .util import interleave
 
+def float_to_byte_color(color):
+    return tuple(int(round(x * 255)) for x in color)
+
 class Font(object):
-    def __init__(self, window, unit, name, size, fg=None, bg=None):
-        self.fg = fg or (255, 255, 255, 255)
-        self.bg = bg or (0, 0, 0, 0)
+    def __init__(self, scene_or_window, unit, name, size, fg=None, bg=None):
+        window = scene_or_window
+        if isinstance(scene_or_window, Scene):
+            window = scene_or_window.window
+        self.fg = float_to_byte_color(fg or (1.0, 1.0, 1.0, 1.0))
+        self.bg = float_to_byte_color(bg or (0.0, 0.0, 0.0, 0.0))
+        if len(self.fg) == 3:
+            self.fg += (255,)
+        if len(self.bg) == 3:
+            self.bg += (255,)
         self.window = window
         self.kerning = {}
         self.load(name, size)
@@ -57,7 +67,9 @@ class Font(object):
             k = self.get_kerning(previous, c) if previous else 0
             x += k
             for i, j in data:
-                positions.append((x + i * self.dx + ox, y + j * self.dy + oy))
+                cx = x + i * self.dx + ox
+                cy = y + j * self.dy + oy
+                positions.append((cx, cy))
                 uvs.append((u + i * self.du, 1 - v - j * self.dv))
             x += ox + sx
             previous = c
@@ -89,7 +101,6 @@ class Font(object):
             x = col * mw
             y = row * mh
             dx, dy = offsets[c]
-            # draw.rectangle((x, y, x + mw, y + mh), outline=(48, 48, 48, 255))
             draw.text((x + 1 - dx, y + 1 - dy), c, self.fg, font)
         self.dx = mw
         self.dy = mh
