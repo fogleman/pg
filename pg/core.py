@@ -88,7 +88,10 @@ class Mesh(object):
             v1, v2, v3 = self.positions[i:i+3]
             positions.extend([v3, v2, v1])
         normals = [neg(x) for x in self.normals]
-        uvs = list(self.uvs)
+        uvs = []
+        for i in xrange(0, len(self.uvs), 3):
+            v1, v2, v3 = self.uvs[i:i+3]
+            uvs.extend([v3, v2, v1])
         return Mesh(positions, normals, uvs)
     def swap_axes(self, i, j, k):
         si, sj, sk = copysign(1, i), copysign(1, j), copysign(1, k)

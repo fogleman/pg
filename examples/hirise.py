@@ -63,6 +63,17 @@ class MainScene(pg.Scene):
         self.window.set_clear_color(0.74, 0.70, 0.64)
         self.wasd = pg.WASD(self, speed=SPEED)
         self.dy = 0
+        sphere = pg.Sphere(4, 1)
+        sphere = sphere.reverse_winding().smooth_normals()
+        self.sky_context = pg.Context(pg.DirectionalLightProgram())
+        self.sky_context.sampler = pg.Texture(4, 'examples/sky.png')
+        self.sky_context.use_texture = True
+        self.sky_context.position = pg.VertexBuffer(sphere.positions)
+        self.sky_context.normal = pg.VertexBuffer(sphere.normals)
+        self.sky_context.uv = pg.VertexBuffer(sphere.uvs)
+        self.sky_context.ambient_color = (0.9, 0.9, 0.9)
+        self.sky_context.light_color = (0.1, 0.1, 0.1)
+        self.sky_context.specular_multiplier = 0
     def get_height(self):
         p = x, y, z = self.wasd.position
         x, z = int(round(x / STEP)), int(round(z / STEP))
@@ -99,6 +110,11 @@ class MainScene(pg.Scene):
             self.wasd.y -= h - HEIGHT
     def draw(self):
         self.window.clear()
+        # matrix = self.wasd.get_matrix(translate=False)
+        # matrix = matrix.perspective(65, self.window.aspect, 0.1, 2)
+        # self.sky_context.matrix = matrix
+        # self.sky_context.draw()
+        # self.window.clear_depth_buffer()
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.window.aspect, 1, 100000)
         self.context.matrix = matrix
