@@ -17,6 +17,7 @@ from .core import (
     VertexBuffer,
     VertexShader,
     Window,
+    Worker,
 )
 
 from .csg import (

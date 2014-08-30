@@ -249,8 +249,7 @@ class Texture(object):
         self.size = width, height = im.size
         data = im.tobytes()
         self.handle = glGenTextures(1)
-        glActiveTexture(Texture.UNITS[unit])
-        glBindTexture(GL_TEXTURE_2D, self.handle)
+        self.bind()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
@@ -258,6 +257,9 @@ class Texture(object):
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, data)
+    def bind(self):
+        glActiveTexture(Texture.UNITS[self.unit])
+        glBindTexture(GL_TEXTURE_2D, self.handle)
 
 class Attribute(object):
     def __init__(self, location, name, size, data_type):
@@ -458,14 +460,39 @@ class Scene(object):
     def on_char(self, codepoint):
         pass
 
-class Window(object):
-    def __init__(self, size=(800, 600), title='Python Graphics'):
-        self.size = width, height = size
-        self.aspect = float(width) / height
-        self.handle = glfw.create_window(width, height, title, None, None)
+class Worker(object):
+    def __init__(self):
+        self.handle = glfw.create_window(1, 1, 'Worker', None, None)
         if not self.handle:
             raise Exception
-        App.instance.add_window(self)
+    def use(self):
+        glfw.make_context_current(self.handle)
+    def destroy(self):
+        glfw.destroy_window(self.handle)
+    def start(self):
+        async(self.thread_main)
+    def thread_main(self):
+        self.use()
+        try:
+            self.run()
+        finally:
+            self.destroy()
+    def run(self):
+        pass
+
+class Window(object):
+    def __init__(
+        self, size=(800, 600), title='Python Graphics', visible=True,
+        share=None):
+        self.app = App.instance
+        self.size = width, height = size
+        self.aspect = float(width) / height
+        glfw.window_hint(glfw.VISIBLE, visible)
+        share = share and share.handle
+        self.handle = glfw.create_window(width, height, title, None, share)
+        if not self.handle:
+            raise Exception
+        self.app.add_window(self)
         self.cache = Cache()
         self.current_program = None
         self.use()
@@ -493,13 +520,13 @@ class Window(object):
         self.push_scene(scene)
     @property
     def t(self):
-        return App.instance.ticker.t
+        return self.app.ticker.t
     @property
     def dt(self):
-        return App.instance.ticker.dt
+        return self.app.ticker.dt
     @property
     def fps(self):
-        return App.instance.ticker.fps
+        return self.app.ticker.fps
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -518,7 +545,7 @@ class Window(object):
         self.current_program = program
     def use(self):
         glfw.make_context_current(self.handle)
-        App.instance.set_current_window(self)
+        self.app.set_current_window(self)
     def clear(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     def clear_color_buffer(self):
@@ -531,7 +558,7 @@ class Window(object):
         self.use()
         if glfw.window_should_close(self.handle):
             self.call('teardown')
-            App.instance.remove_window(self)
+            self.app.remove_window(self)
             glfw.destroy_window(self.handle)
             return
         self.call('update', self.t, self.dt)

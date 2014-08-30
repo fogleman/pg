@@ -13,67 +13,33 @@ PAN = None #(-920, 2000, -7760), (895, 2000, 7530)
 
 class LoadingScene(pg.Scene):
     def setup(self):
-        self.message = ''
-        self.triangles = 0
-        fg = (0, 0, 0, 1)
-        self.title_font = pg.Font(self, 2, FONT, 72, fg)
-        self.font = pg.Font(self, 3, FONT, 36, fg)
-    def enter(self):
-        context = pg.Context(Program())
-        self.set_message('loading color texture')
-        context.sampler = pg.Texture(1, 'examples/%s.jpg' % NAME)
-        self.set_message('loading normal texture')
-        context.normal_sampler = pg.Texture(0, 'examples/%s.png' % NAME)
-        self.set_message('loading mesh')
-        mesh = pg.STL('examples/%s.stl' % NAME).center()
-        (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
-        context.uv0 = (x0, z0)
-        context.uv1 = (x1, z1)
-        self.set_message('generating vertex buffer')
-        context.position = pg.VertexBuffer(mesh.positions)
-        self.set_message('generating height map')
-        p = mesh.positions
-        lookup = defaultdict(list)
-        for v1, v2, v3 in zip(p[::3], p[1::3], p[2::3]):
-            x, y, z = v1
-            x, z = int(round(x / STEP)), int(round(z / STEP))
-            lookup[(x, z)].append((v1, v2, v3))
-        self.set_message('%d triangles' % (len(p) / 3))
-        self.window.set_scene(MainScene(self.window, context, lookup))
-    def set_message(self, message):
-        self.message = message
-        self.window.redraw()
-        pg.poll_events()
+        self.title_font = pg.Font(self, 3, FONT, 72, (0, 0, 0, 1))
+        self.font = pg.Font(self, 4, FONT, 36, (0, 0, 0, 1))
+    def update(self, t, dt):
+        result = self.window.worker.result
+        if result:
+            self.window.set_scene(MainScene(self.window, result))
     def draw(self):
         self.window.clear()
         w, h = self.window.size
         title = 'Mars HiRISE Viewer'
+        message = self.window.worker.message
+        triangles = self.window.worker.triangles
         self.title_font.render(title, (w / 2, h / 2 - 10), (0.5, 1))
-        self.font.render(self.message, (w / 2, h / 2 + 10), (0.5, 0))
-        self.font.render(NAME, (w / 2, h - 50), (0.5, 1))
+        self.font.render(message, (w / 2, h / 2 + 10), (0.5, 0))
+        self.font.render(NAME, (w / 2, 50), (0.5, 0))
+        self.font.render(triangles, (w / 2, h - 50), (0.5, 1))
 
 class MainScene(pg.Scene):
-    def __init__(self, window, context, lookup):
+    def __init__(self, window, data):
         super(MainScene, self).__init__(window)
-        self.context = context
-        self.lookup = lookup
+        for key, value in data.items():
+            setattr(self, key, value)
+        self.context.sampler.bind()
+        self.context.normal_sampler.bind()
     def setup(self):
-        fg = (0, 0, 0, 1)
-        self.font = pg.Font(self, 2, FONT, 24, fg)
-        self.window.set_clear_color(0.74, 0.70, 0.64)
         self.wasd = pg.WASD(self, speed=SPEED)
         self.dy = 0
-        sphere = pg.Sphere(4, 1)
-        sphere = sphere.reverse_winding().smooth_normals()
-        self.sky_context = pg.Context(pg.DirectionalLightProgram())
-        self.sky_context.sampler = pg.Texture(4, 'examples/sky.png')
-        self.sky_context.use_texture = True
-        self.sky_context.position = pg.VertexBuffer(sphere.positions)
-        self.sky_context.normal = pg.VertexBuffer(sphere.normals)
-        self.sky_context.uv = pg.VertexBuffer(sphere.uvs)
-        self.sky_context.ambient_color = (0.9, 0.9, 0.9)
-        self.sky_context.light_color = (0.1, 0.1, 0.1)
-        self.sky_context.specular_multiplier = 0
     def get_height(self):
         p = x, y, z = self.wasd.position
         x, z = int(round(x / STEP)), int(round(z / STEP))
@@ -110,11 +76,6 @@ class MainScene(pg.Scene):
             self.wasd.y -= h - HEIGHT
     def draw(self):
         self.window.clear()
-        # matrix = self.wasd.get_matrix(translate=False)
-        # matrix = matrix.perspective(65, self.window.aspect, 0.1, 2)
-        # self.sky_context.matrix = matrix
-        # self.sky_context.draw()
-        # self.window.clear_depth_buffer()
         matrix = self.wasd.get_matrix()
         matrix = matrix.perspective(65, self.window.aspect, 1, 100000)
         self.context.matrix = matrix
@@ -126,7 +87,46 @@ class MainScene(pg.Scene):
             text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position
             self.font.render(text, (5, 0))
 
+class Worker(pg.Worker):
+    def __init__(self):
+        self.message = ''
+        self.triangles = ''
+        self.result = None
+        super(Worker, self).__init__()
+    def run(self):
+        context = pg.Context(Program())
+        font = pg.Font(self, 2, FONT, 24, (0, 0, 0, 1))
+        self.message = 'loading triangle mesh'
+        mesh = pg.STL('examples/%s.stl' % NAME).center()
+        self.triangles = '%d triangles' % (len(mesh.positions) / 3)
+        self.message = 'computing bounding box'
+        (x0, y0, z0), (x1, y1, z1) = pg.bounding_box(mesh.positions)
+        context.uv0 = (x0, z0)
+        context.uv1 = (x1, z1)
+        self.message = 'generating vertex buffer'
+        context.position = pg.VertexBuffer(mesh.positions)
+        self.message = 'generating height map'
+        p = mesh.positions
+        lookup = defaultdict(list)
+        for v1, v2, v3 in zip(p[::3], p[1::3], p[2::3]):
+            x, y, z = v1
+            x, z = int(round(x / STEP)), int(round(z / STEP))
+            lookup[(x, z)].append((v1, v2, v3))
+        self.message = 'loading brightness texture'
+        context.sampler = pg.Texture(0, 'examples/%s.jpg' % NAME)
+        self.message = 'loading normal texture'
+        context.normal_sampler = pg.Texture(1, 'examples/%s.png' % NAME)
+        self.result = {
+            'font': font,
+            'context': context,
+            'lookup': lookup,
+        }
+
 class Window(pg.Window):
+    def __init__(self, worker):
+        self.worker = worker
+        super(Window, self).__init__(share=self.worker)
+        self.worker.start()
     def setup(self):
         self.set_clear_color(0.74, 0.70, 0.64)
         self.set_scene(LoadingScene(self))
@@ -210,5 +210,10 @@ class Program(pg.Program):
         context.fog_distance = 6000
         context.light_direction = pg.normalize((-1, 0.5, 1))
 
+def main():
+    app = pg.App()
+    Window(Worker())
+    app.run()
+
 if __name__ == "__main__":
-    pg.run(Window)
+    main()

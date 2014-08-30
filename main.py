@@ -54,11 +54,14 @@ def main():
     if name is None:
         return
     module = import_module('examples.%s' % name)
-    names = ['Window', 'Scene']
-    for name in names:
-        if hasattr(module, name):
-            pg.run(getattr(module, name))
-            return
+    if hasattr(module, 'main'):
+        module.main()
+    else:
+        names = ['Window', 'Scene']
+        for name in names:
+            if hasattr(module, name):
+                pg.run(getattr(module, name))
+                return
 
 if __name__ == '__main__':
     # generate_screenshots((800, 600))
