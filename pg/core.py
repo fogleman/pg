@@ -419,28 +419,6 @@ class Context(object):
             if value is not None:
                 self._attributes[name].unbind()
 
-class Ticker(object):
-    def __init__(self):
-        self.start_time = time.time()
-        self.last_time = self.start_time
-        self.t = 0
-        self.dt = 0
-        self.ticks = 0
-        self.fps_time = self.start_time
-        self.fps_ticks = 0
-        self.fps = 0
-    def tick(self):
-        now = time.time()
-        self.t = now - self.start_time
-        self.dt = now - self.last_time
-        self.last_time = now
-        self.ticks += 1
-        self.fps_ticks += 1
-        if now - self.fps_time >= 1:
-            self.fps = self.fps_ticks / (now - self.fps_time)
-            self.fps_ticks = 0
-            self.fps_time = now
-
 class Scene(object):
     def __init__(self, window):
         self.window = window
@@ -490,7 +468,6 @@ class Window(object):
         self.use()
         self.configure()
         self.exclusive = False
-        self.ticker = Ticker()
         self.listeners = []
         self.scene_stack = []
         self.set_callbacks()
@@ -513,10 +490,13 @@ class Window(object):
         self.push_scene(scene)
     @property
     def t(self):
-        return self.ticker.t
+        return App.instance.ticker.t
+    @property
+    def dt(self):
+        return App.instance.ticker.dt
     @property
     def fps(self):
-        return self.ticker.fps
+        return App.instance.ticker.fps
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -551,8 +531,7 @@ class Window(object):
             App.instance.remove_window(self)
             glfw.destroy_window(self.handle)
             return
-        self.ticker.tick()
-        self.call('update', self.ticker.t, self.ticker.dt)
+        self.call('update', self.t, self.dt)
         self.redraw()
     def redraw(self):
         self.call('draw')
@@ -622,6 +601,28 @@ class Window(object):
     def on_char(self, codepoint):
         pass
 
+class Ticker(object):
+    def __init__(self):
+        self.start_time = time.time()
+        self.last_time = self.start_time
+        self.t = 0
+        self.dt = 0
+        self.ticks = 0
+        self.fps_time = self.start_time
+        self.fps_ticks = 0
+        self.fps = 0
+    def tick(self):
+        now = time.time()
+        self.t = now - self.start_time
+        self.dt = now - self.last_time
+        self.last_time = now
+        self.ticks += 1
+        self.fps_ticks += 1
+        if now - self.fps_time >= 1:
+            self.fps = self.fps_ticks / (now - self.fps_time)
+            self.fps_ticks = 0
+            self.fps_time = now
+
 class App(object):
     instance = None
     def __init__(self):
@@ -631,6 +632,7 @@ class App(object):
         self.windows = []
         self.current_window = None
         self.queue = Queue.Queue()
+        self.ticker = Ticker()
     def add_window(self, window):
         self.windows.append(window)
     def remove_window(self, window):
@@ -648,6 +650,7 @@ class App(object):
             self.tick()
         glfw.terminate()
     def tick(self):
+        self.ticker.tick()
         poll_events()
         self.process_queue()
         for window in list(self.windows):
@@ -672,5 +675,5 @@ def run(cls, *args, **kwargs):
         window = Window()
     if issubclass(cls, Scene):
         scene = cls(window, *args, **kwargs)
-        window.push_scene(scene)
+        window.set_scene(scene)
     app.run()
