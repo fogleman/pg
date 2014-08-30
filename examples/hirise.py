@@ -15,11 +15,11 @@ class Window(pg.Window):
         self.wasd = pg.WASD(self, speed=SPEED)
         self.wasd.look_at((0, 0, 0), (0, 0, -1))
         self.context = pg.Context(Program())
-        print 'loading normal map'
+        print 'loading normal texture'
         self.context.normal_sampler = pg.Texture(0, 'examples/%s.png' % NAME)
-        # print 'loading intensity texture'
+        # print 'loading color texture'
         # try:
-        #     self.context.sampler = pg.Texture(1, 'examples/texture.png')
+        #     self.context.sampler = pg.Texture(1, 'examples/texture.jpg')
         #     self.context.use_texture = True
         # except IOError:
         #     self.context.use_texture = False
@@ -124,8 +124,7 @@ class Program(pg.Program):
         norm = norm.yzx;
         vec3 color = object_color;
         if (use_texture) {
-            vec3 intensity = vec3(texture2D(sampler, frag_uv));
-            color = color * 0.6 + color * intensity * 0.4;
+            color = vec3(texture2D(sampler, frag_uv));
         }
         float diffuse = max(dot(mat3(normal_matrix) * norm,
             light_direction), 0.0);
