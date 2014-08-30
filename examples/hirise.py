@@ -3,17 +3,21 @@ from math import atan2
 import pg
 
 NAME = 'PSP_009149_1750'
+FONT = '/Library/Fonts/Arial.ttf'
+FLY = True
 STEP = 16
 HEIGHT = 1.8288 * 10
 SPEED = 1.34 * 500
+SHOW_INFO = False
+PAN = None #(-920, 2000, -7760), (895, 2000, 7530)
 
 class LoadingScene(pg.Scene):
     def setup(self):
         self.message = ''
         self.triangles = 0
         fg = (0, 0, 0, 1)
-        self.title_font = pg.Font(self, 2, '/Library/Fonts/Arial.ttf', 72, fg)
-        self.font = pg.Font(self, 3, '/Library/Fonts/Arial.ttf', 36, fg)
+        self.title_font = pg.Font(self, 2, FONT, 72, fg)
+        self.font = pg.Font(self, 3, FONT, 36, fg)
     def enter(self):
         context = pg.Context(Program())
         self.set_message('loading color texture')
@@ -55,7 +59,7 @@ class MainScene(pg.Scene):
         self.lookup = lookup
     def setup(self):
         fg = (0, 0, 0, 1)
-        self.font = pg.Font(self, 2, '/Library/Fonts/Arial.ttf', 24, fg)
+        self.font = pg.Font(self, 2, FONT, 24, fg)
         self.window.set_clear_color(0.74, 0.70, 0.64)
         self.wasd = pg.WASD(self, speed=SPEED)
         self.dy = 0
@@ -77,15 +81,16 @@ class MainScene(pg.Scene):
             if self.dy == 0:
                 self.dy = 2.0
     def update(self, t, dt):
-        # p = abs((t * 0.01) % 2 - 1) / 1.0
-        # a = (-920, 2000, -7760)
-        # b = (895, 2000, 7530)
-        # x, y, z = pg.interpolate(a, b, p)
-        # self.wasd.look_at((x, y, z), (x, 0, z))
-        # self.wasd.rx = atan2(b[2] - a[2], b[0] - a[0])
-        # return
+        if PAN:
+            a, b = PAN
+            p = abs((t * 0.01) % 2 - 1) / 1.0
+            x, y, z = pg.interpolate(a, b, p)
+            self.wasd.look_at((x, y, z), (x, 0, z))
+            self.wasd.rx = atan2(b[2] - a[2], b[0] - a[0])
+            return
         self.dy = max(self.dy - dt * 2.5, -25.0)
-        # self.wasd.y += self.dy
+        if not FLY:
+            self.wasd.y += self.dy
         h = self.get_height()
         if h is None:
             return
@@ -99,10 +104,11 @@ class MainScene(pg.Scene):
         self.context.matrix = matrix
         self.context.camera_position = self.wasd.position
         self.context.draw()
-        # w, h = self.window.size
-        # self.font.render('%.1f fps' % self.window.fps, (w - 5, 0), (1, 0))
-        # text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position
-        # self.font.render(text, (5, 0))
+        if SHOW_INFO:
+            w, h = self.window.size
+            self.font.render('%.1f fps' % self.window.fps, (w - 5, 0), (1, 0))
+            text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position
+            self.font.render(text, (5, 0))
 
 class Window(pg.Window):
     def setup(self):
