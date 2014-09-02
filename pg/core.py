@@ -88,7 +88,10 @@ class Mesh(object):
             v1, v2, v3 = self.positions[i:i+3]
             positions.extend([v3, v2, v1])
         normals = [neg(x) for x in self.normals]
-        uvs = list(self.uvs)
+        uvs = []
+        for i in xrange(0, len(self.uvs), 3):
+            v1, v2, v3 = self.uvs[i:i+3]
+            uvs.extend([v3, v2, v1])
         return Mesh(positions, normals, uvs)
     def swap_axes(self, i, j, k):
         si, sj, sk = copysign(1, i), copysign(1, j), copysign(1, k)
@@ -243,11 +246,10 @@ class Texture(object):
         if isinstance(im, basestring):
             im = Image.open(im)
         im = im.convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
-        width, height = im.size
+        self.size = width, height = im.size
         data = im.tobytes()
         self.handle = glGenTextures(1)
-        glActiveTexture(Texture.UNITS[unit])
-        glBindTexture(GL_TEXTURE_2D, self.handle)
+        self.bind()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
@@ -255,6 +257,9 @@ class Texture(object):
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, data)
+    def bind(self):
+        glActiveTexture(Texture.UNITS[self.unit])
+        glBindTexture(GL_TEXTURE_2D, self.handle)
 
 class Attribute(object):
     def __init__(self, location, name, size, data_type):
@@ -419,44 +424,109 @@ class Context(object):
             if value is not None:
                 self._attributes[name].unbind()
 
-class FPS(object):
-    def __init__(self):
-        self.time = time.time()
-        self.counter = 0
-        self.value = 0
-    def tick(self):
-        self.counter += 1
-        now = time.time()
-        elapsed = now - self.time
-        if elapsed >= 1:
-            self.value = self.counter / elapsed
-            self.counter = 0
-            self.time = now
+class Scene(object):
+    def __init__(self, window):
+        self.window = window
+        self.listeners = []
+        self.call('setup')
+    def __del__(self):
+        self.call('teardown')
+    def call(self, name, *args, **kwargs):
+        for listener in self.listeners + [self]:
+            if hasattr(listener, name):
+                if getattr(listener, name)(*args, **kwargs):
+                    return
+    # listener functions
+    def setup(self):
+        pass
+    def enter(self):
+        pass
+    def update(self, t, dt):
+        pass
+    def draw(self):
+        pass
+    def exit(self):
+        pass
+    def teardown(self):
+        pass
+    def on_size(self, width, height):
+        pass
+    def on_cursor_pos(self, x, y):
+        pass
+    def on_mouse_button(self, button, action, mods):
+        pass
+    def on_key(self, key, scancode, action, mods):
+        pass
+    def on_char(self, codepoint):
+        pass
 
-class Window(object):
-    def __init__(self, size=(800, 600), title='Python Graphics'):
-        self.size = width, height = size
-        self.handle = glfw.create_window(width, height, title, None, None)
+class Worker(object):
+    def __init__(self):
+        self.handle = glfw.create_window(1, 1, 'Worker', None, None)
         if not self.handle:
             raise Exception
+    def use(self):
+        glfw.make_context_current(self.handle)
+    def destroy(self):
+        glfw.destroy_window(self.handle)
+    def start(self):
+        async(self.thread_main)
+    def thread_main(self):
+        self.use()
+        try:
+            self.run()
+        finally:
+            self.destroy()
+    def run(self):
+        pass
+
+class Window(object):
+    def __init__(
+        self, size=(800, 600), title='Python Graphics', visible=True,
+        share=None):
+        self.app = App.instance
+        self.size = width, height = size
+        self.aspect = float(width) / height
+        glfw.window_hint(glfw.VISIBLE, visible)
+        share = share and share.handle
+        self.handle = glfw.create_window(width, height, title, None, share)
+        if not self.handle:
+            raise Exception
+        self.app.add_window(self)
         self.cache = Cache()
         self.current_program = None
         self.use()
         self.configure()
-        self.aspect = float(width) / height
         self.exclusive = False
-        self.start = self.time = time.time()
-        self._fps = FPS()
-        self.listeners = [self]
+        self.listeners = []
+        self.scene_stack = []
         self.set_callbacks()
         self.call('setup')
-        App.instance.add_window(self)
+    @property
+    def current_scene(self):
+        return self.scene_stack[-1] if self.scene_stack else None
+    def push_scene(self, scene):
+        if scene.window != self:
+            raise Exception
+        self.scene_stack.append(scene)
+        scene.call('enter')
+    def pop_scene(self):
+        scene = self.current_scene
+        scene.call('exit')
+        self.scene_stack.pop()
+    def set_scene(self, scene):
+        if self.current_scene:
+            self.pop_scene()
+        self.push_scene(scene)
     @property
     def t(self):
-        return time.time() - self.start
+        return self.app.ticker.t
+    @property
+    def dt(self):
+        return self.app.ticker.dt
     @property
     def fps(self):
-        return self._fps.value
+        return self.app.ticker.fps
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -473,17 +543,9 @@ class Window(object):
             glfw.set_input_mode(self.handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
     def set_current_program(self, program):
         self.current_program = program
-    def setup(self):
-        pass
-    def update(self, t, dt):
-        pass
-    def draw(self):
-        pass
-    def teardown(self):
-        pass
     def use(self):
         glfw.make_context_current(self.handle)
-        App.instance.set_current_window(self)
+        self.app.set_current_window(self)
     def clear(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     def clear_color_buffer(self):
@@ -493,16 +555,15 @@ class Window(object):
     def set_clear_color(self, r, g, b, a=1.0):
         glClearColor(r, g, b, a)
     def tick(self):
-        self._fps.tick()
         self.use()
         if glfw.window_should_close(self.handle):
             self.call('teardown')
-            App.instance.remove_window(self)
+            self.app.remove_window(self)
             glfw.destroy_window(self.handle)
             return
-        now = time.time()
-        self.call('update', now - self.start, now - self.time)
-        self.time = now
+        self.call('update', self.t, self.dt)
+        self.redraw()
+    def redraw(self):
         self.call('draw')
         glfw.swap_buffers(self.handle)
     def save_image(self, path):
@@ -527,33 +588,70 @@ class Window(object):
         glfw.set_key_callback(self.handle, self._on_key)
         glfw.set_char_callback(self.handle, self._on_char)
     def call(self, name, *args, **kwargs):
-        for listener in list(self.listeners):
+        for listener in self.listeners + [self]:
             if hasattr(listener, name):
-                getattr(listener, name)(*args, **kwargs)
+                if getattr(listener, name)(*args, **kwargs):
+                    return
+        if name in ['setup', 'teardown']:
+            return
+        scene = self.current_scene
+        if scene is not None:
+            scene.call(name, *args, **kwargs)
     def _on_size(self, window, width, height):
         self.size = (width, height)
         self.aspect = float(width) / height
         self.call('on_size', width, height)
-    def on_size(self, width, height):
-        pass
     def _on_cursor_pos(self, window, x, y):
         self.call('on_cursor_pos', x, y)
-    def on_cursor_pos(self, x, y):
-        pass
     def _on_mouse_button(self, window, button, action, mods):
         self.call('on_mouse_button', button, action, mods)
-    def on_mouse_button(self, button, action, mods):
-        pass
     def _on_key(self, window, key, scancode, action, mods):
         self.call('on_key', key, scancode, action, mods)
         if action == glfw.PRESS and key == glfw.KEY_F12:
             self.screenshot()
-    def on_key(self, key, scancode, action, mods):
-        pass
     def _on_char(self, window, codepoint):
         self.call('on_char', codepoint)
+    # listener functions
+    def setup(self):
+        pass
+    def update(self, t, dt):
+        pass
+    def draw(self):
+        pass
+    def teardown(self):
+        pass
+    def on_size(self, width, height):
+        pass
+    def on_cursor_pos(self, x, y):
+        pass
+    def on_mouse_button(self, button, action, mods):
+        pass
+    def on_key(self, key, scancode, action, mods):
+        pass
     def on_char(self, codepoint):
         pass
+
+class Ticker(object):
+    def __init__(self):
+        self.start_time = time.time()
+        self.last_time = self.start_time
+        self.t = 0
+        self.dt = 0
+        self.ticks = 0
+        self.fps_time = self.start_time
+        self.fps_ticks = 0
+        self.fps = 0
+    def tick(self):
+        now = time.time()
+        self.t = now - self.start_time
+        self.dt = now - self.last_time
+        self.last_time = now
+        self.ticks += 1
+        self.fps_ticks += 1
+        if now - self.fps_time >= 1:
+            self.fps = self.fps_ticks / (now - self.fps_time)
+            self.fps_ticks = 0
+            self.fps_time = now
 
 class App(object):
     instance = None
@@ -564,6 +662,7 @@ class App(object):
         self.windows = []
         self.current_window = None
         self.queue = Queue.Queue()
+        self.ticker = Ticker()
     def add_window(self, window):
         self.windows.append(window)
     def remove_window(self, window):
@@ -581,10 +680,14 @@ class App(object):
             self.tick()
         glfw.terminate()
     def tick(self):
-        glfw.poll_events()
+        self.ticker.tick()
+        poll_events()
         self.process_queue()
         for window in list(self.windows):
             window.tick()
+
+def poll_events():
+    glfw.poll_events()
 
 def call_after(func, *args, **kwargs):
     App.instance.call_after(func, *args, **kwargs)
@@ -594,7 +697,13 @@ def async(func, *args, **kwargs):
     thread.setDaemon(True)
     thread.start()
 
-def run(window_class, *args, **kwargs):
+def run(cls, *args, **kwargs):
     app = App()
-    window_class(*args, **kwargs)
+    if issubclass(cls, Window):
+        window = cls(*args, **kwargs)
+    else:
+        window = Window()
+    if issubclass(cls, Scene):
+        scene = cls(window, *args, **kwargs)
+        window.set_scene(scene)
     app.run()

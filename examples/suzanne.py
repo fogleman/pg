@@ -15,7 +15,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        mesh = self.meshes[int(self.time % len(self.meshes))]
+        mesh = self.meshes[int(self.t % len(self.meshes))]
         mesh.draw(self.context)
 
 if __name__ == "__main__":

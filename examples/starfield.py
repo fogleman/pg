@@ -21,7 +21,7 @@ class Window(pg.Window):
     def draw(self):
         self.clear()
         for m in xrange(-1, 2):
-            z = m * FIELD_DEPTH + (-self.time * SPEED) % FIELD_DEPTH
+            z = m * FIELD_DEPTH + (-self.t * SPEED) % FIELD_DEPTH
             matrix = pg.Matrix().translate((0, 0, -z))
             matrix = matrix.perspective(65, self.aspect, 1, 1000)
             self.context.matrix = matrix

@@ -1,12 +1,15 @@
 from math import sin, cos, pi, atan2, asin
+from .core import Scene
 from .matrix import Matrix
 from .util import normalize
 from . import glfw
 
 class WASD(object):
-    def __init__(self, window,
+    def __init__(self, scene_or_window,
         speed=1.0, sensitivity=2.5, invert=False, exclusive=True):
-        self.window = window
+        self.window = scene_or_window
+        if isinstance(scene_or_window, Scene):
+            self.window = scene_or_window.window
         self.speed = speed
         self.sensitivity = sensitivity
         self.invert = invert
@@ -21,7 +24,7 @@ class WASD(object):
         self.discard = True
         if self.exclusive:
             self.window.set_exclusive()
-        self.window.listeners.insert(0, self)
+        scene_or_window.listeners.append(self)
     @property
     def position(self):
         return (self.x, self.y, self.z)
@@ -34,11 +37,14 @@ class WASD(object):
         self.z = pz
         self.rx = 2 * pi - (atan2(dx, dz) + pi)
         self.ry = asin(dy)
+    def enter(self):
+        self.discard = True
     def on_mouse_button(self, button, action, mods):
-        if self.exclusive:
+        if self.exclusive and not self.window.exclusive:
             if button == glfw.MOUSE_BUTTON_1 and action == glfw.PRESS:
                 self.window.set_exclusive()
                 self.discard = True
+                return True
     def on_key(self, key, scancode, action, mods):
         if self.exclusive:
             if key == glfw.KEY_ESCAPE:
@@ -76,9 +82,10 @@ class WASD(object):
         if glfw.get_key(self.window.handle, ord('D')):
             sx += 1
         return (sx, sz)
-    def get_matrix(self, matrix=None):
+    def get_matrix(self, matrix=None, translate=True):
         matrix = matrix or Matrix()
-        matrix = matrix.translate((-self.x, -self.y, -self.z))
+        if translate:
+            matrix = matrix.translate((-self.x, -self.y, -self.z))
         matrix = matrix.rotate((cos(self.rx), 0, sin(self.rx)), self.ry)
         matrix = matrix.rotate((0, 1, 0), -self.rx)
         return matrix

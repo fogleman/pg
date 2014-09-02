@@ -50,13 +50,18 @@ def generate_screenshots(size):
     app.run()
 
 def main():
-    app = pg.App()
     name = get_argument_example() or get_menu_example()
     if name is None:
         return
     module = import_module('examples.%s' % name)
-    module.Window()
-    app.run()
+    if hasattr(module, 'main'):
+        module.main()
+    else:
+        names = ['Window', 'Scene']
+        for name in names:
+            if hasattr(module, name):
+                pg.run(getattr(module, name))
+                return
 
 if __name__ == '__main__':
     # generate_screenshots((800, 600))
