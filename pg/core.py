@@ -89,7 +89,7 @@ class Mesh(object):
         for i in xrange(0, len(self.positions), 3):
             v1, v2, v3 = self.positions[i:i+3]
             positions.extend([v3, v2, v1])
-        normals = [neg(x) for x in self.normals]
+        normals = [util.neg(x) for x in self.normals]
         uvs = []
         for i in xrange(0, len(self.uvs), 3):
             v1, v2, v3 = self.uvs[i:i+3]
