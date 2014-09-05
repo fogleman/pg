@@ -63,6 +63,7 @@ class DirectionalLightProgram(BaseProgram):
 
     uniform mat4 matrix;
     uniform mat4 model_matrix;
+    uniform mat4 normal_matrix;
 
     attribute vec4 position;
     attribute vec3 normal;
@@ -77,7 +78,7 @@ class DirectionalLightProgram(BaseProgram):
     void main() {
         gl_Position = matrix * position;
         frag_position = vec3(model_matrix * position);
-        frag_normal = normal;
+        frag_normal = mat3(normal_matrix) * normal;
         frag_uv = uv;
         frag_color = color;
     }
@@ -88,7 +89,6 @@ class DirectionalLightProgram(BaseProgram):
     uniform sampler2D sampler;
     uniform vec3 camera_position;
 
-    uniform mat4 normal_matrix;
     uniform vec3 light_direction;
     uniform vec3 object_color;
     uniform vec3 ambient_color;
@@ -111,8 +111,7 @@ class DirectionalLightProgram(BaseProgram):
         if (use_texture) {
             color = vec3(texture2D(sampler, frag_uv));
         }
-        float diffuse = max(dot(mat3(normal_matrix) * frag_normal,
-            light_direction), 0.0);
+        float diffuse = max(dot(frag_normal, light_direction), 0.0);
         float specular = 0.0;
         if (diffuse > 0.0) {
             vec3 camera_vector = normalize(camera_position - frag_position);
