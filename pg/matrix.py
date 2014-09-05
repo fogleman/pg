@@ -15,8 +15,8 @@ class Matrix(object):
         self.value = map(float, value)
     def __repr__(self):
         result = []
-        for row in xrange(4):
-            x = ','.join('% .3f' % self[(row, col)] for col in xrange(4))
+        for r in xrange(4):
+            x = ','.join('% .3f' % self.value[c * 4 + r] for c in xrange(4))
             result.append('[%s]' % x)
         return '\n'.join(result)
     def __mul__(self, other):
