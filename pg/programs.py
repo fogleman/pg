@@ -27,14 +27,14 @@ class SolidColorProgram(BaseProgram):
     FS = '''
     #version 120
 
-    uniform vec3 color;
+    uniform vec4 color;
 
     void main() {
-        gl_FragColor = vec4(color, 1.0);
+        gl_FragColor = color;
     }
     '''
     def set_defaults(self, context):
-        context.color = (1.0, 1.0, 1.0)
+        context.color = (1.0, 1.0, 1.0, 1.0)
 
 class DirectionalLightProgram(BaseProgram):
     '''Renders the scene with a single, directional light source. Optionally,
