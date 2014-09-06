@@ -529,6 +529,9 @@ class Window(object):
     @property
     def fps(self):
         return self.app.ticker.fps
+    @property
+    def ticks(self):
+        return self.app.ticker.ticks
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)

@@ -36,6 +36,42 @@ class SolidColorProgram(BaseProgram):
     def set_defaults(self, context):
         context.color = (1.0, 1.0, 1.0, 1.0)
 
+class TextureProgram(BaseProgram):
+    '''Renders with a texture and no lighting.
+
+    :param matrix: the model-view-projection matrix, required
+    :param position: vertex buffer containing vertex positions, required
+    :param sampler: texture to use, required
+    '''
+    VS = '''
+    #version 120
+
+    uniform mat4 matrix;
+
+    attribute vec4 position;
+    attribute vec2 uv;
+
+    varying vec2 frag_uv;
+
+    void main() {
+        gl_Position = matrix * position;
+        frag_uv = uv;
+    }
+    '''
+    FS = '''
+    #version 120
+
+    uniform sampler2D sampler;
+
+    varying vec2 frag_uv;
+
+    void main() {
+        gl_FragColor = texture2D(sampler, frag_uv);
+    }
+    '''
+    def set_defaults(self, context):
+        pass
+
 class DirectionalLightProgram(BaseProgram):
     '''Renders the scene with a single, directional light source. Optionally,
     primitives can be textured or independently colored.

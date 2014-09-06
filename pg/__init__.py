@@ -57,9 +57,11 @@ from .poisson import (
 )
 
 from .programs import (
+    BaseProgram,
     DirectionalLightProgram,
     SolidColorProgram,
     TextProgram,
+    TextureProgram,
 )
 
 from .stl import (
