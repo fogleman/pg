@@ -1,12 +1,13 @@
 from math import pi, sin
 import pg
 
-SCALE = 220
+SCALE = 384
 CIRCLE_SIZE = SCALE * 3
 CIRCLE_SPACING = SCALE * 1
-GRID_SIZE = 11
-SPEED = 1.0
+GRID_SIZE = 7
+SPEED = 0.5
 OFFSET_MULTIPLIER = 1.0
+CIRCLE_COUNT = GRID_SIZE * GRID_SIZE
 
 class Window(pg.Window):
     def setup(self):
@@ -17,8 +18,8 @@ class Window(pg.Window):
         self.positions = []
         n = GRID_SIZE
         m = CIRCLE_SPACING
-        for i in xrange(n):
-            for j in xrange(n):
+        for i in range(n):
+            for j in range(n):
                 x = (i - (n - 1) / 2.0) * m
                 y = (j - (n - 1) / 2.0) * m
                 d = (x * x + y * y) ** 0.5
@@ -53,19 +54,25 @@ class Program(pg.BaseProgram):
 
     uniform float w;
     uniform float h;
-    uniform vec3 circles[128];
+    uniform vec3 circles[%d];
 
-    const vec4 palette[4] = vec4[4](
-        vec4(0.13, 0.71, 0.69, 1.00),
-        vec4(0.98, 0.76, 0.08, 1.00),
-        vec4(0.94, 0.42, 0.00, 1.00),
-        vec4(0.94, 0.06, 0.11, 1.00)
+    const vec4 palette[10] = vec4[10](
+        vec4(0.122, 0.467, 0.706, 1.0),
+        vec4(1.000, 0.498, 0.055, 1.0),
+        vec4(0.173, 0.627, 0.173, 1.0),
+        vec4(0.839, 0.153, 0.157, 1.0),
+        vec4(0.580, 0.404, 0.741, 1.0),
+        vec4(0.549, 0.337, 0.294, 1.0),
+        vec4(0.890, 0.467, 0.761, 1.0),
+        vec4(0.498, 0.498, 0.498, 1.0),
+        vec4(0.737, 0.741, 0.133, 1.0),
+        vec4(0.090, 0.745, 0.812, 1.0)
     );
 
     void main() {
         int count = 0;
         vec2 point = gl_FragCoord.xy - vec2(w / 2.0, h / 2.0);
-        for (int i = 0; i < 128; i++) {
+        for (int i = 0; i < %d; i++) {
             if (distance(point, circles[i].xy) <= circles[i].z) {
                 count++;
             }
@@ -77,7 +84,7 @@ class Program(pg.BaseProgram):
             gl_FragColor = palette[int(mod(count / 2, palette.length()))];
         }
     }
-    '''
+    ''' % (CIRCLE_COUNT, CIRCLE_COUNT)
 
 if __name__ == "__main__":
     pg.run(Window)
