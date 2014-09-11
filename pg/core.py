@@ -533,6 +533,7 @@ class Window(object):
         self.cache = Cache()
         self.current_program = None
         self.use()
+        self.framebuffer_size = glfw.get_framebuffer_size(self.handle)
         self.configure()
         self.exclusive = False
         self.listeners = []
@@ -623,6 +624,7 @@ class Window(object):
             counter += 1
     def set_callbacks(self):
         glfw.set_window_size_callback(self.handle, self._on_size)
+        glfw.set_framebuffer_size_callback(self.handle, self._on_framebuffer_size)
         glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
         glfw.set_mouse_button_callback(self.handle, self._on_mouse_button)
         glfw.set_key_callback(self.handle, self._on_key)
@@ -641,6 +643,9 @@ class Window(object):
         self.size = (width, height)
         self.aspect = float(width) / height
         self.call('on_size', width, height)
+    def _on_framebuffer_size(self, window, width, height):
+        self.framebuffer_size = (width, height)
+        self.call('on_framebuffer_size', width, height)
     def _on_cursor_pos(self, window, x, y):
         self.call('on_cursor_pos', x, y)
     def _on_mouse_button(self, window, button, action, mods):
@@ -661,6 +666,8 @@ class Window(object):
     def teardown(self):
         pass
     def on_size(self, width, height):
+        pass
+    def on_framebuffer_size(self, width, height):
         pass
     def on_cursor_pos(self, x, y):
         pass

@@ -2,7 +2,7 @@ from math import pi, sin
 import pg
 
 SCALE = 220
-CIRCLE_SIZE = SCALE * 2
+CIRCLE_SIZE = SCALE * 3
 CIRCLE_SPACING = SCALE * 1
 GRID_SIZE = 11
 SPEED = 1.0
@@ -33,7 +33,7 @@ class Window(pg.Window):
         return result
     def draw(self):
         self.clear()
-        self.context.w, self.context.h = self.size
+        self.context.w, self.context.h = self.framebuffer_size
         self.context.circles = self.circles()
         self.context.draw()
 
@@ -55,6 +55,13 @@ class Program(pg.BaseProgram):
     uniform float h;
     uniform vec3 circles[128];
 
+    const vec4 palette[4] = vec4[4](
+        vec4(0.13, 0.71, 0.69, 1.00),
+        vec4(0.98, 0.76, 0.08, 1.00),
+        vec4(0.94, 0.42, 0.00, 1.00),
+        vec4(0.94, 0.06, 0.11, 1.00)
+    );
+
     void main() {
         int count = 0;
         vec2 point = gl_FragCoord.xy - vec2(w / 2.0, h / 2.0);
@@ -63,7 +70,12 @@ class Program(pg.BaseProgram):
                 count++;
             }
         }
-        gl_FragColor = vec4(mod(count, 2));
+        if (mod(count, 2) == 0) {
+            gl_FragColor = vec4(0, 0, 0, 1);
+        }
+        else {
+            gl_FragColor = palette[int(mod(count / 2, palette.length()))];
+        }
     }
     '''
 
