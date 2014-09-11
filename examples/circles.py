@@ -1,7 +1,7 @@
 from math import pi, sin
 import pg
 
-SCALE = 128
+SCALE = 220
 CIRCLE_SIZE = SCALE * 2
 CIRCLE_SPACING = SCALE * 1
 GRID_SIZE = 11
@@ -28,7 +28,7 @@ class Window(pg.Window):
         result = []
         for x, y, d in self.positions:
             t = d / self.max_distance * pi * OFFSET_MULTIPLIER
-            r = sin(t + self.t * -SPEED) * CIRCLE_SIZE
+            r = (sin(t + self.t * -SPEED) + 1) / 2.0 * CIRCLE_SIZE
             result.append((x, y, r))
         return result
     def draw(self):
@@ -53,12 +53,12 @@ class Program(pg.BaseProgram):
 
     uniform float w;
     uniform float h;
-    uniform vec3 circles[256];
+    uniform vec3 circles[128];
 
     void main() {
         int count = 0;
         vec2 point = gl_FragCoord.xy - vec2(w / 2.0, h / 2.0);
-        for (int i = 0; i < 256; i++) {
+        for (int i = 0; i < 128; i++) {
             if (distance(point, circles[i].xy) <= circles[i].z) {
                 count++;
             }
