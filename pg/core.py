@@ -336,6 +336,7 @@ class Uniform(object):
     def bind_array(self, value):
         first = value[0]
         size = min(len(value), self.size)
+        value = value[:size]
         try:
             count = len(first)
             value = util.flatten(value)
