@@ -1,12 +1,12 @@
 from math import pi, sin
 import pg
 
-SCALE = 384
-CIRCLE_SIZE = SCALE * 3
+SCALE = 256
+CIRCLE_SIZE = SCALE * 2
 CIRCLE_SPACING = SCALE * 1
 GRID_SIZE = 7
-SPEED = 0.5
-OFFSET_MULTIPLIER = 1.0
+SPEED = 1.0 / 10
+OFFSET_MULTIPLIER = 3.0
 CIRCLE_COUNT = GRID_SIZE * GRID_SIZE
 
 class Window(pg.Window):
@@ -29,7 +29,7 @@ class Window(pg.Window):
         result = []
         for x, y, d in self.positions:
             t = d / self.max_distance * pi * OFFSET_MULTIPLIER
-            r = (sin(t + self.t * -SPEED) + 1) / 2.0 * CIRCLE_SIZE
+            r = (sin(t + self.t * 2 * pi * -SPEED) + 1) / 2.0 * CIRCLE_SIZE
             result.append((x, y, r))
         return result
     def draw(self):
@@ -71,9 +71,15 @@ class Program(pg.BaseProgram):
 
     void main() {
         int count = 0;
-        vec2 point = gl_FragCoord.xy - vec2(w / 2.0, h / 2.0);
+        vec2 p = gl_FragCoord.xy - vec2(w / 2.0, h / 2.0);
         for (int i = 0; i < %d; i++) {
-            if (distance(point, circles[i].xy) <= circles[i].z) {
+            vec2 c = circles[i].xy;
+            float r = circles[i].z;
+            float d = min(abs(c.x - p.x), abs(c.y - p.y));
+            if (d <= r) {
+                count++;
+            }
+            if (distance(p, c) <= r) {
                 count++;
             }
         }
@@ -86,5 +92,10 @@ class Program(pg.BaseProgram):
     }
     ''' % (CIRCLE_COUNT, CIRCLE_COUNT)
 
+def main():
+    app = pg.App()
+    Window((1000, 1000))
+    app.run()
+
 if __name__ == "__main__":
-    pg.run(Window)
+    main()
