@@ -2,11 +2,12 @@ from math import pi, sin
 import pg
 
 SCALE = 256
-CIRCLE_SIZE = SCALE * 2
+MIN_CIRCLE_SIZE = SCALE / 2
+MAX_CIRCLE_SIZE = SCALE * 2
 CIRCLE_SPACING = SCALE * 1
 GRID_SIZE = 7
 SPEED = 1.0 / 10
-OFFSET_MULTIPLIER = 3.0
+OFFSET_MULTIPLIER = 2.0
 CIRCLE_COUNT = GRID_SIZE * GRID_SIZE
 
 class Window(pg.Window):
@@ -29,7 +30,8 @@ class Window(pg.Window):
         result = []
         for x, y, d in self.positions:
             t = d / self.max_distance * pi * OFFSET_MULTIPLIER
-            r = (sin(t + self.t * 2 * pi * -SPEED) + 1) / 2.0 * CIRCLE_SIZE
+            p = (sin(t - self.t * 2 * pi * SPEED) + 1) / 2
+            r = MIN_CIRCLE_SIZE + p * (MAX_CIRCLE_SIZE - MIN_CIRCLE_SIZE)
             result.append((x, y, r))
         return result
     def draw(self):
@@ -69,25 +71,28 @@ class Program(pg.BaseProgram):
         vec4(0.090, 0.745, 0.812, 1.0)
     );
 
+    const vec4 background = vec4(0, 0, 0, 1);
+
     void main() {
         int count = 0;
+        float e = 1e9;
         vec2 p = gl_FragCoord.xy - vec2(w / 2.0, h / 2.0);
         for (int i = 0; i < %d; i++) {
             vec2 c = circles[i].xy;
             float r = circles[i].z;
-            float d = min(abs(c.x - p.x), abs(c.y - p.y));
+            float d = distance(p, c);
+            e = min(e, abs(d - r));
             if (d <= r) {
-                count++;
-            }
-            if (distance(p, c) <= r) {
                 count++;
             }
         }
         if (mod(count, 2) == 0) {
-            gl_FragColor = vec4(0, 0, 0, 1);
+            gl_FragColor = background;
         }
         else {
-            gl_FragColor = palette[int(mod(count / 2, palette.length()))];
+            vec4 color = palette[int(mod(count / 2, palette.length()))];
+            float pct = clamp(pow(e / 2, 2), 0, 1);
+            gl_FragColor = mix(background, color, pct);
         }
     }
     ''' % (CIRCLE_COUNT, CIRCLE_COUNT)
