@@ -293,6 +293,9 @@ class Uniform(object):
         self.size = size
         self.data_type = data_type
     def bind(self, value):
+        if self.size > 1:
+            self.bind_array(value)
+            return
         if isinstance(value, Matrix):
             value = value.value
         elif isinstance(value, Texture):
@@ -330,6 +333,35 @@ class Uniform(object):
             funcs[count](self.location, *value)
         elif self.data_type in Uniform.SAMPLERS:
             glUniform1i(self.location, *value)
+    def bind_array(self, value):
+        first = value[0]
+        size = min(len(value), self.size)
+        try:
+            count = len(first)
+            value = util.flatten(value)
+        except Exception:
+            count = 1
+        if len(value) != size * count:
+            raise Exception
+        value = (c_float * len(value))(*value)
+        if self.data_type in Uniform.FLOATS:
+            funcs = {
+                1: glUniform1fv,
+                2: glUniform2fv,
+                3: glUniform3fv,
+                4: glUniform4fv,
+            }
+            funcs[count](self.location, size, value)
+        elif self.data_type in Uniform.INTS or self.data_type in Uniform.BOOLS:
+            funcs = {
+                1: glUniform1iv,
+                2: glUniform2iv,
+                3: glUniform3iv,
+                4: glUniform4iv,
+            }
+            funcs[count](self.location, size, value)
+        elif self.data_type in Uniform.SAMPLERS:
+            glUniform1iv(self.location, size, value)
     def __repr__(self):
         return 'Uniform%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -375,6 +407,8 @@ class Program(object):
         count = glGetProgramiv(self.handle, GL_ACTIVE_UNIFORMS)
         for index in xrange(count):
             name, size, data_type = glGetActiveUniform(self.handle, index)
+            if name.endswith('[0]'):
+                name = name[:-3]
             location = glGetUniformLocation(self.handle, name)
             uniform = Uniform(location, name, size, data_type)
             result.append(uniform)
