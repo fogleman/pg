@@ -610,6 +610,7 @@ class Window(object):
     def save_image(self, path):
         width, height = self.size
         data = (c_ubyte * (width * height * 3))()
+        glReadBuffer(GL_BACK)
         glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)
         im = Image.frombytes('RGB', (width, height), data)
         im = im.transpose(Image.FLIP_TOP_BOTTOM)
