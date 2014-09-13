@@ -36,6 +36,7 @@ class Sprite(object):
         self.position = (0, 0)
         self.rotation = 0
         self.scale = 1
+        self.z = 0
     def generate_vertex_data(self):
         data = [
             (0, 0), (1, 0), (0, 1),
@@ -48,7 +49,7 @@ class Sprite(object):
         coords = self.frame.coords
         u = (coords[0], coords[2])
         v = (coords[1], coords[3])
-        position = [(x - ax, y - ay) for x, y in data]
+        position = [(x - ax, y - ay, self.z) for x, y in data]
         matrix = Matrix()
         matrix = matrix.scale((w * s, h * s, 1))
         matrix = matrix.rotate((0, 0, -1), self.rotation)
@@ -62,12 +63,12 @@ class Sprite(object):
         # TODO: batched drawing
         position, uv = self.generate_vertex_data()
         vertex_buffer = VertexBuffer(interleave(position, uv))
-        context.position, context.uv = vertex_buffer.slices(2, 2)
+        context.position, context.uv = vertex_buffer.slices(3, 2)
         glEnable(GL_BLEND)
-        glDisable(GL_DEPTH_TEST)
+        # glDisable(GL_DEPTH_TEST)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         context.draw()
-        glEnable(GL_DEPTH_TEST)
+        # glEnable(GL_DEPTH_TEST)
         glDisable(GL_BLEND)
         vertex_buffer.delete()
 
@@ -95,8 +96,8 @@ class SpriteSheet(object):
         for name, image, (x, y, w, h) in zip(names, images, positions):
             u1 = (x + p) / float(tw - 1)
             u2 = (x + w - p) / float(tw - 1)
-            v1 = 1 - (y + p) / float(th - 1)
-            v2 = 1 - (y + h - p) / float(th - 1)
+            v2 = 1 - (y + p) / float(th - 1)
+            v1 = 1 - (y + h - p) / float(th - 1)
             im.paste(image, (x + p, y + p))
             frame = SpriteFrame(name, (w, h), (u1, v1, u2, v2))
             self.lookup[name] = frame

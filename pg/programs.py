@@ -66,7 +66,11 @@ class TextureProgram(BaseProgram):
     varying vec2 frag_uv;
 
     void main() {
-        gl_FragColor = texture2D(sampler, frag_uv);
+        vec4 color = texture2D(sampler, frag_uv);
+        if (color.a == 0) {
+            discard;
+        }
+        gl_FragColor = color;
     }
     '''
     def set_defaults(self, context):
@@ -171,6 +175,7 @@ class DirectionalLightProgram(BaseProgram):
         context.use_texture = False
         context.use_color = False
 
+# TODO: same as TextureProgram? consolidate?
 class TextProgram(BaseProgram):
     '''Renders 2D text using a font texture. Used by the built-in ``pg.Font``.
 
