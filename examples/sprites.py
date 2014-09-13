@@ -1,4 +1,4 @@
-from math import sin
+from math import sin, cos, pi
 import pg
 
 class Window(pg.Window):
@@ -16,9 +16,11 @@ class Window(pg.Window):
         w, h = self.size
         self.context.matrix = pg.Matrix().orthographic(0, w, 0, h, -1, 1)
         for i, sprite in enumerate(self.sprites):
-            x = (i - 1.5) * sin(t) * 200
-            sprite.position = (x + w / 2, h / 2)
+            x = cos(t + i * pi / 2) * 250
+            y = sin(t + i * pi / 2) * 250
+            sprite.position = (x + w / 2, y + h / 2)
             sprite.z = i / 10.0
+            sprite.rotation = -t
     def draw(self):
         self.clear()
         for sprite in self.sprites:

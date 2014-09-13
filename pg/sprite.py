@@ -1,7 +1,7 @@
 from .core import VertexBuffer, Texture
 from .pack import pack
-from .matrix import Matrix
 from .util import interleave
+from math import sin, cos
 from OpenGL.GL import *
 from PIL import Image
 import os
@@ -38,26 +38,28 @@ class Sprite(object):
         self.scale = 1
         self.z = 0
     def generate_vertex_data(self):
-        data = [
-            (0, 0), (1, 0), (0, 1),
-            (1, 0), (1, 1), (0, 1),
-        ]
         ax, ay = self.anchor
         px, py = self.position
-        w, h = self.frame.size
-        s = self.scale
+        fw, fh = self.frame.size
+        rs = sin(self.rotation)
+        rc = cos(self.rotation)
+        z = self.z
         coords = self.frame.coords
-        u = (coords[0], coords[2])
-        v = (coords[1], coords[3])
-        position = [(x - ax, y - ay, self.z) for x, y in data]
-        matrix = Matrix()
-        matrix = matrix.scale((w * s, h * s, 1))
-        matrix = matrix.rotate((0, 0, -1), self.rotation)
-        matrix = matrix.translate((px, py, 0))
-        position = [matrix * x for x in position]
-        uv = []
-        for i, j in data:
-            uv.append((u[i], v[j]))
+        points = [(0, 0), (1, 0), (0, 1), (1, 1)]
+        position = []
+        for i, j in points:
+            x, y = (i - ax) * fw, (j - ay) * fh
+            x, y = px + x * rc - y * rs, py + x * rs + y * rc
+            position.append((x, y, z))
+        uv = [
+            (coords[0], coords[1]),
+            (coords[2], coords[1]),
+            (coords[0], coords[3]),
+            (coords[2], coords[3]),
+        ]
+        indexes = [0, 1, 2, 1, 3, 2]
+        position = [position[i] for i in indexes]
+        uv = [uv[i] for i in indexes]
         return position, uv
     def draw(self, context):
         # TODO: batched drawing
