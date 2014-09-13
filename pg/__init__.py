@@ -64,6 +64,12 @@ from .programs import (
     TextureProgram,
 )
 
+from .sprite import (
+    Sprite,
+    SpriteFrame,
+    SpriteSheet,
+)
+
 from .stl import (
     STL,
 )
