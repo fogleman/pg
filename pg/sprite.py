@@ -1,5 +1,6 @@
-from .core import VertexBuffer, Texture
+from .core import VertexBuffer, Texture, Context
 from .pack import pack
+from .programs import TextureProgram
 from .util import interleave
 from math import sin, cos
 from OpenGL.GL import *
@@ -29,6 +30,12 @@ def load_images(paths):
         images.append(im)
     return names, images
 
+class SpriteBatch(object):
+    def __init__(self, sheet):
+        self.sprites = []
+        self.context = Context(TextureProgram())
+        self.context.sampler = sheet
+
 class Sprite(object):
     def __init__(self, frame):
         self.frame = frame
@@ -43,36 +50,28 @@ class Sprite(object):
         fw, fh = self.frame.size
         rs = sin(self.rotation)
         rc = cos(self.rotation)
+        s = self.scale
         z = self.z
         coords = self.frame.coords
+        u = (coords[0], coords[2])
+        v = (coords[1], coords[3])
         points = [(0, 0), (1, 0), (0, 1), (1, 1)]
-        position = []
+        data = []
         for i, j in points:
-            x, y = (i - ax) * fw, (j - ay) * fh
+            x, y = (i - ax) * fw * s, (j - ay) * fh * s
             x, y = px + x * rc - y * rs, py + x * rs + y * rc
-            position.append((x, y, z))
-        uv = [
-            (coords[0], coords[1]),
-            (coords[2], coords[1]),
-            (coords[0], coords[3]),
-            (coords[2], coords[3]),
-        ]
+            data.append((x, y, z, u[i], v[j]))
         indexes = [0, 1, 2, 1, 3, 2]
-        position = [position[i] for i in indexes]
-        uv = [uv[i] for i in indexes]
-        return position, uv
+        return [data[i] for i in indexes]
     def draw(self, context):
         # TODO: batched drawing
-        position, uv = self.generate_vertex_data()
-        vertex_buffer = VertexBuffer(interleave(position, uv))
-        context.position, context.uv = vertex_buffer.slices(3, 2)
+        vb = VertexBuffer(self.generate_vertex_data())
+        context.position, context.uv = vb.slices(3, 2)
         glEnable(GL_BLEND)
-        # glDisable(GL_DEPTH_TEST)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         context.draw()
-        # glEnable(GL_DEPTH_TEST)
         glDisable(GL_BLEND)
-        vertex_buffer.delete()
+        vb.delete()
 
 class SpriteFrame(object):
     def __init__(self, name, size, coords):
@@ -83,7 +82,7 @@ class SpriteFrame(object):
         return Sprite(self)
 
 class SpriteSheet(object):
-    def __init__(self, arg):
+    def __init__(self, unit, arg):
         if os.path.isdir(arg):
             names, images = load_directory(arg)
         else:
@@ -103,12 +102,12 @@ class SpriteSheet(object):
             im.paste(image, (x + p, y + p))
             frame = SpriteFrame(name, (w, h), (u1, v1, u2, v2))
             self.lookup[name] = frame
-        self.im = im
+        self.texture = Texture(unit, im)
+    def get_uniform_value(self):
+        return self.texture.unit
     def __getattr__(self, name):
         if name in self.lookup:
             return self.lookup[name]
         return super(SpriteSheet, self).__getattr__(name)
     def __getitem__(self, name):
         return self.lookup[name]
-    def texture(self, unit):
-        return Texture(unit, self.im)

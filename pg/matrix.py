@@ -13,6 +13,8 @@ class Matrix(object):
                 0, 0, 0, 1,
             ]
         self.value = map(float, value)
+    def get_uniform_value(self):
+        return self.value
     def __repr__(self):
         result = []
         for r in xrange(4):

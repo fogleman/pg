@@ -259,6 +259,8 @@ class Texture(object):
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, data)
+    def get_uniform_value(self):
+        return self.unit
     def bind(self):
         glActiveTexture(Texture.UNITS[self.unit])
         glBindTexture(GL_TEXTURE_2D, self.handle)
@@ -296,10 +298,8 @@ class Uniform(object):
         if self.size > 1:
             self.bind_array(value)
             return
-        if isinstance(value, Matrix):
-            value = value.value
-        elif isinstance(value, Texture):
-            value = value.unit
+        if hasattr(value, 'get_uniform_value'):
+            value = value.get_uniform_value()
         try:
             count = len(value)
         except Exception:
