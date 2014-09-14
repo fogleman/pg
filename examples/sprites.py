@@ -10,10 +10,9 @@ class Window(pg.Window):
             for x in range(-n, n + 1, 64):
                 sprite = sheet.star(self.batch)
                 sprite.position = (x, y)
-        print len(self.batch.sprites)
     def update(self, t, dt):
         for sprite in self.batch.sprites:
-            sprite.rotation = -t * 2
+            sprite.rotation = -t * 4
     def draw(self):
         w, h = self.size
         w, h = w / 2, h / 2

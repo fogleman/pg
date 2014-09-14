@@ -56,6 +56,8 @@ def pack(sizes):
     while True:
         result = try_pack(tw, th, items)
         if result:
+            tw = max(x + w for x, y, w, h in result)
+            th = max(y + h for x, y, w, h in result)
             return (tw, th), result
         if tw <= th:
             tw *= 2

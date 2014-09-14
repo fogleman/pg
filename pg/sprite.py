@@ -27,7 +27,7 @@ def load_images(paths):
     for path in paths:
         base, ext = os.path.splitext(path)
         im = Image.open(path)
-        names.append(base)
+        names.append(os.path.basename(base))
         images.append(im)
     return names, images
 
@@ -125,8 +125,11 @@ class SpriteFrame(object):
 
 class SpriteSheet(object):
     def __init__(self, unit, arg):
-        if os.path.isdir(arg):
-            names, images = load_directory(arg)
+        if isinstance(arg, basestring):
+            if os.path.isdir(arg):
+                names, images = load_directory(arg)
+            else:
+                names, images = load_images([arg])
         else:
             names, images = load_images(arg)
         p = 1
