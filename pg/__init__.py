@@ -89,6 +89,7 @@ from .util import (
     neg,
     normal_from_points,
     normalize,
+    pack_list,
     ray_triangle_intersection,
     recenter,
     smooth_normals,

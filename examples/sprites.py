@@ -5,25 +5,21 @@ class Window(pg.Window):
     def setup(self):
         sheet = pg.SpriteSheet(0, '/Users/fogleman/Desktop/Sprites')
         self.batch = pg.SpriteBatch(sheet)
-        sheet.planet1(self.batch)
-        sheet.planet2(self.batch)
-        sheet.planet3(self.batch)
-        sheet.planet4(self.batch)
-        sheet.planet5(self.batch)
-        sheet.planet6(self.batch)
-        sheet.planet7(self.batch)
+        n = 1000
+        for y in range(-n, n + 1, 64):
+            for x in range(-n, n + 1, 64):
+                sprite = sheet.star(self.batch)
+                sprite.position = (x, y)
+        print len(self.batch.sprites)
     def update(self, t, dt):
-        w, h = self.size
-        for i, sprite in enumerate(self.batch.sprites):
-            x = cos(t + i * 2 * pi / 7) * 200
-            y = sin(t + i * 2 * pi / 7) * 200
-            sprite.scale = 0.5
-            sprite.position = (x + w / 2, y + h / 2)
-            sprite.z = i / 10.0
-            sprite.rotation = -t
+        for sprite in self.batch.sprites:
+            sprite.rotation = -t * 2
     def draw(self):
+        w, h = self.size
+        w, h = w / 2, h / 2
+        matrix = pg.Matrix().orthographic(-w, w, -h, h, -1, 1)
         self.clear()
-        self.batch.draw()
+        self.batch.draw(matrix)
 
 if __name__ == "__main__":
     pg.run(Window)

@@ -50,10 +50,12 @@ class SpriteBatch(object):
             result.extend(sprite.get_vertex_data())
         return result
     def draw(self, matrix=None):
+        dirty = not all(x.vertex_data for x in self.sprites)
         w, h = App.instance.current_window.size
         self.context.matrix = matrix or Matrix().orthographic(
             0, w, 0, h, self.minz, self.maxz)
-        self.vb.set_data(self.get_vertex_data())
+        if dirty:
+            self.vb.set_data(self.get_vertex_data())
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.context.draw()

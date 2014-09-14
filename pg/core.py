@@ -148,7 +148,7 @@ class VertexBuffer(object):
             GL_ARRAY_BUFFER,
             sizeof(c_float) * offset,
             sizeof(c_float) * size,
-            (c_float * size)(*flat))
+            util.pack_list('<f', flat))
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def allocate(self, size):
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
@@ -181,12 +181,12 @@ class VertexBuffer(object):
                 GL_ARRAY_BUFFER,
                 0,
                 sizeof(c_float) * size,
-                (c_float * size)(*flat))
+                util.pack_list('<f', flat))
         else:
             glBufferData(
                 GL_ARRAY_BUFFER,
                 sizeof(c_float) * size,
-                (c_float * size)(*flat),
+                util.pack_list('<f', flat),
                 GL_DYNAMIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def delete(self):

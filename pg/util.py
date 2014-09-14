@@ -1,4 +1,6 @@
 from collections import defaultdict
+from ctypes import create_string_buffer
+import struct
 
 def hex_color(value):
     '''Accepts a hexadecimal color `value` in the format ``0xrrggbb`` and
@@ -182,3 +184,12 @@ def ray_triangle_intersection(v1, v2, v3, o, d):
     if t > eps:
         return t
     return None
+
+def pack_list(fmt, data):
+    '''Convert a Python list into a ctypes buffer.
+
+    This appears to be faster than the typical method of creating a ctypes
+    array, e.g. (c_float * len(data))(*data)
+    '''
+    func = struct.Struct(fmt).pack
+    return create_string_buffer(''.join([func(x) for x in data]))
