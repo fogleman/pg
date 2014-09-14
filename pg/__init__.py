@@ -66,6 +66,7 @@ from .programs import (
 
 from .sprite import (
     Sprite,
+    SpriteBatch,
     SpriteFrame,
     SpriteSheet,
 )

@@ -3,22 +3,18 @@ import pg
 
 class Window(pg.Window):
     def setup(self):
-        self.sheet = pg.SpriteSheet(0, '/Users/fogleman/Desktop/Sprites')
-        self.sprites = [
-            self.sheet.planet1(),
-            self.sheet.planet2(),
-            self.sheet.planet3(),
-            self.sheet.planet4(),
-            self.sheet.planet5(),
-            self.sheet.planet6(),
-            self.sheet.planet7(),
-        ]
-        self.context = pg.Context(pg.TextureProgram())
-        self.context.sampler = self.sheet
+        sheet = pg.SpriteSheet(0, '/Users/fogleman/Desktop/Sprites')
+        self.batch = pg.SpriteBatch(sheet)
+        sheet.planet1(self.batch)
+        sheet.planet2(self.batch)
+        sheet.planet3(self.batch)
+        sheet.planet4(self.batch)
+        sheet.planet5(self.batch)
+        sheet.planet6(self.batch)
+        sheet.planet7(self.batch)
     def update(self, t, dt):
         w, h = self.size
-        self.context.matrix = pg.Matrix().orthographic(0, w, 0, h, -1, 1)
-        for i, sprite in enumerate(self.sprites):
+        for i, sprite in enumerate(self.batch.sprites):
             x = cos(t + i * 2 * pi / 7) * 200
             y = sin(t + i * 2 * pi / 7) * 200
             sprite.scale = 0.5
@@ -27,8 +23,7 @@ class Window(pg.Window):
             sprite.rotation = -t
     def draw(self):
         self.clear()
-        for sprite in self.sprites:
-            sprite.draw(self.context)
+        self.batch.draw()
 
 if __name__ == "__main__":
     pg.run(Window)

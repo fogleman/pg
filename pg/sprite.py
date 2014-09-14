@@ -1,4 +1,5 @@
-from .core import VertexBuffer, Texture, Context
+from .core import VertexBuffer, Texture, Context, App
+from .matrix import Matrix
 from .pack import pack
 from .programs import TextureProgram
 from .util import interleave
@@ -33,18 +34,57 @@ def load_images(paths):
 class SpriteBatch(object):
     def __init__(self, sheet):
         self.sprites = []
+        self.minz = -10000
+        self.maxz = 10000
         self.context = Context(TextureProgram())
         self.context.sampler = sheet
+    def append(self, sprite):
+        self.sprites.append(sprite)
+    def get_vertex_data(self):
+        result = []
+        for sprite in self.sprites:
+            result.extend(sprite.get_vertex_data())
+        return result
+    def draw(self):
+        # TODO: reuse vertex buffer
+        window = App.instance.current_window
+        w, h = window.size
+        self.context.matrix = Matrix().orthographic(
+            0, w, 0, h, self.minz, self.maxz)
+        vb = VertexBuffer(self.get_vertex_data())
+        self.context.position, self.context.uv = vb.slices(3, 2)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        self.context.draw()
+        glDisable(GL_BLEND)
+        vb.delete()
 
 class Sprite(object):
-    def __init__(self, frame):
+    ATTRIBUTES = set([
+        'frame',
+        'anchor',
+        'position',
+        'rotation',
+        'scale',
+        'z',
+    ])
+    def __init__(self, frame, batch=None):
+        self.vertex_data = None
         self.frame = frame
         self.anchor = (0.5, 0.5)
         self.position = (0, 0)
         self.rotation = 0
         self.scale = 1
         self.z = 0
-    def generate_vertex_data(self):
+        if batch:
+            batch.append(self)
+    def __setattr__(self, name, value):
+        if name in Sprite.ATTRIBUTES:
+            self.vertex_data = None
+        super(Sprite, self).__setattr__(name, value)
+    def get_vertex_data(self):
+        if self.vertex_data:
+            return self.vertex_data
         ax, ay = self.anchor
         px, py = self.position
         fw, fh = self.frame.size
@@ -62,10 +102,10 @@ class Sprite(object):
             x, y = px + x * rc - y * rs, py + x * rs + y * rc
             data.append((x, y, z, u[i], v[j]))
         indexes = [0, 1, 2, 1, 3, 2]
-        return [data[i] for i in indexes]
+        self.vertex_data = [data[i] for i in indexes]
+        return self.vertex_data
     def draw(self, context):
-        # TODO: batched drawing
-        vb = VertexBuffer(self.generate_vertex_data())
+        vb = VertexBuffer(self.get_vertex_data())
         context.position, context.uv = vb.slices(3, 2)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -78,8 +118,8 @@ class SpriteFrame(object):
         self.name = name
         self.size = size
         self.coords = coords
-    def __call__(self):
-        return Sprite(self)
+    def __call__(self, *args, **kwargs):
+        return Sprite(self, *args, **kwargs)
 
 class SpriteSheet(object):
     def __init__(self, unit, arg):
@@ -105,6 +145,8 @@ class SpriteSheet(object):
         self.texture = Texture(unit, im)
     def get_uniform_value(self):
         return self.texture.unit
+    def get(self, name):
+        return self.lookup.get(name)
     def __getattr__(self, name):
         if name in self.lookup:
             return self.lookup[name]
