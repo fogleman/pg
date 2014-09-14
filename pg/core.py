@@ -168,6 +168,27 @@ class VertexBuffer(object):
         glUnmapBuffer(GL_ARRAY_BUFFER)
         glBufferData(GL_ARRAY_BUFFER, new_size, temp, GL_DYNAMIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
+    def set_data(self, data):
+        old_size = self.components * self.vertex_capacity
+        self.components = len(data[0])
+        self.vertex_count = len(data)
+        self.vertex_capacity = len(data)
+        flat = util.flatten(data)
+        size = len(flat)
+        glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+        if size == old_size:
+            glBufferSubData(
+                GL_ARRAY_BUFFER,
+                0,
+                sizeof(c_float) * size,
+                (c_float * size)(*flat))
+        else:
+            glBufferData(
+                GL_ARRAY_BUFFER,
+                sizeof(c_float) * size,
+                (c_float * size)(*flat),
+                GL_DYNAMIC_DRAW)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
     def delete(self):
         glDeleteBuffers(1, self.handle)
     def slice(self, components, offset):

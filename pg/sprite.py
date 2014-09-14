@@ -36,8 +36,12 @@ class SpriteBatch(object):
         self.sprites = []
         self.minz = -10000
         self.maxz = 10000
+        self.vb = VertexBuffer()
         self.context = Context(TextureProgram())
         self.context.sampler = sheet
+        self.context.position, self.context.uv = self.vb.slices(3, 2)
+    def delete(self):
+        self.vb.delete()
     def append(self, sprite):
         self.sprites.append(sprite)
     def get_vertex_data(self):
@@ -45,19 +49,15 @@ class SpriteBatch(object):
         for sprite in self.sprites:
             result.extend(sprite.get_vertex_data())
         return result
-    def draw(self):
-        # TODO: reuse vertex buffer
-        window = App.instance.current_window
-        w, h = window.size
-        self.context.matrix = Matrix().orthographic(
+    def draw(self, matrix=None):
+        w, h = App.instance.current_window.size
+        self.context.matrix = matrix or Matrix().orthographic(
             0, w, 0, h, self.minz, self.maxz)
-        vb = VertexBuffer(self.get_vertex_data())
-        self.context.position, self.context.uv = vb.slices(3, 2)
+        self.vb.set_data(self.get_vertex_data())
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.context.draw()
         glDisable(GL_BLEND)
-        vb.delete()
 
 class Sprite(object):
     ATTRIBUTES = set([
