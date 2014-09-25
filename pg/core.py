@@ -462,7 +462,7 @@ class Context(object):
             return self._uniform_values[name]
         else:
             super(Context, self).__getattr__(name)
-    def draw(self, mode=GL_TRIANGLES, index_buffer=None):
+    def draw(self, mode=GL_TRIANGLES, index_buffer=None, instances=None):
         self._program.use()
         for name, value in self._uniform_values.iteritems():
             if value is not None:
@@ -473,7 +473,10 @@ class Context(object):
         if index_buffer is None:
             vertex_count = min(x.vertex_count for x in
                 self._attribute_values.itervalues() if x is not None)
-            glDrawArrays(mode, 0, vertex_count)
+            if instances is None:
+                glDrawArrays(mode, 0, vertex_count)
+            else:
+                glDrawArraysInstanced(mode, 0, vertex_count, instances)
         else:
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.handle)
             glDrawElements(mode, index_buffer.size, GL_UNSIGNED_INT, c_void_p())
@@ -546,6 +549,10 @@ class Window(object):
         self.size = width, height = size
         self.aspect = float(width) / height
         glfw.window_hint(glfw.VISIBLE, visible)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
+        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 2)
+        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
+        glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, True)
         share = share and share.handle
         self.handle = glfw.create_window(width, height, title, None, share)
         if not self.handle:
@@ -554,6 +561,8 @@ class Window(object):
         self.cache = Cache()
         self.current_program = None
         self.use()
+        self.vao = glGenVertexArrays(1)
+        glBindVertexArray(self.vao)
         self.framebuffer_size = glfw.get_framebuffer_size(self.handle)
         self.configure()
         self.exclusive = False
