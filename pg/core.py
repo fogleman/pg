@@ -22,6 +22,8 @@ class Shader(object):
         log = glGetShaderInfoLog(self.handle)
         if log:
             raise Exception(log)
+    def delete(self):
+        glDeleteShader(self.handle)
 
 class VertexShader(Shader):
     def __init__(self, shader_source):
@@ -120,6 +122,8 @@ class VertexBuffer(object):
         self.vertex_count = 0
         self.vertex_capacity = 0
         self.extend(data)
+    def delete(self):
+        glDeleteBuffers(1, self.handle)
     def extend(self, data):
         if not data:
             return
@@ -189,8 +193,6 @@ class VertexBuffer(object):
                 util.pack_list('<f', flat),
                 GL_DYNAMIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-    def delete(self):
-        glDeleteBuffers(1, self.handle)
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
     def slices(self, *args):
@@ -231,6 +233,8 @@ class IndexBuffer(object):
         self.handle = glGenBuffers(1)
         if data is not None:
             self.set_data(data)
+    def delete(self):
+        glDeleteBuffers(1, self.handle)
     def set_data(self, data):
         self.size = len(data)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.handle)
@@ -240,8 +244,6 @@ class IndexBuffer(object):
             (c_uint * self.size)(*data),
             GL_STATIC_DRAW)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-    def delete(self):
-        glDeleteBuffers(1, self.handle)
 
 def index(*args):
     sizes = [len(x[0]) if x else None for x in args]
@@ -280,6 +282,8 @@ class Texture(object):
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, data)
+    def delete(self):
+        glDeleteTextures(1, self.handle)
     def get_uniform_value(self):
         return self.unit
     def bind(self):
@@ -404,6 +408,8 @@ class Program(object):
         if log:
             raise Exception(log)
         self.cache = Cache()
+    def delete(self):
+        glDeleteProgram(self.handle)
     def use(self):
         glUseProgram(self.handle)
         App.instance.current_window.set_current_program(self)
