@@ -37,9 +37,9 @@ class Window(pg.Window):
         self.plane.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.plane.draw(pg.GL_TRIANGLES)
-        self.context.draw(pg.GL_TRIANGLES)
-        self.axes.draw(pg.GL_LINES)
+        self.plane.draw()
+        self.context.draw()
+        self.axes.draw(pg.gl.GL_LINES)
 
 if __name__ == "__main__":
     pg.run(Window)
