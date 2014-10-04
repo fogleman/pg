@@ -1,3 +1,7 @@
+# use case: pg.GL_CONST or pg.glFunc()
+from .gl import *
+
+# use case: from pg.gl import *
 from . import gl
 
 from .camera import (

@@ -586,13 +586,18 @@ class Worker(object):
 class Window(object):
     def __init__(
         self, size=(800, 600), title='Python Graphics', visible=True,
-        share=None):
+        share=None, full_screen=False):
         self.app = App.instance
+        if full_screen:
+            monitor = glfw.get_primary_monitor()
+            size = glfw.get_video_mode(monitor)[0]
+        else:
+            monitor = None
         self.size = width, height = size
         self.aspect = float(width) / height
         glfw.window_hint(glfw.VISIBLE, visible)
         share = share and share.handle
-        self.handle = glfw.create_window(width, height, title, None, share)
+        self.handle = glfw.create_window(width, height, title, monitor, share)
         if not self.handle:
             raise Exception
         self.app.add_window(self)
