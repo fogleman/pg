@@ -1,5 +1,9 @@
 from . import gl
 
+from .camera import (
+    Camera,
+)
+
 from .core import (
     App,
     async,
