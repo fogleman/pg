@@ -11,6 +11,23 @@ import Queue
 import threading
 import time
 
+def delete_all(obj):
+    '''Calls `delete()` on all members of `obj` that are recognized as
+    instances of `pg` objects.'''
+    types = tuple([
+        Shader,
+        Mesh,
+        VertexBuffer,
+        IndexBuffer,
+        Texture,
+        Program,
+        Context,
+    ])
+    for name in dir(obj):
+        child = getattr(obj, name)
+        if isinstance(child, types):
+            child.delete()
+
 class Shader(object):
     def __init__(self, shader_type, shader_source):
         if os.path.exists(shader_source):
@@ -23,7 +40,9 @@ class Shader(object):
         if log:
             raise Exception(log)
     def delete(self):
-        glDeleteShader(self.handle)
+        if self.handle is not None:
+            glDeleteShader(self.handle)
+            self.handle = None
 
 class VertexShader(Shader):
     def __init__(self, shader_source):
@@ -55,11 +74,13 @@ class Mesh(object):
         self.index = None
         self.vertex_buffer = None
         self.slices = None
-    def __del__(self):
+    def delete(self):
         if self.index:
             self.index.delete()
+            self.index = None
         if self.vertex_buffer:
             self.vertex_buffer.delete()
+            self.vertex_buffer = None
     def __add__(self, other):
         positions = self.positions + other.positions
         normals = self.normals + other.normals
@@ -123,7 +144,9 @@ class VertexBuffer(object):
         self.vertex_capacity = 0
         self.extend(data)
     def delete(self):
-        glDeleteBuffers(1, self.handle)
+        if self.handle is not None:
+            glDeleteBuffers(1, self.handle)
+            self.handle = None
     def extend(self, data):
         if not data:
             return
@@ -234,7 +257,9 @@ class IndexBuffer(object):
         if data is not None:
             self.set_data(data)
     def delete(self):
-        glDeleteBuffers(1, self.handle)
+        if self.handle is not None:
+            glDeleteBuffers(1, self.handle)
+            self.handle = None
     def set_data(self, data):
         self.size = len(data)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.handle)
@@ -266,7 +291,11 @@ class Texture(object):
         GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27,
         GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
     ]
-    def __init__(self, unit, im):
+    def __init__(
+        self, unit, im,
+        min_filter=GL_LINEAR, mag_filter=GL_LINEAR,
+        wrap_s=GL_REPEAT, wrap_t=GL_REPEAT,
+        mipmap=False):
         self.unit = unit
         if isinstance(im, basestring):
             im = Image.open(im)
@@ -275,15 +304,19 @@ class Texture(object):
         data = im.tobytes()
         self.handle = glGenTextures(1)
         self.bind()
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_s)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_t)
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, data)
+        if mipmap:
+            glGenerateMipmap(GL_TEXTURE_2D)
     def delete(self):
-        glDeleteTextures(1, self.handle)
+        if self.handle is not None:
+            glDeleteTextures(1, self.handle)
+            self.handle = None
     def get_uniform_value(self):
         return self.unit
     def bind(self):
@@ -409,7 +442,11 @@ class Program(object):
             raise Exception(log)
         self.cache = Cache()
     def delete(self):
-        glDeleteProgram(self.handle)
+        if self.handle is not None:
+            glDeleteProgram(self.handle)
+            self.handle = None
+        self.vs.delete()
+        self.fs.delete()
     def use(self):
         glUseProgram(self.handle)
         App.instance.current_window.set_current_program(self)
@@ -450,6 +487,8 @@ class Context(object):
         self._attribute_values = {}
         self._uniform_values = {}
         self._program.set_defaults(self)
+    def delete(self):
+        self._program.delete()
     def __setattr__(self, name, value):
         if name.startswith('_'):
             super(Context, self).__setattr__(name, value)

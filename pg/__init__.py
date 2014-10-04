@@ -1,8 +1,11 @@
+from . import gl
+
 from .core import (
     App,
     async,
     call_after,
     Context,
+    delete_all,
     FragmentShader,
     index,
     IndexBuffer,
@@ -98,20 +101,6 @@ from .util import (
 
 from .wasd import (
     WASD,
-)
-
-from OpenGL.GL import (
-    GL_POINTS,
-    GL_LINE_STRIP,
-    GL_LINE_LOOP,
-    GL_LINES,
-    GL_LINE_STRIP_ADJACENCY,
-    GL_LINES_ADJACENCY,
-    GL_TRIANGLE_STRIP,
-    GL_TRIANGLE_FAN,
-    GL_TRIANGLES,
-    GL_TRIANGLE_STRIP_ADJACENCY,
-    GL_TRIANGLES_ADJACENCY,
 )
 
 from .glfw import (
