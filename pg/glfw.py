@@ -28,6 +28,19 @@ if sys.version_info.major > 2:
 else:
     _to_char_p = lambda s: s
 
+def _parse_ldsoconf(filename="/etc/ld.so.conf"):
+    paths = set()
+    with open(filename) as f:
+        for line in (_line.rstrip() for _line in f.readlines()):
+            if line.startswith("include "):
+                wildcard = line.partition("include ")[-1:][0].rstrip()
+                for filename in glob.glob(wildcard):
+                    paths |= set(_parse_ldsoconf(filename))
+            elif not line.startswith("#"):
+                if line:
+                    paths.add(line)
+    return list(paths)
+
 
 def _find_library_candidates(library_names,
                              library_file_extensions,
@@ -135,7 +148,7 @@ def _glfw_get_version(filename):
         return None
 
 _glfw = _load_library(['glfw', 'glfw3'], ['.so', '.dylib', '.dll'],
-                      ['', '/usr/lib', '/usr/local/lib'], _glfw_get_version)
+                      ['', '/usr/lib', '/usr/local/lib'] + _parse_ldsoconf(), _glfw_get_version)
 if _glfw is None:
     raise ImportError("Failed to load GLFW3 shared library.")
 
