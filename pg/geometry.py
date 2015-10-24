@@ -214,10 +214,13 @@ class Plane(Mesh):
         if both:
             self.setup(point, (-nx, -ny, -nz), size)
     def setup(self, point, normal, size):
-        n = size
+        try:
+            w, h = size
+        except Exception:
+            w = h = size
         positions = [
-            (-n, 0, -n), (n, 0, -n), (-n, 0, n),
-            (-n, 0, n), (n, 0, -n), (n, 0, n)
+            (-w, 0, -h), (w, 0, -h), (-w, 0, h),
+            (-w, 0, h), (w, 0, -h), (w, 0, h)
         ]
         uvs = [
             (0, 0), (1, 0), (0, 1),

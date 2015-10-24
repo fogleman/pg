@@ -24,7 +24,7 @@ class Window(pg.Window):
         matrix = matrix.perspective(65, self.aspect, 0.01, 100)
         for z in range(-2, 3):
             for x in range(-10, 11):
-                y = sin(self.time * pi / 4 + x * 0.5 + z * pi) * 3
+                y = sin(self.t * pi / 4 + x * 0.5 + z * pi) * 3
                 model_matrix = pg.Matrix().translate((x, y, z * 3))
                 self.context.model_matrix = model_matrix
                 self.context.matrix = matrix * model_matrix

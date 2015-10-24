@@ -13,6 +13,8 @@ class Matrix(object):
                 0, 0, 0, 1,
             ]
         self.value = map(float, value)
+    def get_uniform_value(self):
+        return self.value
     def __repr__(self):
         result = []
         for r in xrange(4):
@@ -23,7 +25,9 @@ class Matrix(object):
         if isinstance(other, Matrix):
             return self.matrix_multiply(other)
         elif isinstance(other, (tuple, list)):
-            if len(other) == 3:
+            if len(other) == 2:
+                return self.vector2_multiply(other)
+            elif len(other) == 3:
                 return self.vector3_multiply(other)
             elif len(other) == 4:
                 return self.vector4_multiply(other)
@@ -69,6 +73,16 @@ class Matrix(object):
         return Matrix([
             c00, c10, c20, c30, c01, c11, c21, c31,
             c02, c12, c22, c32, c03, c13, c23, c33])
+    def vector2_multiply(self, other):
+        (
+            a00, a10, a20, a30, a01, a11, a21, a31,
+            a02, a12, a22, a32, a03, a13, a23, a33,
+        ) = self.value
+        b0, b1 = other
+        return (
+            a00 * b0 + a01 * b1 + a03,
+            a10 * b0 + a11 * b1 + a13,
+        )
     def vector3_multiply(self, other):
         (
             a00, a10, a20, a30, a01, a11, a21, a31,

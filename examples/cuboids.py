@@ -51,7 +51,7 @@ class Window(pg.Window):
         matrix = matrix.perspective(65, self.aspect, 0.1, 500)
         self.context.matrix = matrix * model_matrix
         self.context.model_matrix = model_matrix
-        self.context.draw(pg.GL_TRIANGLES)
+        self.context.draw()
         # bullets
         self.bullet.camera_position = self.wasd.position
         for bullet in list(self.bullets):
@@ -60,7 +60,7 @@ class Window(pg.Window):
             model_matrix = pg.Matrix().translate((x, y, z))
             self.bullet.model_matrix = model_matrix
             self.bullet.matrix = matrix * model_matrix
-            self.bullet.draw(pg.GL_TRIANGLES)
+            self.bullet.draw()
             if dt > 10:
                 self.bullets.remove(bullet)
         # crosshairs
@@ -71,7 +71,7 @@ class Window(pg.Window):
         glEnable(GL_COLOR_LOGIC_OP)
         glLogicOp(GL_INVERT)
         glLineWidth(3)
-        self.crosshairs.draw(pg.GL_LINES)
+        self.crosshairs.draw(pg.gl.GL_LINES)
         glDisable(GL_COLOR_LOGIC_OP)
     def on_mouse_button(self, button, action, mods):
         if button == 0 and action == 1:

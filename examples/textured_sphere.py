@@ -23,7 +23,7 @@ class Window(pg.Window):
         self.context.camera_position = self.wasd.position
     def draw(self):
         self.clear()
-        self.context.draw(pg.GL_TRIANGLES)
+        self.context.draw()
         w, h = self.size
         self.font.render('%.1f fps' % self.fps, (w - 5, 0), (1, 0))
         text = 'x=%.2f, y=%.2f, z=%.2f' % self.wasd.position

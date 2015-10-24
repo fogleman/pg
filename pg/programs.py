@@ -27,14 +27,54 @@ class SolidColorProgram(BaseProgram):
     FS = '''
     #version 120
 
-    uniform vec3 color;
+    uniform vec4 color;
 
     void main() {
-        gl_FragColor = vec4(color, 1.0);
+        gl_FragColor = color;
     }
     '''
     def set_defaults(self, context):
-        context.color = (1.0, 1.0, 1.0)
+        context.color = (1.0, 1.0, 1.0, 1.0)
+
+class TextureProgram(BaseProgram):
+    '''Renders with a texture and no lighting.
+
+    :param matrix: the model-view-projection matrix, required
+    :param position: vertex buffer containing vertex positions, required
+    :param sampler: texture to use, required
+    '''
+    VS = '''
+    #version 120
+
+    uniform mat4 matrix;
+
+    attribute vec4 position;
+    attribute vec2 uv;
+
+    varying vec2 frag_uv;
+
+    void main() {
+        gl_Position = matrix * position;
+        frag_uv = uv;
+    }
+    '''
+    FS = '''
+    #version 120
+
+    uniform sampler2D sampler;
+
+    varying vec2 frag_uv;
+
+    void main() {
+        vec4 color = texture2D(sampler, frag_uv);
+        if (color.a == 0) {
+            discard;
+        }
+        gl_FragColor = color;
+    }
+    '''
+    def set_defaults(self, context):
+        pass
 
 class DirectionalLightProgram(BaseProgram):
     '''Renders the scene with a single, directional light source. Optionally,
@@ -63,6 +103,7 @@ class DirectionalLightProgram(BaseProgram):
 
     uniform mat4 matrix;
     uniform mat4 model_matrix;
+    uniform mat4 normal_matrix;
 
     attribute vec4 position;
     attribute vec3 normal;
@@ -77,7 +118,7 @@ class DirectionalLightProgram(BaseProgram):
     void main() {
         gl_Position = matrix * position;
         frag_position = vec3(model_matrix * position);
-        frag_normal = normal;
+        frag_normal = mat3(normal_matrix) * normal;
         frag_uv = uv;
         frag_color = color;
     }
@@ -88,7 +129,6 @@ class DirectionalLightProgram(BaseProgram):
     uniform sampler2D sampler;
     uniform vec3 camera_position;
 
-    uniform mat4 normal_matrix;
     uniform vec3 light_direction;
     uniform vec3 object_color;
     uniform vec3 ambient_color;
@@ -111,8 +151,7 @@ class DirectionalLightProgram(BaseProgram):
         if (use_texture) {
             color = vec3(texture2D(sampler, frag_uv));
         }
-        float diffuse = max(dot(mat3(normal_matrix) * frag_normal,
-            light_direction), 0.0);
+        float diffuse = max(dot(frag_normal, light_direction), 0.0);
         float specular = 0.0;
         if (diffuse > 0.0) {
             vec3 camera_vector = normalize(camera_position - frag_position);
@@ -136,6 +175,7 @@ class DirectionalLightProgram(BaseProgram):
         context.use_texture = False
         context.use_color = False
 
+# TODO: same as TextureProgram? consolidate?
 class TextProgram(BaseProgram):
     '''Renders 2D text using a font texture. Used by the built-in ``pg.Font``.
 

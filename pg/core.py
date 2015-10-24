@@ -11,6 +11,23 @@ import Queue
 import threading
 import time
 
+def delete_all(obj):
+    '''Calls `delete()` on all members of `obj` that are recognized as
+    instances of `pg` objects.'''
+    types = tuple([
+        Shader,
+        Mesh,
+        VertexBuffer,
+        IndexBuffer,
+        Texture,
+        Program,
+        Context,
+    ])
+    for name in dir(obj):
+        child = getattr(obj, name)
+        if isinstance(child, types):
+            child.delete()
+
 class Shader(object):
     def __init__(self, shader_type, shader_source):
         if os.path.exists(shader_source):
@@ -22,6 +39,10 @@ class Shader(object):
         log = glGetShaderInfoLog(self.handle)
         if log:
             raise Exception(log)
+    def delete(self):
+        if self.handle is not None:
+            glDeleteShader(self.handle)
+            self.handle = None
 
 class VertexShader(Shader):
     def __init__(self, shader_source):
@@ -53,11 +74,13 @@ class Mesh(object):
         self.index = None
         self.vertex_buffer = None
         self.slices = None
-    def __del__(self):
+    def delete(self):
         if self.index:
             self.index.delete()
+            self.index = None
         if self.vertex_buffer:
             self.vertex_buffer.delete()
+            self.vertex_buffer = None
     def __add__(self, other):
         positions = self.positions + other.positions
         normals = self.normals + other.normals
@@ -120,6 +143,10 @@ class VertexBuffer(object):
         self.vertex_count = 0
         self.vertex_capacity = 0
         self.extend(data)
+    def delete(self):
+        if self.handle is not None:
+            glDeleteBuffers(1, self.handle)
+            self.handle = None
     def extend(self, data):
         if not data:
             return
@@ -148,7 +175,7 @@ class VertexBuffer(object):
             GL_ARRAY_BUFFER,
             sizeof(c_float) * offset,
             sizeof(c_float) * size,
-            (c_float * size)(*flat))
+            util.pack_list('<f', flat))
         glBindBuffer(GL_ARRAY_BUFFER, 0)
     def allocate(self, size):
         glBindBuffer(GL_ARRAY_BUFFER, self.handle)
@@ -168,8 +195,27 @@ class VertexBuffer(object):
         glUnmapBuffer(GL_ARRAY_BUFFER)
         glBufferData(GL_ARRAY_BUFFER, new_size, temp, GL_DYNAMIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-    def delete(self):
-        glDeleteBuffers(1, self.handle)
+    def set_data(self, data):
+        old_size = self.components * self.vertex_capacity
+        self.components = len(data[0])
+        self.vertex_count = len(data)
+        self.vertex_capacity = len(data)
+        flat = util.flatten(data)
+        size = len(flat)
+        glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+        if size == old_size:
+            glBufferSubData(
+                GL_ARRAY_BUFFER,
+                0,
+                sizeof(c_float) * size,
+                util.pack_list('<f', flat))
+        else:
+            glBufferData(
+                GL_ARRAY_BUFFER,
+                sizeof(c_float) * size,
+                util.pack_list('<f', flat),
+                GL_DYNAMIC_DRAW)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
     def slice(self, components, offset):
         return VertexBufferSlice(self, components, offset)
     def slices(self, *args):
@@ -210,6 +256,10 @@ class IndexBuffer(object):
         self.handle = glGenBuffers(1)
         if data is not None:
             self.set_data(data)
+    def delete(self):
+        if self.handle is not None:
+            glDeleteBuffers(1, self.handle)
+            self.handle = None
     def set_data(self, data):
         self.size = len(data)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.handle)
@@ -219,8 +269,6 @@ class IndexBuffer(object):
             (c_uint * self.size)(*data),
             GL_STATIC_DRAW)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-    def delete(self):
-        glDeleteBuffers(1, self.handle)
 
 def index(*args):
     sizes = [len(x[0]) if x else None for x in args]
@@ -243,7 +291,11 @@ class Texture(object):
         GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27,
         GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31,
     ]
-    def __init__(self, unit, im):
+    def __init__(
+        self, unit, im,
+        min_filter=GL_LINEAR, mag_filter=GL_LINEAR,
+        wrap_s=GL_REPEAT, wrap_t=GL_REPEAT,
+        mipmap=False):
         self.unit = unit
         if isinstance(im, basestring):
             im = Image.open(im)
@@ -252,13 +304,21 @@ class Texture(object):
         data = im.tobytes()
         self.handle = glGenTextures(1)
         self.bind()
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_s)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_t)
         glTexImage2D(
             GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, data)
+        if mipmap:
+            glGenerateMipmap(GL_TEXTURE_2D)
+    def delete(self):
+        if self.handle is not None:
+            glDeleteTextures(1, self.handle)
+            self.handle = None
+    def get_uniform_value(self):
+        return self.unit
     def bind(self):
         glActiveTexture(Texture.UNITS[self.unit])
         glBindTexture(GL_TEXTURE_2D, self.handle)
@@ -293,10 +353,11 @@ class Uniform(object):
         self.size = size
         self.data_type = data_type
     def bind(self, value):
-        if isinstance(value, Matrix):
-            value = value.value
-        elif isinstance(value, Texture):
-            value = value.unit
+        if self.size > 1:
+            self.bind_array(value)
+            return
+        if hasattr(value, 'get_uniform_value'):
+            value = value.get_uniform_value()
         try:
             count = len(value)
         except Exception:
@@ -330,6 +391,36 @@ class Uniform(object):
             funcs[count](self.location, *value)
         elif self.data_type in Uniform.SAMPLERS:
             glUniform1i(self.location, *value)
+    def bind_array(self, value):
+        first = value[0]
+        size = min(len(value), self.size)
+        value = value[:size]
+        try:
+            count = len(first)
+            value = util.flatten(value)
+        except Exception:
+            count = 1
+        if len(value) != size * count:
+            raise Exception
+        value = (c_float * len(value))(*value)
+        if self.data_type in Uniform.FLOATS:
+            funcs = {
+                1: glUniform1fv,
+                2: glUniform2fv,
+                3: glUniform3fv,
+                4: glUniform4fv,
+            }
+            funcs[count](self.location, size, value)
+        elif self.data_type in Uniform.INTS or self.data_type in Uniform.BOOLS:
+            funcs = {
+                1: glUniform1iv,
+                2: glUniform2iv,
+                3: glUniform3iv,
+                4: glUniform4iv,
+            }
+            funcs[count](self.location, size, value)
+        elif self.data_type in Uniform.SAMPLERS:
+            glUniform1iv(self.location, size, value)
     def __repr__(self):
         return 'Uniform%s' % str(
             (self.location, self.name, self.size, self.data_type))
@@ -350,6 +441,12 @@ class Program(object):
         if log:
             raise Exception(log)
         self.cache = Cache()
+    def delete(self):
+        if self.handle is not None:
+            glDeleteProgram(self.handle)
+            self.handle = None
+        self.vs.delete()
+        self.fs.delete()
     def use(self):
         glUseProgram(self.handle)
         App.instance.current_window.set_current_program(self)
@@ -375,6 +472,8 @@ class Program(object):
         count = glGetProgramiv(self.handle, GL_ACTIVE_UNIFORMS)
         for index in xrange(count):
             name, size, data_type = glGetActiveUniform(self.handle, index)
+            if name.endswith('[0]'):
+                name = name[:-3]
             location = glGetUniformLocation(self.handle, name)
             uniform = Uniform(location, name, size, data_type)
             result.append(uniform)
@@ -388,6 +487,8 @@ class Context(object):
         self._attribute_values = {}
         self._uniform_values = {}
         self._program.set_defaults(self)
+    def delete(self):
+        self._program.delete()
     def __setattr__(self, name, value):
         if name.startswith('_'):
             super(Context, self).__setattr__(name, value)
@@ -485,19 +586,25 @@ class Worker(object):
 class Window(object):
     def __init__(
         self, size=(800, 600), title='Python Graphics', visible=True,
-        share=None):
+        share=None, full_screen=False):
         self.app = App.instance
+        if full_screen:
+            monitor = glfw.get_primary_monitor()
+            size = glfw.get_video_mode(monitor)[0]
+        else:
+            monitor = None
         self.size = width, height = size
         self.aspect = float(width) / height
         glfw.window_hint(glfw.VISIBLE, visible)
         share = share and share.handle
-        self.handle = glfw.create_window(width, height, title, None, share)
+        self.handle = glfw.create_window(width, height, title, monitor, share)
         if not self.handle:
             raise Exception
         self.app.add_window(self)
         self.cache = Cache()
         self.current_program = None
         self.use()
+        self.framebuffer_size = glfw.get_framebuffer_size(self.handle)
         self.configure()
         self.exclusive = False
         self.listeners = []
@@ -529,6 +636,9 @@ class Window(object):
     @property
     def fps(self):
         return self.app.ticker.fps
+    @property
+    def ticks(self):
+        return self.app.ticker.ticks
     def configure(self):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_CULL_FACE)
@@ -571,6 +681,7 @@ class Window(object):
     def save_image(self, path):
         width, height = self.size
         data = (c_ubyte * (width * height * 3))()
+        glReadBuffer(GL_BACK)
         glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data)
         im = Image.frombytes('RGB', (width, height), data)
         im = im.transpose(Image.FLIP_TOP_BOTTOM)
@@ -585,6 +696,7 @@ class Window(object):
             counter += 1
     def set_callbacks(self):
         glfw.set_window_size_callback(self.handle, self._on_size)
+        glfw.set_framebuffer_size_callback(self.handle, self._on_framebuffer_size)
         glfw.set_cursor_pos_callback(self.handle, self._on_cursor_pos)
         glfw.set_mouse_button_callback(self.handle, self._on_mouse_button)
         glfw.set_key_callback(self.handle, self._on_key)
@@ -603,6 +715,9 @@ class Window(object):
         self.size = (width, height)
         self.aspect = float(width) / height
         self.call('on_size', width, height)
+    def _on_framebuffer_size(self, window, width, height):
+        self.framebuffer_size = (width, height)
+        self.call('on_framebuffer_size', width, height)
     def _on_cursor_pos(self, window, x, y):
         self.call('on_cursor_pos', x, y)
     def _on_mouse_button(self, window, button, action, mods):
@@ -623,6 +738,8 @@ class Window(object):
     def teardown(self):
         pass
     def on_size(self, width, height):
+        pass
+    def on_framebuffer_size(self, width, height):
         pass
     def on_cursor_pos(self, x, y):
         pass

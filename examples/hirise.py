@@ -2,7 +2,7 @@ from collections import defaultdict
 from math import atan2
 import pg
 
-NAME = 'PSP_009149_1750'
+NAME = 'ESP_025735_2185'
 FONT = '/Library/Fonts/Arial.ttf'
 FLY = True
 STEP = 16
@@ -192,7 +192,7 @@ class Program(pg.Program):
             specular * specular_multiplier;
         color = min(color * light, vec3(1.0));
         float camera_distance = distance(camera_position, frag_position);
-        float fog_factor = pow(min(camera_distance / fog_distance, 1.0), 4.0);
+        float fog_factor = pow(min(camera_distance / fog_distance, 1.0), 3.0);
         color = mix(color, fog_color, fog_factor);
         gl_FragColor = vec4(color, 1.0);
     }
@@ -207,8 +207,8 @@ class Program(pg.Program):
         context.ambient_color = (0.4, 0.4, 0.4)
         context.light_color = (0.8, 0.8, 0.8)
         context.fog_color = (0.74, 0.70, 0.64)
-        context.fog_distance = 6000
-        context.light_direction = pg.normalize((-1, 0.5, 1))
+        context.fog_distance = 10000
+        context.light_direction = pg.normalize((1, 0.5, 1))
 
 def main():
     app = pg.App()
