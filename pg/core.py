@@ -322,7 +322,10 @@ class Texture(object):
     def bind(self):
         glActiveTexture(Texture.UNITS[self.unit])
         glBindTexture(GL_TEXTURE_2D, self.handle)
-
+    def replace_data(self, data):
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                        self.size[0], self.size[1],
+                        GL_RGBA, GL_UNSIGNED_BYTE, data)
 class Attribute(object):
     def __init__(self, location, name, size, data_type):
         self.location = location
