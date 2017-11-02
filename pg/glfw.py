@@ -28,12 +28,16 @@ if sys.version_info.major > 2:
 else:
     _to_char_p = lambda s: s
 
+
 def _parse_ldsoconf(filename="/etc/ld.so.conf"):
     paths = set()
+    directory = os.path.dirname(os.path.abspath(filename))
     with open(filename) as f:
         for line in (_line.rstrip() for _line in f.readlines()):
             if line.startswith("include "):
                 wildcard = line.partition("include ")[-1:][0].rstrip()
+                if not os.path.isabs(wildcard):
+                    wildcard = os.path.join(directory, wildcard)
                 for filename in glob.glob(wildcard):
                     paths |= set(_parse_ldsoconf(filename))
             elif not line.startswith("#"):
