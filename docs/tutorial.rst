@@ -4,6 +4,17 @@ Tutorial
 In this tutorial we will explore various aspects of the ``pg`` framework from
 opening a window to flying through a scene of several geometric objects.
 
+Installation
+-----------------
+
+To install ``pg``, you need to have **python** and **glfw** installed from your package manager:
+
+``# apt install python libglfw3`` or ``# yum install python3.6 glfw``
+
+Then, install the ``pg`` and ``glfw`` pypi package:
+
+``$ pip install pg && pip install glfw```
+
 Creating a Window
 -----------------
 
