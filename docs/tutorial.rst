@@ -11,9 +11,9 @@ To install ``pg``, you need to have **python** and **glfw** installed from your 
 
 ``# apt install python libglfw3`` or ``# yum install python3.6 glfw``
 
-Then, install the ``pg`` pypi package:
+Then, install the ``pg`` and ``glfw`` pypi package:
 
-``$ pip install pg```
+``$ pip install pg && pip install glfw```
 
 Creating a Window
 -----------------
